@@ -1,0 +1,359 @@
+class_name Combat
+extends RefCounted
+## Combat rules only, no UI: main.gd drives it, tests/test_combat.gd checks it.
+
+enum Slot { NONE, ATTACK, GUARD, CLEAVE }
+enum Grade { MISS, GOOD, PERFECT }
+
+const CURSE := 0  # a cursed face rolls as 0 and counts for nothing
+const REROLLS_PER_TURN := 2
+const PLAYER_MAX_HP := 40
+const HEAL_BETWEEN_FIGHTS := 10
+const GOOD_MS := 250
+const CLEAVE_MULTIPLIER := 1.5
+
+## Enemy types. Optional keys:
+## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
+## "rig_pair_turn": that turn's roll always contains a pair, so the Cleave lesson can happen.
+## "bone_wall": blocks your highest Attack die aimed at it.
+## A "ring" intent turns another enemy's attack this turn unblockable.
+const TYPES := {
+	"dummy": {"name": "Training Dummy", "hp": 30, "turns": 5, "rig_pair_turn": 2,
+		"phase1": [{"kind": "attack", "value": 3}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 2}, {"kind": "attack", "value": 3}, {"kind": "unblockable", "value": 5}]},
+	"rat": {"name": "Bone Rat", "hp": 6,
+		"phase1": [{"kind": "attack", "value": 2}]},
+	"skeleton": {"name": "Skeleton", "hp": 20,
+		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
+	"acolyte": {"name": "Shield Acolyte", "hp": 18,
+		"phase1": [{"kind": "guard", "value": 8}, {"kind": "guard", "value": 8}, {"kind": "attack", "value": 10}]},
+	"bell": {"name": "Grave Bell", "hp": 14,
+		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
+	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true,
+		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
+		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
+}
+
+## Fight 0 is the tutorial; the last is the boss.
+const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "rat", "rat"], ["warden"]]
+
+var rng := RandomNumberGenerator.new()
+var player_hp := PLAYER_MAX_HP
+var dice: Array[Dictionary] = []
+var rerolls := 0
+var grit := 0
+var fight := 0
+var enemies: Array[Dictionary] = []  # {type, name, hp, intent}
+var target := 0
+var guard_pool := 0  # Guard left to soak this turn's hits; set when you end your turn
+var turn := 0
+
+
+func _init(seed_value := -1) -> void:
+	if seed_value >= 0:
+		rng.seed = seed_value
+	for i in 3:
+		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE})
+	start_fight(0)
+
+
+func start_fight(index: int) -> void:
+	fight = index
+	enemies.clear()
+	var keys: Array = FIGHTS[index]
+	var seen := {}
+	for key in keys:
+		var t: Dictionary = TYPES[key]
+		var name: String = t.name
+		if keys.count(key) > 1:  # Bone Rat A, B, C
+			seen[key] = seen.get(key, 0) + 1
+			name += " " + "ABC"[seen[key] - 1]
+		enemies.append({"type": t, "name": name, "hp": t.hp, "intent": {}})
+	target = 0
+	turn = 0
+	grit = 0
+	for d in dice:
+		d.faces = d.base.duplicate()  # boss tampering ends with the fight
+	start_turn()
+
+
+func start_turn() -> void:
+	rerolls = REROLLS_PER_TURN + grit
+	grit = 0
+	for e in enemies:
+		e.intent = _next_intent(e) if e.hp > 0 else {}
+	_apply_rings()
+	for d in dice:
+		d.locked = false
+		d.slot = Slot.NONE
+		_roll(d)
+	if enemies[0].type.get("rig_pair_turn", -1) == turn:
+		dice[1].value = dice[0].value
+
+
+func alive(i: int) -> bool:
+	return enemies[i].hp > 0
+
+
+func fight_won() -> bool:
+	return enemies.all(func(e): return e.hp == 0)
+
+
+func is_tutorial() -> bool:
+	return enemies[0].type.has("turns")
+
+
+func tutorial_done() -> bool:
+	return is_tutorial() and turn >= enemies[0].type.turns
+
+
+func is_boss_fight() -> bool:
+	return enemies[0].type.get("boss", false)
+
+
+func is_phase2(e: Dictionary) -> bool:
+	return e.type.get("boss", false) and e.hp * 2 <= e.type.hp
+
+
+func set_target(i: int) -> void:
+	if alive(i):
+		target = i
+
+
+func reroll() -> bool:
+	if rerolls <= 0:
+		return false
+	rerolls -= 1
+	for d in dice:
+		if not d.locked:
+			_roll(d)
+	return true
+
+
+func toggle_lock(i: int) -> void:
+	dice[i].locked = not dice[i].locked
+
+
+func assign(i: int, slot: Slot) -> void:
+	dice[i].slot = slot
+
+
+func guard_total() -> int:
+	return _sum(_values_in(Slot.GUARD))
+
+
+func has_guard() -> bool:
+	return not _values_in(Slot.GUARD).is_empty()
+
+
+func cleave_ready() -> bool:
+	var v := _values_in(Slot.CLEAVE)
+	return v.size() == 2 and v[0] == v[1] and v[0] != CURSE
+
+
+func parry_window_ms() -> int:
+	return 60 + 10 * _best_guard_pip()
+
+
+## A high Guard die widens the Perfect window too, so a lone 1 in Guard can't Perfect everything.
+func perfect_window_ms() -> int:
+	return 40 + 10 * _best_guard_pip()
+
+
+## Total Cleave damage, split evenly across living enemies by cleave_share().
+func cleave_damage() -> int:
+	return ceili(_sum(_values_in(Slot.CLEAVE)) * CLEAVE_MULTIPLIER) if cleave_ready() else 0
+
+
+## Enemy i's share of the Cleave. Leftover points go one each to the target first, then down the row.
+func cleave_share(i: int) -> int:
+	var up: Array[int] = []
+	for j in enemies.size():
+		if alive(j):
+			up.append(j)
+	if not alive(i):
+		return 0
+	var total := cleave_damage()
+	var rank := (up.find(i) - up.find(target) + up.size()) % up.size()
+	return total / up.size() + (1 if rank < total % up.size() else 0)
+
+
+## The value of a pair in the current roll, or 0 if there is none.
+func rolled_pair() -> int:
+	for i in dice.size():
+		for j in range(i + 1, dice.size()):
+			if dice[i].value == dice[j].value and dice[i].value != CURSE:
+				return dice[i].value
+	return 0
+
+
+func unplaced_count() -> int:
+	return _values_in(Slot.NONE).size()
+
+
+## Damage your placed dice would deal to enemy i right now: Attack hits the target, Cleave is shared out.
+func damage_to(i: int) -> int:
+	if not alive(i):
+		return 0
+	var e := enemies[i]
+	var damage := 0
+	if i == target:
+		var attack := _values_in(Slot.ATTACK)
+		if e.type.get("bone_wall", false) and not attack.is_empty():
+			attack.erase(attack.max())  # Bone Wall: the Warden blocks your highest Attack die
+		damage = _sum(attack)
+		if e.intent.get("kind") == "guard":
+			damage = maxi(0, damage - e.intent.value)
+	return damage + cleave_share(i)  # Cleave ignores Bone Wall and enemy Guard
+
+
+func preview_damage() -> int:
+	var total := 0
+	for i in enemies.size():
+		total += damage_to(i)
+	return total
+
+
+## Resolves your placed dice. Returns total damage dealt.
+func resolve_player() -> int:
+	var hits: Array[int] = []
+	for i in enemies.size():
+		hits.append(damage_to(i))
+	var floor_hp := 1 if is_tutorial() else 0
+	for i in enemies.size():
+		if alive(i):
+			enemies[i].hp = maxi(floor_hp, enemies[i].hp - hits[i])
+	for d in dice:
+		if d.slot == Slot.GUARD and d.value == CURSE:
+			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
+		if d.slot == Slot.NONE:
+			grit += 1
+	guard_pool = guard_total()
+	if not alive(target):
+		for i in enemies.size():
+			if alive(i):
+				target = i
+				break
+	return _sum(hits)
+
+
+## Timing only happens with a die in Guard, against something you can block or parry.
+func needs_timing(i: int) -> bool:
+	return has_guard() and enemies[i].intent.get("kind") in ["attack", "unblockable", "curse"]
+
+
+func grade_for(remaining_ms: float, i: int) -> Grade:
+	if remaining_ms < 0:
+		return Grade.MISS
+	if enemies[i].intent.kind == "attack":
+		if remaining_ms <= perfect_window_ms():
+			return Grade.PERFECT
+		if remaining_ms <= GOOD_MS:
+			return Grade.GOOD
+		return Grade.MISS
+	return Grade.PERFECT if remaining_ms <= parry_window_ms() else Grade.MISS
+
+
+## Enemy i acts on its intent. Returns a line for the log. Call end_enemy_phase() after all have acted.
+func resolve_enemy(i: int, grade: Grade) -> String:
+	var e := enemies[i]
+	var text := ""
+	match e.intent.kind:
+		"attack":
+			var hit := 0
+			if grade != Grade.PERFECT:
+				var soak := ceili(guard_pool * 1.5) if grade == Grade.GOOD else guard_pool
+				var blocked := mini(e.intent.value, soak)
+				hit = e.intent.value - blocked
+				guard_pool = maxi(0, guard_pool - blocked)
+			player_hp -= hit
+			text = "%s%s hits for %d." % [["", "Good block! ", "Perfect block! "][grade], e.name, hit]
+		"unblockable":
+			if grade == Grade.PERFECT:
+				text = "Parried %s!" % e.name
+			else:
+				player_hp -= e.intent.value
+				text = "%s: unblockable hit for %d." % [e.name, e.intent.value]
+		"curse":
+			if grade == Grade.PERFECT:
+				text = "Parried the Curse sticker!"
+			else:
+				_curse(dice[e.intent.target])
+				text = "Die %d got a Curse face." % (e.intent.target + 1)
+		"guard":
+			text = "%s braced behind its guard." % e.name
+		"ring":
+			text = "%s tolls." % e.name
+	player_hp = maxi(0, player_hp)
+	return text
+
+
+func end_enemy_phase() -> void:
+	turn += 1
+
+
+func intent_text(i: int) -> String:
+	var it: Dictionary = enemies[i].intent
+	match it.get("kind"):
+		"attack":
+			return "Attack %d" % it.value
+		"guard":
+			return "Guard %d" % it.value
+		"curse":
+			return "Curse sticker on die %d" % (it.target + 1)
+		"unblockable":
+			return "UNBLOCKABLE %d" % it.value
+		"ring":
+			return "Ring"
+	return ""
+
+
+func _next_intent(e: Dictionary) -> Dictionary:
+	var pattern: Array = e.type.phase2 if is_phase2(e) else e.type.phase1
+	var next: Dictionary = pattern[turn % pattern.size()].duplicate()
+	if next.kind == "curse":
+		next.target = rng.randi_range(0, dice.size() - 1)
+	return next
+
+
+## A ringing enemy makes the first other enemy's attack this turn unblockable, shown in its intent.
+func _apply_rings() -> void:
+	for bell in enemies:
+		if bell.intent.get("kind") != "ring":
+			continue
+		for e in enemies:
+			if not is_same(e, bell) and e.intent.get("kind") == "attack":
+				e.intent.kind = "unblockable"
+				break
+
+
+func _roll(d: Dictionary) -> void:
+	d.value = d.faces[rng.randi_range(0, d.faces.size() - 1)]
+
+
+func _curse(d: Dictionary) -> void:
+	var best := -1
+	for i in d.faces.size():
+		if d.faces[i] != CURSE and (best < 0 or d.faces[i] > d.faces[best]):
+			best = i
+	if best >= 0:
+		d.faces[best] = CURSE
+
+
+func _best_guard_pip() -> int:
+	var v := _values_in(Slot.GUARD)
+	return v.max() if not v.is_empty() else 0
+
+
+func _values_in(slot: Slot) -> Array[int]:
+	var out: Array[int] = []
+	for d in dice:
+		if d.slot == slot:
+			out.append(d.value)
+	return out
+
+
+func _sum(values: Array) -> int:
+	var total := 0
+	for v in values:
+		total += v
+	return total
