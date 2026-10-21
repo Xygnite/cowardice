@@ -1,6 +1,7 @@
 class_name Combat
 extends RefCounted
-## Combat rules only, no UI: main.gd drives it, tests/test_combat.gd checks it.
+## Combat rules and per-run state (HP, dice, Shards, kills), no UI.
+## One instance lasts a whole run; combat_screen.gd and game.gd drive it, tests/test_combat.gd checks it.
 
 enum Slot { NONE, ATTACK, GUARD, CLEAVE }
 enum Grade { MISS, GOOD, PERFECT }
@@ -8,9 +9,12 @@ enum Grade { MISS, GOOD, PERFECT }
 const CURSE := 0  # a cursed face rolls as 0 and counts for nothing
 const REROLLS_PER_TURN := 2
 const PLAYER_MAX_HP := 40
-const HEAL_BETWEEN_FIGHTS := 10
 const GOOD_MS := 250
 const CLEAVE_MULTIPLIER := 1.5
+const SHARDS_PER_KILL := 2
+const FORGE_COST := 4
+const FORGE_STEP := 2  # a forged face goes up by this much
+const CAMPFIRE_HEAL := 0.3  # share of max HP
 
 ## Enemy types. Optional keys:
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
@@ -37,7 +41,12 @@ const TYPES := {
 const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "rat", "rat"], ["warden"]]
 
 var rng := RandomNumberGenerator.new()
+var perks: Array = []  # perk ids from Meta.PERKS equipped for this run
+var max_hp := PLAYER_MAX_HP
 var player_hp := PLAYER_MAX_HP
+var shards := 0
+var kills := 0
+var dungeon_turns := 0  # enemy turns in dungeon fights this run; drives the murmurs
 var dice: Array[Dictionary] = []
 var rerolls := 0
 var grit := 0
@@ -54,6 +63,46 @@ func _init(seed_value := -1) -> void:
 	for i in 3:
 		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE})
 	start_fight(0)
+
+
+func apply_perks(ids: Array) -> void:
+	perks = ids.duplicate()
+	max_hp = PLAYER_MAX_HP + (10 if "thick_skin" in perks else 0)
+	player_hp = max_hp
+
+
+func heal(amount: int) -> void:
+	player_hp = mini(max_hp, player_hp + amount)
+
+
+func campfire_heal_amount() -> int:
+	return ceili(max_hp * CAMPFIRE_HEAL)
+
+
+## Raises face f of die i by FORGE_STEP for the rest of the run. Paid in Shards unless no_cost.
+func forge(i: int, f: int, no_cost := false) -> bool:
+	if not no_cost:
+		if shards < FORGE_COST:
+			return false
+		shards -= FORGE_COST
+	dice[i].base[f] += FORGE_STEP
+	dice[i].faces = dice[i].base.duplicate()
+	return true
+
+
+## Call once when a fight ends, won or lost: counts kills and pays Shards for them.
+func claim_fight() -> void:
+	var dead := enemies.filter(func(e): return e.hp == 0).size()
+	kills += dead
+	if not is_tutorial():
+		shards += dead * SHARDS_PER_KILL
+
+
+## How much of the boss's HP you took, 0 to 100. 0 outside a boss fight.
+func boss_damage_pct() -> int:
+	if not is_boss_fight():
+		return 0
+	return 100 * (enemies[0].type.hp - enemies[0].hp) / enemies[0].type.hp
 
 
 func start_fight(index: int) -> void:
@@ -77,7 +126,7 @@ func start_fight(index: int) -> void:
 
 
 func start_turn() -> void:
-	rerolls = REROLLS_PER_TURN + grit
+	rerolls = REROLLS_PER_TURN + grit + (1 if "steady_hand" in perks else 0)
 	grit = 0
 	for e in enemies:
 		e.intent = _next_intent(e) if e.hp > 0 else {}
@@ -161,7 +210,11 @@ func perfect_window_ms() -> int:
 
 ## Total Cleave damage, split evenly across living enemies by cleave_share().
 func cleave_damage() -> int:
-	return ceili(_sum(_values_in(Slot.CLEAVE)) * CLEAVE_MULTIPLIER) if cleave_ready() else 0
+	if not cleave_ready():
+		return 0
+	var pair := _values_in(Slot.CLEAVE)
+	var total := 12 if pair[0] == 1 and "gamblers_heart" in perks else _sum(pair)  # snake eyes count as 12
+	return ceili(total * CLEAVE_MULTIPLIER)
 
 
 ## Enemy i's share of the Cleave. Leftover points go one each to the target first, then down the row.
@@ -289,6 +342,8 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 
 func end_enemy_phase() -> void:
 	turn += 1
+	if not is_tutorial() and not is_boss_fight():
+		dungeon_turns += 1
 
 
 func intent_text(i: int) -> String:
