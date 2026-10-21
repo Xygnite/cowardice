@@ -24,6 +24,10 @@ func _init() -> void:
 	_grave_bell_rings()
 	_phase2()
 	_tutorial()
+	_perks()
+	_forge_and_campfire()
+	_fight_rewards()
+	_meta()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -208,3 +212,69 @@ func _tutorial() -> void:
 	for t in 3:
 		c.end_enemy_phase()
 	check(c.tutorial_done(), "the tutorial ends after 5 enemy turns")
+	check(c.dungeon_turns == 0, "tutorial turns don't advance the murmurs")
+
+
+func _perks() -> void:
+	var c := fresh()
+	c.apply_perks(["steady_hand", "thick_skin"])
+	check(c.max_hp == 50 and c.player_hp == 50, "Thick Skin: 50 max HP")
+	c.start_turn()
+	check(c.rerolls == CombatScript.REROLLS_PER_TURN + 1, "Steady Hand: +1 reroll")
+	place(c, 0, 1, CombatScript.Slot.CLEAVE)
+	place(c, 1, 1, CombatScript.Slot.CLEAVE)
+	check(c.cleave_damage() == 3, "a pair of 1s Cleaves for 3 without Gambler's Heart")
+	c.apply_perks(["gamblers_heart"])
+	check(c.cleave_damage() == 18, "Gambler's Heart: a pair of 1s counts as 12, so 18")
+
+
+func _forge_and_campfire() -> void:
+	var c := fresh()
+	check(not c.forge(0, 0), "no Shards, no forging")
+	c.shards = 5
+	check(c.forge(0, 0) and c.shards == 1, "a forge costs 4 Shards")
+	check(c.dice[0].faces == [3, 2, 3, 4, 5, 6], "the 1 face became a 3")
+	check(c.forge(0, 5, true) and c.shards == 1, "the campfire upgrade is free")
+	c.start_fight(WARDEN)
+	check(c.dice[0].faces == [3, 2, 3, 4, 5, 8], "forged faces survive into the next fight")
+	c.player_hp = 30
+	c.heal(c.campfire_heal_amount())
+	check(c.player_hp == 40, "the campfire heals 12, capped at max HP")
+
+
+func _fight_rewards() -> void:
+	var c := fresh(RATS)
+	c.enemies[0].hp = 0
+	c.enemies[1].hp = 0
+	c.claim_fight()
+	check(c.kills == 2 and c.shards == 4, "two dead rats: 2 kills, 4 Shards")
+	c.start_fight(WARDEN)
+	c.enemies[0].hp = 30
+	check(c.boss_damage_pct() == 60, "Warden at 30/75 took 60%")
+	c.start_fight(RATS)
+	c.end_enemy_phase()
+	c.start_fight(WARDEN)
+	c.end_enemy_phase()
+	check(c.dungeon_turns == 1, "only dungeon turns advance the murmurs")
+
+
+func _meta() -> void:
+	check(Meta.embers_for(7, 3, 50, false) == 35 + 30 + 25, "Embers: 5 per kill, 10 per room, half the boss %")
+	check(Meta.embers_for(0, 0, 0, true) == 50, "a win adds 50")
+	var m := Meta.new()
+	m.embers = 120
+	check(m.unlock("thick_skin") and m.embers == 20, "unlock spends Embers")
+	check(not m.unlock("thick_skin"), "can't unlock twice")
+	check(not m.unlock("gamblers_heart"), "can't unlock what you can't afford")
+	m.owned = ["steady_hand", "thick_skin", "gamblers_heart"]
+	check(m.toggle_equip("steady_hand") and m.toggle_equip("thick_skin"), "two perks fit")
+	check(not m.toggle_equip("gamblers_heart"), "a third doesn't")
+	check(m.toggle_equip("steady_hand") and m.equipped == ["thick_skin"], "toggling again unequips")
+	var path := "user://test_meta.json"
+	m.tutorial_done = true
+	m.save_path = path
+	m.save()
+	var back := Meta.load_from(path)
+	check(back.embers == m.embers and back.owned == m.owned and back.equipped == m.equipped and back.tutorial_done, "save and load round-trip")
+	DirAccess.remove_absolute(path)
+	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")
