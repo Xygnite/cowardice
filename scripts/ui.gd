@@ -8,13 +8,14 @@ const QUIET := Color(0.6, 0.62, 0.7)
 
 ## Fills `screen` with the dark background and a padded column; returns the column.
 static func page(screen: Control) -> VBoxContainer:
-	screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Anchors AND offsets: a screen is added at size 0, so anchors alone would leave it shrunk to its content.
+	screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg := ColorRect.new()
 	bg.color = Color(0.1, 0.11, 0.14)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(bg)
 	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 24)
 	screen.add_child(margin)
