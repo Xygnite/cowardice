@@ -15,7 +15,7 @@ func _ready() -> void:
 	var top := UI.row(root)
 	UI.label(top, 22, "HP %d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards])
 	UI.spacer(top)
-	UI.label(top, 22, "The Sunken Chapel")
+	UI.heading(top, 32, "The Sunken Chapel")
 	for li in range(rooms.size() - 1, -1, -1):
 		var r := UI.row(root, 24)
 		r.alignment = BoxContainer.ALIGNMENT_CENTER

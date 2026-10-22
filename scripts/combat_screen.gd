@@ -225,7 +225,7 @@ func _build() -> void:
 	var top := UI.row(root)
 	hp_label = UI.label(top, 22)
 	UI.spacer(top)
-	fight_label = UI.label(top, 22)
+	fight_label = UI.heading(top, 32)
 
 	var field := UI.row(root)
 	field.size_flags_vertical = Control.SIZE_EXPAND_FILL

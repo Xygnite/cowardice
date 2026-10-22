@@ -12,7 +12,7 @@ var face_buttons: Array = []  # per die, its 6 face buttons
 
 func _ready() -> void:
 	var root := UI.page(self)
-	UI.label(root, 32, "Campfire: tend the dice" if no_cost else "Forge")
+	UI.heading(root, 32, "Campfire: tend the dice" if no_cost else "Forge")
 	info = UI.label(root, 20)
 	for i in combat.dice.size():
 		var r := UI.row(root, 8)

@@ -4,6 +4,8 @@ class_name UI
 const DANGER := Color(1, 0.45, 0.4)
 const GOLD := Color(1, 0.85, 0.4)
 const QUIET := Color(0.6, 0.62, 0.7)
+## Body text is m6x11, the theme default (assets/ui_theme.tres); titles use this.
+const HEADING_FONT := preload("res://assets/fonts/alagard.ttf")
 
 
 ## Fills `screen` with the dark background and a padded column; returns the column.
@@ -28,12 +30,20 @@ static func page(screen: Control) -> VBoxContainer:
 static func label(parent: Node, font_size: int, text := "") -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", font_size)
+	# Pixel fonts only stay crisp at whole multiples of their 16 px design size.
+	l.add_theme_font_size_override("font_size", maxi(1, roundi(font_size / 16.0)) * 16)
 	if parent is ColorRect:
 		l.set_anchors_preset(Control.PRESET_FULL_RECT)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	parent.add_child(l)
+	return l
+
+
+## A title in the gothic heading font.
+static func heading(parent: Node, font_size: int, text := "") -> Label:
+	var l := label(parent, font_size, text)
+	l.add_theme_font_override("font", HEADING_FONT)
 	return l
 
 

@@ -13,7 +13,7 @@ var cards := {}  # perk id -> {state: Label, button: Button}
 func _ready() -> void:
 	var root := UI.page(self)
 	var top := UI.row(root)
-	UI.label(top, 28, "Camp: perk board")
+	UI.heading(top, 32, "Camp: perk board")
 	UI.spacer(top)
 	embers_label = UI.label(top, 22)
 	var grid := UI.row(root, 24)

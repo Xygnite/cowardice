@@ -11,7 +11,7 @@ var choices: Array = []  # [button text, Callable]
 func _ready() -> void:
 	var root := UI.page(self)
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
-	_centered(UI.label(root, 40, title))
+	_centered(UI.heading(root, 48, title))
 	for i in lines.size():
 		var l := _centered(UI.label(root, 20, lines[i]))
 		if i == highlight:
