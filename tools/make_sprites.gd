@@ -12,19 +12,23 @@ const BG_TOLERANCE := 0.14  # how close to the background colour a pixel must be
 ## h: figure height in game pixels (the game runs at 320x180, scaled up).
 ## crop: part of the reference to use, as fractions [x0, y0, x1, y1].
 ## flip: mirror it, so enemies face left toward the hero.
-## cell: the reference is already pixel art, blown up by this factor; it is read back one cell per
-## pixel instead of shrunk to h, and left out of the palette fit so adding it never recolours the others.
+## cell: the reference is already pixel art, blown up by this factor (measure it with
+## .claude/skills/rigging-pixel-sprites/measure_cells.gd); it is read back one cell per pixel instead
+## of shrunk to h.
+## shrink: after cutting out at full detail, keep 1 pixel per shrink x shrink block, so references
+## drawn at finer detail match the others' pixel size. Shrinking blends the outline into the background, and the cut-out then leaks
+## through the gaps into the figure.
 ## pad: empty pixels kept around the figure, for rig parts that swing past its edge.
 const SPRITES := [
-	{"src": "deserter", "out": "deserter", "h": 48},
-	{"src": "skeleton_and_rotwood", "out": "skeleton", "h": 44, "crop": [0.0, 0.0, 0.5, 1.0], "flip": true},
-	{"src": "skeleton_and_rotwood", "out": "rotwood_treant", "h": 50, "crop": [0.5, 0.0, 1.0, 1.0]},
-	{"src": "bone_warden", "out": "bone_warden", "h": 60},
-	{"src": "mother_moss", "out": "mother_moss", "h": 60},
-	{"src": "foreman_grieve", "out": "foreman_grieve", "h": 60},
-	{"src": "archivist", "out": "archivist", "h": 60},
-	{"src": "gambler", "out": "gambler", "h": 48},
-	{"src": "monk", "out": "monk", "h": 48},
+	{"src": "deserter", "out": "deserter", "cell": 20.0, "pad": 2},
+	{"src": "skeleton_and_rotwood", "out": "skeleton", "cell": 10.0, "shrink": 2, "crop": [0.0, 0.0, 0.5, 1.0], "flip": true, "pad": 2},
+	{"src": "skeleton_and_rotwood", "out": "rotwood_treant", "cell": 10.0, "shrink": 2, "crop": [0.5, 0.0, 1.0, 1.0], "pad": 2},
+	{"src": "bone_warden", "out": "bone_warden", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2},
+	{"src": "mother_moss", "out": "mother_moss", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2},
+	{"src": "foreman_grieve", "out": "foreman_grieve", "cell": 20.83, "pad": 2},
+	{"src": "archivist", "out": "archivist", "cell": 10.0, "shrink": 2, "pad": 2},
+	{"src": "gambler", "out": "gambler", "cell": 20.0, "pad": 2},
+	{"src": "monk", "out": "monk", "cell": 20.0, "pad": 2},
 	{"src": "plague_doctor.webp", "out": "plague_doctor", "cell": 10.24, "flip": true, "pad": 2},
 ]
 
@@ -37,7 +41,7 @@ func _init() -> void:
 		var cut := _cut(s)
 		sprites[s.out] = cut[0]
 		bgs.append(cut[1])
-	var palette := _palette(SPRITES.filter(func(s): return not s.has("cell")).map(func(s): return sprites[s.out]))
+	var palette := _palette(sprites.values())
 	for name in sprites:
 		_snap(sprites[name], palette)
 		sprites[name].save_png(OUT + name + ".png")
@@ -58,16 +62,18 @@ func _cut(s: Dictionary) -> Array:
 	var src: String = s.src if "." in s.src else s.src + ".jpg"
 	var img := Image.load_from_file(ProjectSettings.globalize_path(REF + src))
 	img.convert(Image.FORMAT_RGBA8)
+	var c: Array = s.get("crop", [0.0, 0.0, 1.0, 1.0])
+	var full := img.get_size()
+	img = img.get_region(Rect2i(int(c[0] * full.x), int(c[1] * full.y), int((c[2] - c[0]) * full.x), int((c[3] - c[1]) * full.y)))
 	if s.has("cell"):
 		img = _read_cells(img, s.cell)
 		var bg_px := _corner_color(img)
 		_cut_background(img, bg_px)
+		if s.has("shrink"):
+			img = _shrink(img, s.shrink)
 		if s.get("flip", false):
 			img.flip_x()
 		return [img.get_region(img.get_used_rect().grow(s.get("pad", 0))), bg_px]
-	var c: Array = s.get("crop", [0.0, 0.0, 1.0, 1.0])
-	var full := img.get_size()
-	img = img.get_region(Rect2i(int(c[0] * full.x), int(c[1] * full.y), int((c[2] - c[0]) * full.x), int((c[3] - c[1]) * full.y)))
 	var bg := _corner_color(img)
 
 	# Find the figure on a thumbnail, then crop the full image to it plus a band of background.
@@ -105,6 +111,36 @@ func _read_cells(img: Image, cell: float) -> Image:
 				for dx in inner:
 					sum += img.get_pixelv(corner + Vector2i(dx, dy))
 			out.set_pixel(x, y, Color(sum.r / (inner * inner), sum.g / (inner * inner), sum.b / (inner * inner)))
+	return out
+
+
+## Each k x k block becomes its most common opaque colour (near-equal colours count as one, ties go
+## to the one nearest the block's average), or transparent if fewer than half of it is opaque.
+## Averaging instead would blend 1-pixel outlines into the fill.
+func _shrink(img: Image, k: int) -> Image:
+	var out := Image.create_empty(img.get_width() / k, img.get_height() / k, false, Image.FORMAT_RGBA8)
+	for y in out.get_height():
+		for x in out.get_width():
+			var groups := {}  # quantised colour -> [count, a real colour from the block]
+			var mean := Color(0, 0, 0, 0)
+			var opaque := 0
+			for dy in k:
+				for dx in k:
+					var c := img.get_pixel(x * k + dx, y * k + dy)
+					if c.a > 0.5:
+						var key := Vector3i(roundi(c.r * 12), roundi(c.g * 12), roundi(c.b * 12))
+						groups[key] = [groups.get(key, [0, c])[0] + 1, c]
+						mean += c
+						opaque += 1
+			if opaque * 2 < k * k:
+				out.set_pixel(x, y, Color(0, 0, 0, 0))
+				continue
+			mean /= opaque
+			var best: Array = []
+			for g in groups.values():
+				if best.is_empty() or g[0] > best[0] or (g[0] == best[0] and _dist(g[1], mean) < _dist(best[1], mean)):
+					best = g
+			out.set_pixel(x, y, Color(best[1], 1))
 	return out
 
 

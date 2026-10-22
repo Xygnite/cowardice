@@ -20,56 +20,65 @@ const GLOW_FLARE := Color(1.5, 1.3, 1.1)
 ## body: hip pivot. legs_top: rows from here down stay still (use the sprite height for no legs).
 ## weapon / shield / head (all optional): "outline" claims the pixels inside it, checked in that order,
 ## "pivot" is the joint it turns or moves around. weapon "swing" is [wind-up, strike] rotation in radians.
+## weapon "flourish": weapon rotations at 0.08, 0.2, 0.26, 0.34, 0.46 and 0.62 s for a livelier, longer attack
+## (anticipation, wind-up, strike, hit-stop, settle); the body crouches, lunges and holds on the hit with it.
+## weapon "patch": [colour, last row]: the hole it leaves in the body down to that row is filled with the
+## colour instead of smeared from the neighbouring pixels (use it for a big part, like a whole arm;
+## the rows below, under the blade, smear fine).
+## Hero only: enemy blows must land STRIKE_DELAY (0.2 s) into the attack, which this timing doesn't keep.
 ## chest (optional): {outline, pivot} part of the body that rises 1 px to breathe; the roles above ride on it.
 ## lantern (optional): {outline, pivot, glow} a hanging prop. It sways by swapping SWAY_STEPS frames that
 ## shear it about the pivot row (never rotated); the pixels inside "glow" flicker on their own layer.
 ## skirt (optional): outlines of cloth strips that trail every move by 1 px, one strip a frame behind the last.
 const RIGS := {
-	"deserter": {"facing": 1, "body": Vector2(19, 38), "legs_top": 38,
-		"weapon": {"pivot": Vector2(11, 29), "swing": [-1.9, 0.5],
-			"outline": [Vector2(6, 27), Vector2(11, 27), Vector2(17, 29), Vector2(29, 42), Vector2(28, 45), Vector2(25, 45), Vector2(14, 34), Vector2(6, 31)]},
-		"shield": {"pivot": Vector2(29, 25),
-			"outline": [Vector2(28, 18), Vector2(34, 18), Vector2(38, 23), Vector2(38, 36), Vector2(28, 36), Vector2(27, 27)]},
-		"head": {"pivot": Vector2(24, 12),
-			"outline": [Vector2(19, 0), Vector2(31, 0), Vector2(31, 13), Vector2(20, 13), Vector2(19, 7)]}},
-	"skeleton": {"facing": -1, "body": Vector2(18, 33), "legs_top": 33,
-		"weapon": {"pivot": Vector2(29, 27), "swing": [1.9, -0.5],
-			"outline": [Vector2(36, 23), Vector2(36, 30), Vector2(26, 34), Vector2(16, 39), Vector2(13, 37), Vector2(24, 29), Vector2(27, 23)]},
-		"shield": {"pivot": Vector2(6, 22),
-			"outline": [Vector2(0, 13), Vector2(11, 13), Vector2(12, 31), Vector2(0, 31)]},
-		"head": {"pivot": Vector2(16, 9),
-			"outline": [Vector2(9, 0), Vector2(21, 0), Vector2(21, 10), Vector2(9, 10)]}},
-	"bone_warden": {"facing": -1, "body": Vector2(31, 46), "legs_top": 46,
-		"weapon": {"pivot": Vector2(19, 33), "swing": [1.6, -0.4],
-			"outline": [Vector2(14, 28), Vector2(24, 30), Vector2(16, 44), Vector2(12, 55), Vector2(0, 55), Vector2(0, 40), Vector2(8, 38)]},
-		"shield": {"pivot": Vector2(45, 30),
-			"outline": [Vector2(37, 8), Vector2(61, 8), Vector2(61, 53), Vector2(40, 53), Vector2(37, 30)]},
-		"head": {"pivot": Vector2(31, 11),
-			"outline": [Vector2(25, 0), Vector2(37, 0), Vector2(37, 12), Vector2(25, 12)]}},
-	"rotwood_treant": {"facing": -1, "body": Vector2(23, 40), "legs_top": 40,
-		"weapon": {"pivot": Vector2(10, 16), "swing": [0.8, -0.3],
-			"outline": [Vector2(0, 14), Vector2(11, 16), Vector2(11, 40), Vector2(0, 40)]},
-		"head": {"pivot": Vector2(18, 14),
-			"outline": [Vector2(11, 0), Vector2(25, 0), Vector2(25, 14), Vector2(11, 14)]}},
-	"mother_moss": {"facing": -1, "body": Vector2(32, 50), "legs_top": 50,
-		"weapon": {"pivot": Vector2(49, 27), "swing": [-0.6, 0.3],
-			"outline": [Vector2(47, 25), Vector2(63, 25), Vector2(63, 45), Vector2(47, 45)]},
-		"head": {"pivot": Vector2(40, 27),
-			"outline": [Vector2(31, 5), Vector2(47, 5), Vector2(47, 25), Vector2(31, 25)]}},
-	"foreman_grieve": {"facing": -1, "body": Vector2(30, 50), "legs_top": 50,
-		"weapon": {"pivot": Vector2(13, 43), "swing": [-0.8, 0.4],
-			"outline": [Vector2(0, 40), Vector2(23, 40), Vector2(25, 32), Vector2(33, 32), Vector2(33, 60), Vector2(25, 60), Vector2(23, 47), Vector2(0, 47)]},
-		"shield": {"pivot": Vector2(55, 29),
-			"outline": [Vector2(49, 28), Vector2(60, 28), Vector2(60, 51), Vector2(49, 51)]},
-		"head": {"pivot": Vector2(30, 19),
-			"outline": [Vector2(24, 4), Vector2(37, 4), Vector2(37, 19), Vector2(24, 19)]}},
-	"archivist": {"facing": -1, "body": Vector2(25, 59), "legs_top": 60,
-		"weapon": {"pivot": Vector2(38, 22), "swing": [-0.4, 0.2],
-			"outline": [Vector2(35, 11), Vector2(48, 11), Vector2(48, 24), Vector2(35, 24)]},
-		"shield": {"pivot": Vector2(7, 20),
-			"outline": [Vector2(0, 4), Vector2(14, 4), Vector2(14, 38), Vector2(0, 38)]},
-		"head": {"pivot": Vector2(25, 11),
-			"outline": [Vector2(19, 0), Vector2(31, 0), Vector2(31, 12), Vector2(19, 12)]}},
+	"deserter": {"facing": 1, "body": Vector2(32, 64), "legs_top": 64,
+		# The whole sword arm, shoulder to blade, swings from the shoulder.
+		"weapon": {"pivot": Vector2(21, 22), "swing": [-2.2, 0.5], "patch": [Color("1c202c"), 46],
+			# Pull back, raise it behind him, chop over the top to forward-down, then fall back to rest (TAU = 0).
+			"flourish": [0.4, 2.4, 5.5, 5.6, 6.0, TAU],
+			"outline": [Vector2(16, 19), Vector2(26, 19), Vector2(27, 30), Vector2(26, 43), Vector2(30, 49), Vector2(43, 63), Vector2(42, 67), Vector2(38, 67), Vector2(26, 56), Vector2(19, 52), Vector2(13, 46), Vector2(13, 42), Vector2(16, 38), Vector2(15, 26)]},
+		"shield": {"pivot": Vector2(48, 42),
+			"outline": [Vector2(46, 30), Vector2(52, 30), Vector2(57, 38), Vector2(57, 50), Vector2(53, 56), Vector2(46, 56)]},
+		"head": {"pivot": Vector2(37, 15),
+			"outline": [Vector2(29, 1), Vector2(46, 1), Vector2(46, 15), Vector2(30, 15), Vector2(29, 8)]}},
+	"skeleton": {"facing": -1, "body": Vector2(22, 34), "legs_top": 34,
+		"weapon": {"pivot": Vector2(31, 32), "swing": [1.9, -0.5],
+			"outline": [Vector2(36, 26), Vector2(42, 26), Vector2(42, 31), Vector2(33, 36), Vector2(27, 42), Vector2(18, 44), Vector2(17, 40), Vector2(26, 34), Vector2(30, 30)]},
+		"shield": {"pivot": Vector2(8, 25),
+			"outline": [Vector2(1, 16), Vector2(15, 16), Vector2(15, 34), Vector2(1, 34)]},
+		"head": {"pivot": Vector2(19, 10),
+			"outline": [Vector2(13, 1), Vector2(25, 1), Vector2(25, 10), Vector2(14, 10)]}},
+	"bone_warden": {"facing": -1, "body": Vector2(47, 76), "legs_top": 76,
+		"weapon": {"pivot": Vector2(66, 53), "swing": [-1.6, 0.4],
+			"outline": [Vector2(94, 60), Vector2(80, 60), Vector2(70, 50), Vector2(63, 48), Vector2(63, 57), Vector2(74, 66), Vector2(74, 85), Vector2(94, 85)]},
+		"shield": {"pivot": Vector2(26, 45),
+			"outline": [Vector2(36, 14), Vector2(15, 13), Vector2(2, 28), Vector2(2, 78), Vector2(14, 82), Vector2(34, 80), Vector2(36, 40)]},
+		"head": {"pivot": Vector2(47, 19),
+			"outline": [Vector2(54, 2), Vector2(40, 2), Vector2(40, 19), Vector2(54, 19)]}},
+	"rotwood_treant": {"facing": -1, "body": Vector2(25, 45), "legs_top": 45,
+		"weapon": {"pivot": Vector2(9, 30), "swing": [0.8, -0.3],
+			"outline": [Vector2(0, 28), Vector2(11, 28), Vector2(11, 48), Vector2(0, 48)]},
+		"head": {"pivot": Vector2(19, 17),
+			"outline": [Vector2(11, 2), Vector2(27, 2), Vector2(27, 17), Vector2(11, 17)]}},
+	"mother_moss": {"facing": -1, "body": Vector2(42, 70), "legs_top": 70,
+		"weapon": {"pivot": Vector2(21, 36), "swing": [0.6, -0.3],
+			"outline": [Vector2(23, 34), Vector2(2, 34), Vector2(2, 58), Vector2(23, 58)]},
+		"head": {"pivot": Vector2(30, 28),
+			"outline": [Vector2(39, 8), Vector2(21, 8), Vector2(21, 28), Vector2(39, 28)]}},
+	"foreman_grieve": {"facing": -1, "body": Vector2(38, 64), "legs_top": 64,
+		"weapon": {"pivot": Vector2(17, 56), "swing": [-0.8, 0.4],
+			"outline": [Vector2(2, 52), Vector2(33, 52), Vector2(33, 42), Vector2(41, 42), Vector2(41, 71), Vector2(33, 71), Vector2(33, 59), Vector2(2, 59)]},
+		"shield": {"pivot": Vector2(68, 30),
+			"outline": [Vector2(61, 26), Vector2(75, 26), Vector2(75, 62), Vector2(61, 62)]},
+		"head": {"pivot": Vector2(38, 31),
+			"outline": [Vector2(29, 7), Vector2(48, 7), Vector2(48, 30), Vector2(29, 30)]}},
+	"archivist": {"facing": -1, "body": Vector2(37, 88), "legs_top": 89,
+		"weapon": {"pivot": Vector2(53, 31), "swing": [-0.4, 0.2],
+			"outline": [Vector2(51, 18), Vector2(67, 18), Vector2(67, 33), Vector2(51, 33)]},
+		"shield": {"pivot": Vector2(10, 30),
+			"outline": [Vector2(1, 5), Vector2(18, 5), Vector2(18, 54), Vector2(1, 54)]},
+		"head": {"pivot": Vector2(37, 16),
+			"outline": [Vector2(32, 1), Vector2(43, 1), Vector2(43, 16), Vector2(32, 16)]}},
 	"plague_doctor": {"facing": -1, "body": Vector2(30, 60), "legs_top": 60,
 		"weapon": {"pivot": Vector2(46, 38), "swing": [1.6, -0.4],
 			"outline": [Vector2(40, 33), Vector2(53, 33), Vector2(53, 48), Vector2(42, 49), Vector2(32, 57), Vector2(22, 57), Vector2(22, 50), Vector2(32, 47), Vector2(40, 46)]},
@@ -137,6 +146,11 @@ func _cut(name: String, rig: Dictionary) -> Dictionary:
 			if part == "chest" or (part == "legs" and y < rig.legs_top + BODY_OVERLAP):
 				parts.body.set_pixel(x, y, c)
 	_fill_holes(parts.body, [parts.get("weapon"), parts.get("shield")], rig.legs_top)
+	if rig.has("weapon") and rig.weapon.has("patch"):  # a flat shade reads as the far side of the body
+		for y in rig.weapon.patch[1] + 1:
+			for x in src.get_width():
+				if parts.weapon.get_pixel(x, y).a > 0.0 and parts.body.get_pixel(x, y).a > 0.0:
+					parts.body.set_pixel(x, y, rig.weapon.patch[0])
 	var dir := SPRITES + name + "/"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
 	for part in parts:
@@ -289,6 +303,8 @@ func _write_scene(name: String, rig: Dictionary, part_names: Array) -> void:
 	attack += flicker.call([0, 0.15, 0.35], [Color.WHITE, GLOW_FLARE, Color.WHITE])
 	attack += trail.call(0.2, 0.32, -f)
 	anims["attack"] = {"length": 0.5, "tracks": attack}
+	if has.call("weapon") and rig.weapon.has("flourish"):
+		anims["attack"] = {"length": 0.62, "tracks": _flourish(rig, node, rest, body, f)}
 
 	if has.call("shield"):
 		var s: Vector2 = rest.call("shield")
@@ -350,6 +366,26 @@ func _write_scene(name: String, rig: Dictionary, part_names: Array) -> void:
 
 
 ## A part sprite placed at its pivot; the offset puts its full-canvas texture back where it was cut from.
+## Crouch and draw back, lunge into the hit, hold on it, then settle.
+func _flourish(rig: Dictionary, node: Callable, rest: Callable, body: Vector2, f: int) -> Array:
+	var t := [0, 0.08, 0.2, 0.26, 0.34, 0.46, 0.62]
+	var tracks: Array = [
+		_track("Rig:position", t, [Vector2.ZERO, Vector2(-f, 0), Vector2(-2 * f, 0), Vector2(5 * f, 0),
+			Vector2(7 * f, 0), Vector2(4 * f, 0), Vector2.ZERO], true),
+		_track("Rig/Body:position", t, [body, body + Vector2(0, 1), body + Vector2(-f, 0), body + Vector2(f, 1),
+			body + Vector2(f, 1), body, body], true),
+		# Eased out into the wind-up, eased in (accelerating) into the strike.
+		_track(node.call("weapon") + ":rotation", t, [0.0] + rig.weapon.flourish, false, [0.5, 0.5, 2.5, 1, 0.6, 0.6, 1]),
+	]
+	if rig.has("head"):  # small tilts only: head holes aren't patched
+		tracks.append(_track(node.call("head") + ":rotation", t, [0.0, 0.0, -0.06 * f, 0.08 * f, 0.08 * f, 0.03 * f, 0.0], false))
+	if rig.has("shield"):
+		var s: Vector2 = rest.call("shield")
+		tracks.append(_track(node.call("shield") + ":position", t, [s, s, s + Vector2(-f, 1), s + Vector2(f, -1),
+			s + Vector2(f, -1), s, s], true))
+	return tracks
+
+
 func _sprite(node_name: String, parent: String, texture_id: String, position: Vector2, pivot: Vector2, frames := 1) -> String:
 	var lines: PackedStringArray = ['[node name="%s" type="Sprite2D" parent="%s"]' % [node_name, parent]]
 	if position != Vector2.ZERO:
