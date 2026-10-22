@@ -5,9 +5,11 @@ extends Control
 ## One floor of the Sunken Chapel, entrance first. You pick one room per layer.
 const MAP := [
 	[{"kind": "fight", "fight": 1, "label": "Fight: Bone Rats"}],
-	[{"kind": "fight", "fight": 2, "label": "Fight: Skeleton, Grave Bell"}, {"kind": "forge", "label": "Forge"}],
-	[{"kind": "campfire", "label": "Campfire"}, {"kind": "fight", "fight": 3, "label": "Fight: Shield Acolyte, Bone Rats"}],
-	[{"kind": "fight", "fight": 4, "label": "Boss: Bone Warden"}],
+	[{"kind": "fight", "fight": 2, "label": "Fight: Skeleton, Grave Bell"}, {"kind": "forge", "label": "Forge"},
+		{"kind": "fight", "fight": 4, "label": "Fight: Rotwood Treant, Mother Moss"}],
+	[{"kind": "campfire", "label": "Campfire"}, {"kind": "fight", "fight": 3, "label": "Fight: Shield Acolyte, Plague Doctor, Bone Rat"},
+		{"kind": "fight", "fight": 5, "label": "Fight: Foreman Grieve, Archivist"}],
+	[{"kind": "fight", "fight": 6, "label": "Boss: Bone Warden"}],
 ]
 
 var meta := Meta.load_from()
@@ -18,7 +20,7 @@ var screen: Control
 
 
 func _ready() -> void:
-	for arg in OS.get_cmdline_user_args():  # dev shortcut: `-- --fight=4` jumps straight into that fight
+	for arg in OS.get_cmdline_user_args():  # dev shortcut: `-- --fight=6` jumps straight into that fight
 		if arg.begins_with("--fight="):
 			_start_run()
 			combat.start_fight(int(arg.trim_prefix("--fight=")))

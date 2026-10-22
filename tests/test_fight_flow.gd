@@ -4,7 +4,7 @@ extends SceneTree
 ## test can't see: rig animations, the combat screen, and the screen shown after the fight.
 ## Headless: godot --headless --path . -s tests/test_fight_flow.gd
 
-const FIGHTS := [2, 3, 4]  # the fights with rigged enemies: Skeleton and Grave Bell, Plague Doctor, Bone Warden
+const FIGHTS := [2, 3, 4, 5, 6]  # the fights with rigged enemies
 const SPEED := 10.0  # runs animations, waits and the timing bar this many times faster
 const TURN_LIMIT := 40
 const SAVE := "user://test_fight_flow.json"  # never the player's real save

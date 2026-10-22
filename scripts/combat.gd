@@ -35,13 +35,22 @@ const TYPES := {
 		"phase1": [{"kind": "attack", "value": 6}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 5}]},
 	"bell": {"name": "Grave Bell", "hp": 14,
 		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
+	"treant": {"name": "Rotwood Treant", "hp": 26, "sprite": "rotwood_treant",
+		"phase1": [{"kind": "guard", "value": 6}, {"kind": "attack", "value": 9}]},
+	"moss": {"name": "Mother Moss", "hp": 22, "sprite": "mother_moss",
+		"phase1": [{"kind": "attack", "value": 4}, {"kind": "curse"}, {"kind": "attack", "value": 6}]},
+	"grieve": {"name": "Foreman Grieve", "hp": 28, "sprite": "foreman_grieve",
+		"phase1": [{"kind": "attack", "value": 7}, {"kind": "guard", "value": 5}, {"kind": "unblockable", "value": 8}]},
+	"archivist": {"name": "Archivist", "hp": 18, "sprite": "archivist",
+		"phase1": [{"kind": "guard", "value": 6}, {"kind": "ring"}, {"kind": "attack", "value": 5}]},
 	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
 }
 
 ## Fight 0 is the tutorial; the last is the boss.
-const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "doctor", "rat"], ["warden"]]
+const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "doctor", "rat"],
+	["treant", "moss"], ["grieve", "archivist"], ["warden"]]
 
 var rng := RandomNumberGenerator.new()
 var perks: Array = []  # perk ids from Meta.PERKS equipped for this run

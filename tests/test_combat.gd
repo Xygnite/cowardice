@@ -5,7 +5,7 @@ const CombatScript := preload("res://scripts/combat.gd")
 const RATS := 1
 const SKELETON_BELL := 2
 const ACOLYTE_RATS := 3
-const WARDEN := 4
+const WARDEN := 6
 
 var failures := 0
 
