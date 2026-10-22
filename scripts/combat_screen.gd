@@ -1,12 +1,16 @@
 class_name CombatScreen
 extends Control
-## One fight on screen. Placeholder art: coloured boxes and labels, built in code.
+## One fight on screen, built in code. The hero and enemies with a sprite are rigs from scenes/
+## (made by tools/rig_sprites.gd); enemies without one are placeholder boxes.
 ## Rules are taught only in the tutorial fight; the boss is hinted at only by murmurs in the dungeon fights.
 ## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up. Click an enemy to target it.
 
 signal finished(won: bool)
 
 const SLOT_NAMES := ["-", "Attack", "Guard", "Cleave"]
+const SPRITE_SCALE := 3  # whole-number scaling keeps every game pixel square
+const LOG_LINES := 4
+const STRIKE_DELAY := 0.2  # seconds into an enemy's attack animation when the blow lands
 
 ## One lesson per tutorial turn, indexed by Combat.turn.
 const LESSONS := [
@@ -43,6 +47,7 @@ var timing_hint: Label
 var timing: TimingBar
 var log_label: Label
 var log_lines: Array[String] = []
+var hero: Node2D
 
 
 func _ready() -> void:
@@ -95,7 +100,14 @@ func _on_end_turn() -> void:
 		return
 	busy = true
 	var unplaced := combat.unplaced_count()
-	_log("You deal %d." % combat.resolve_player())
+	var enemy_hp_before: Array = combat.enemies.map(func(e): return e.hp)
+	var dealt := combat.resolve_player()
+	_log("You deal %d." % dealt)
+	if dealt > 0:
+		await _play(hero, "attack")
+	for i in combat.enemies.size():
+		if combat.enemies[i].hp < enemy_hp_before[i]:
+			_play(enemy_ui[i].rig, "hurt")
 	if unplaced > 0:
 		_log("+%d Grit." % unplaced)
 	_refresh()
@@ -114,7 +126,18 @@ func _on_end_turn() -> void:
 			timing.start(combat, i)
 			grade = await timing.finished
 			timing_hint.hide()
+		var kind: String = combat.enemies[i].intent.get("kind", "")
+		if kind in ["attack", "unblockable"]:
+			_play(enemy_ui[i].rig, "attack")
+			await get_tree().create_timer(STRIKE_DELAY).timeout
+		elif kind == "guard":
+			_play(enemy_ui[i].rig, "block")
+		var hp_before := combat.player_hp
 		_log(combat.resolve_enemy(i, grade))
+		if combat.player_hp < hp_before:
+			_play(hero, "hurt")
+		elif grade != Combat.Grade.MISS:
+			_play(hero, "block")
 		if combat.player_hp == 0:
 			break
 	acting = -1
@@ -127,6 +150,18 @@ func _on_end_turn() -> void:
 		combat.start_turn()
 		busy = false
 		_refresh()
+
+
+## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
+## Does nothing for an enemy without a rig, or a rig without that move.
+func _play(rig: Node2D, anim: StringName) -> void:
+	if rig == null or not rig.get_node("AnimationPlayer").has_animation(anim):
+		return
+	var player: AnimationPlayer = rig.get_node("AnimationPlayer")
+	player.play(anim)
+	await player.animation_finished
+	if not player.is_playing():  # a newer move may have taken over meanwhile
+		player.play("idle")
 
 
 ## Shows the last state for a moment so the final blow registers, then hands back to game.gd.
@@ -146,10 +181,11 @@ func _refresh() -> void:
 		var up := combat.alive(i)
 		ui.intent.text = combat.intent_text(i) if up else ""
 		ui.intent.add_theme_color_override("font_color", UI.DANGER if e.intent.get("kind") in ["unblockable", "curse"] else Color.WHITE)
-		ui.body.text = e.name
+		if ui.rig == null:
+			ui.body.text = e.name
 		ui.body.disabled = not up
 		ui.body.modulate = Color(1, 1, 1, 1 if up else 0.3)
-		ui.hp.text = "HP %d/%d" % [e.hp, e.type.hp] if up else "down"
+		ui.hp.text = "%s   HP %d/%d" % [e.name, e.hp, e.type.hp] if up else e.name + "   down"
 		ui.mark.text = "ACTING" if i == acting else ("TARGET" if i == combat.target and up else "")
 		ui.mark.add_theme_color_override("font_color", UI.DANGER if i == acting else UI.GOLD)
 	lesson_label.visible = combat.is_tutorial() and combat.turn < LESSONS.size()
@@ -177,7 +213,7 @@ func _refresh() -> void:
 
 func _log(line: String) -> void:
 	log_lines.append(line)
-	if log_lines.size() > 6:
+	if log_lines.size() > LOG_LINES:
 		log_lines.pop_front()
 
 
@@ -193,9 +229,10 @@ func _build() -> void:
 
 	var field := UI.row(root)
 	field.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var player := UI.box(field, Color(0.3, 0.4, 0.35), Vector2(120, 160))
-	player.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	UI.label(player, 18, "YOU")
+	var player := Control.new()  # holds the hero's space in the row; the rig itself is a Node2D
+	player.size_flags_vertical = Control.SIZE_SHRINK_END
+	field.add_child(player)
+	hero = _add_rig(player, "deserter")
 	murmur_label = UI.label(field, 18)
 	murmur_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	murmur_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -229,21 +266,36 @@ func _build() -> void:
 	end_button = UI.button(actions, "End turn  [Enter]", _on_end_turn)
 
 	log_label = UI.label(root, 16)
-	log_label.custom_minimum_size = Vector2(0, 110)
+	log_label.custom_minimum_size = Vector2(0, 22 * LOG_LINES)
 
 
-## One column per enemy: intent, clickable body (sets the target), HP, and a TARGET/ACTING mark.
+## One column per enemy: intent, clickable body (sets the target), name and HP, and a TARGET/ACTING mark.
+## The body is the enemy's sprite when it has one, else a placeholder box.
 func _build_enemy(parent: Node, i: int) -> Dictionary:
 	var col := VBoxContainer.new()
-	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	col.size_flags_vertical = Control.SIZE_SHRINK_END
 	parent.add_child(col)
 	var intent := UI.label(col, 20)
+	var sprite: String = combat.enemies[i].type.get("sprite", "")
 	var body := UI.button(col, "", _on_target.bind(i))
-	var big: bool = combat.enemies[i].type.get("boss", false)
-	body.custom_minimum_size = Vector2(200, 160) if big else Vector2(150, 120)
+	var rig: Node2D = null
+	if sprite:
+		body.flat = true
+		rig = _add_rig(body, sprite)
+	else:
+		body.custom_minimum_size = Vector2(120, 96)
 	var hp := UI.label(col, 16)
 	var mark := UI.label(col, 16)
-	return {"intent": intent, "body": body, "hp": hp, "mark": mark}
+	return {"intent": intent, "body": body, "rig": rig, "hp": hp, "mark": mark}
+
+
+## Puts the rigged scene scenes/<sprite>.tscn inside `holder`, sized to the sprite at game scale.
+func _add_rig(holder: Control, sprite: String) -> Node2D:
+	holder.custom_minimum_size = load("res://assets/sprites/%s.png" % sprite).get_size() * SPRITE_SCALE
+	var rig: Node2D = load("res://scenes/%s.tscn" % sprite).instantiate()
+	rig.scale = Vector2.ONE * SPRITE_SCALE
+	holder.add_child(rig)
+	return rig
 
 
 func _build_die(parent: Node, i: int) -> Dictionary:

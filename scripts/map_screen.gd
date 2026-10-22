@@ -26,6 +26,7 @@ func _ready() -> void:
 			b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			b.disabled = li != layer
 			if li < layer:
-				b.modulate.a = 1.0 if path[li] == ri else 0.25  # the room you took stays lit
+				# The room you took stays lit; the --fight dev shortcut skips layers, leaving no room to light.
+				b.modulate.a = 1.0 if li < path.size() and path[li] == ri else 0.25
 			elif li > layer:
 				b.modulate.a = 0.6

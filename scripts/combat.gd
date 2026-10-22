@@ -20,25 +20,28 @@ const CAMPFIRE_HEAL := 0.3  # share of max HP
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
 ## "rig_pair_turn": that turn's roll always contains a pair, so the Cleave lesson can happen.
 ## "bone_wall": blocks your highest Attack die aimed at it.
+## "sprite": file name in assets/sprites/; enemies without one show a placeholder box.
 ## A "ring" intent turns another enemy's attack this turn unblockable.
 const TYPES := {
 	"dummy": {"name": "Training Dummy", "hp": 30, "turns": 5, "rig_pair_turn": 2,
 		"phase1": [{"kind": "attack", "value": 3}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 2}, {"kind": "attack", "value": 3}, {"kind": "unblockable", "value": 5}]},
 	"rat": {"name": "Bone Rat", "hp": 6,
 		"phase1": [{"kind": "attack", "value": 2}]},
-	"skeleton": {"name": "Skeleton", "hp": 20,
+	"skeleton": {"name": "Skeleton", "hp": 20, "sprite": "skeleton",
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
 	"acolyte": {"name": "Shield Acolyte", "hp": 18,
 		"phase1": [{"kind": "guard", "value": 8}, {"kind": "guard", "value": 8}, {"kind": "attack", "value": 10}]},
+	"doctor": {"name": "Plague Doctor", "hp": 22, "sprite": "plague_doctor",
+		"phase1": [{"kind": "attack", "value": 6}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 5}]},
 	"bell": {"name": "Grave Bell", "hp": 14,
 		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
-	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true,
+	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
 }
 
 ## Fight 0 is the tutorial; the last is the boss.
-const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "rat", "rat"], ["warden"]]
+const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "doctor", "rat"], ["warden"]]
 
 var rng := RandomNumberGenerator.new()
 var perks: Array = []  # perk ids from Meta.PERKS equipped for this run

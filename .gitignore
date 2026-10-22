@@ -1,2 +1,5 @@
 # Godot cache and editor state
 .godot/
+
+# Local Godot editor binaries
+Godot_*.exe

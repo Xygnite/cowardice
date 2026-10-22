@@ -18,6 +18,12 @@ var screen: Control
 
 
 func _ready() -> void:
+	for arg in OS.get_cmdline_user_args():  # dev shortcut: `-- --fight=4` jumps straight into that fight
+		if arg.begins_with("--fight="):
+			_start_run()
+			combat.start_fight(int(arg.trim_prefix("--fight=")))
+			_show_fight(_on_fight_finished)
+			return
 	if meta.tutorial_done:
 		_show_camp()
 	else:
