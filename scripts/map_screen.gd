@@ -12,6 +12,7 @@ var combat: Combat
 
 func _ready() -> void:
 	var root := UI.page(self)
+	root.add_theme_constant_override("separation", 4)  # ten layers have to fit on one screen
 	var parchment := UI.image(self, "map", Vector2.ONE)
 	parchment.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_KEEP_SIZE, 8)
 	parchment.offset_top = 72  # below the HP and title row
@@ -26,7 +27,8 @@ func _ready() -> void:
 		r.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		for ri in rooms[li].size():
 			var b := UI.button(r, rooms[li][ri].label, picked.emit.bind(ri))
-			b.custom_minimum_size = Vector2(320, 64)
+			b.custom_minimum_size.x = 360
+			b.add_theme_constant_override("icon_max_width", 32)
 			var taken: bool = li < layer and li < path.size() and path[li] == ri
 			b.icon = load(UI.ART % ("room_" + ("cleared" if taken else _icon(rooms[li][ri]))))
 			b.size_flags_vertical = Control.SIZE_SHRINK_CENTER

@@ -48,7 +48,7 @@ const TYPES := {
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
 }
 
-## Fight 0 is the tutorial; the last is the boss.
+## Set fights for the tutorial (0), the boss (6), tests and the --fight shortcut. A run deals its own groups in game.gd.
 const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "doctor", "rat"],
 	["treant", "moss"], ["grieve", "archivist"], ["warden"]]
 
@@ -119,8 +119,12 @@ func boss_damage_pct() -> int:
 
 func start_fight(index: int) -> void:
 	fight = index
+	start_group(FIGHTS[index])
+
+
+## Starts a fight against `keys` (TYPES keys, at most three of one type).
+func start_group(keys: Array) -> void:
 	enemies.clear()
-	var keys: Array = FIGHTS[index]
 	var seen := {}
 	for key in keys:
 		var t: Dictionary = TYPES[key]

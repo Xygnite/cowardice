@@ -28,6 +28,7 @@ func _init() -> void:
 	_forge_and_campfire()
 	_fight_rewards()
 	_meta()
+	_maps()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -256,6 +257,37 @@ func _fight_rewards() -> void:
 	c.start_fight(WARDEN)
 	c.end_enemy_phase()
 	check(c.dungeon_turns == 1, "only dungeon turns advance the murmurs")
+
+
+## Many dealt floors, each checked against the run's shape in game.gd's make_map().
+func _maps() -> void:
+	var game := preload("res://scripts/game.gd")
+	var firsts := {}
+	for n in 200:
+		var m: Array = game.make_map()
+		var groups := []
+		var kinds := []
+		for li in m.size():
+			check(m[li].size() == (1 if li in [0, m.size() - 1] else 2), "layer %d has the right number of rooms" % li)
+			check(m[li].any(func(r): return r.kind == "fight"), "layer %d has a fight" % li)
+			var hp: Array = game.ENTRANCE_HP if li == 0 else (game.EARLY_HP if li <= game.EARLY_LAYERS else game.LATE_HP)
+			for r in m[li]:
+				kinds.append(r.kind)
+				if r.kind == "fight" and li < m.size() - 1:
+					var total: int = r.enemies.reduce(func(t, k): return t + CombatScript.TYPES[k].hp, 0)
+					check(total >= hp[0] and total <= hp[1], "layer %d fight has %d HP, wants %s" % [li, total, hp])
+					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in game.ENEMIES), "a fight is 1-3 dungeon enemies")
+					groups.append(r.enemies)
+		check(m.size() == 10, "a floor is ten layers")
+		check(m[-1][0].enemies == ["warden"] and m[-1][0].label == "Boss: Bone Warden", "the boss is last")
+		check(m[-2].any(func(r): return r.kind == "campfire"), "a campfire right before the boss")
+		check(kinds.count("forge") == 2 and kinds.count("campfire") == 2, "two forges and two campfires")
+		check(groups.size() == groups.reduce(func(u, g): return u if g in u else u + [g], []).size(), "no group twice")
+		firsts[m[0][0].label] = true
+	check(firsts.size() > 5, "floors differ from run to run")
+	var c := CombatScript.new(7)
+	c.start_group(["rat", "rat", "rat"])
+	check(c.enemies.map(func(e): return e.name) == ["Bone Rat A", "Bone Rat B", "Bone Rat C"], "a dealt group starts like a set fight")
 
 
 func _meta() -> void:

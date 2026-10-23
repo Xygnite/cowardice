@@ -2,18 +2,20 @@ extends Control
 ## Runs the game: a title menu, the tutorial on first play, then runs of map -> rooms -> boss,
 ## with Embers and perks carried between runs by Meta.
 
-## One floor of the Sunken Chapel, entrance first. You pick one room per layer.
-const MAP := [
-	[{"kind": "fight", "fight": 1, "label": "Fight: Bone Rats"}],
-	[{"kind": "fight", "fight": 2, "label": "Fight: Skeleton, Grave Bell"}, {"kind": "forge", "label": "Forge"},
-		{"kind": "fight", "fight": 4, "label": "Fight: Rotwood Treant, Mother Moss"}],
-	[{"kind": "campfire", "label": "Campfire"}, {"kind": "fight", "fight": 3, "label": "Fight: Shield Acolyte, Plague Doctor, Bone Rat"},
-		{"kind": "fight", "fight": 5, "label": "Fight: Foreman Grieve, Archivist"}],
-	[{"kind": "fight", "fight": 6, "label": "Boss: Bone Warden"}],
-]
+## Enemies a run can deal into its fights, and how much total enemy HP a fight gets by depth.
+const ENEMIES := ["rat", "skeleton", "acolyte", "doctor", "bell", "treant", "moss", "grieve", "archivist"]
+const ENTRANCE_HP := [18, 26]
+const EARLY_HP := [18, 38]
+const LATE_HP := [42, 56]
+const BOSS := 6  # Combat.FIGHTS index
+const LAYERS := 10
+const EARLY_LAYERS := 4  # layers 1-4 get EARLY_HP fights, the rest LATE_HP
+## Forges and campfires: each lands on one layer of its band, so they spread out. The last sits right before the boss.
+const SPECIALS := [["forge", [1, 2]], ["campfire", [3, 4]], ["forge", [5, 6]], ["campfire", [8]]]
 
 var meta := Meta.load_from()
 var combat: Combat
+var map: Array = []  # this run's floor, from make_map()
 var layer := 0
 var path: Array = []  # room picked on each layer so far
 var screen: Control
@@ -99,14 +101,62 @@ func _on_tutorial_finished(_won: bool) -> void:
 func _start_run() -> void:
 	combat = Combat.new()
 	combat.apply_perks(meta.equipped)
+	map = make_map()
 	layer = 0
 	path.clear()
 	_show_map()
 
 
+## One floor of the Sunken Chapel, dealt fresh each run, entrance first: an easy fight, eight layers of
+## two rooms (two fights, or a fight and a forge or campfire), then the boss. Every fight is a fresh
+## random group, and no group appears twice.
+static func make_map() -> Array:
+	var used := {}
+	var result := [[_fight_room(_group(ENTRANCE_HP, used))]]
+	var specials := {}
+	for s in SPECIALS:
+		specials[s[1].pick_random()] = s[0]
+	for li in range(1, LAYERS - 1):
+		var row := []
+		if specials.has(li):
+			row.append({"kind": specials[li], "label": specials[li].capitalize()})
+		while row.size() < 2:
+			row.append(_fight_room(_group(EARLY_HP if li <= EARLY_LAYERS else LATE_HP, used)))
+		row.shuffle()
+		result.append(row)
+	result.append([_fight_room(Combat.FIGHTS[BOSS])])
+	return result
+
+
+## One to three random ENEMIES whose total HP is within `hp`, a group not yet in `used`.
+static func _group(hp: Array, used: Dictionary) -> Array:
+	while true:
+		var keys := []
+		for i in randi_range(1, 3):
+			keys.append(ENEMIES.pick_random())
+		keys.sort()
+		var total: int = keys.reduce(func(t, k): return t + Combat.TYPES[k].hp, 0)
+		var id := ",".join(keys)
+		if total >= hp[0] and total <= hp[1] and not used.has(id):
+			used[id] = true
+			return keys
+	return []
+
+
+## "Fight: Archivist, Bone Rats" from the fight's enemies.
+static func _fight_room(keys: Array) -> Dictionary:
+	var names := []
+	for key in keys:
+		var name: String = Combat.TYPES[key].name + ("s" if keys.count(key) > 1 else "")
+		if name not in names:
+			names.append(name)
+	var boss: bool = Combat.TYPES[keys[0]].get("boss", false)
+	return {"kind": "fight", "enemies": keys, "label": ("Boss: " if boss else "Fight: ") + ", ".join(names)}
+
+
 func _show_map() -> void:
 	var s := MapScreen.new()
-	s.rooms = MAP
+	s.rooms = map
 	s.layer = layer
 	s.path = path
 	s.combat = combat
@@ -116,10 +166,10 @@ func _show_map() -> void:
 
 func _on_room_picked(i: int) -> void:
 	path.append(i)
-	var room: Dictionary = MAP[layer][i]
+	var room: Dictionary = map[layer][i]
 	match room.kind:
 		"fight":
-			combat.start_fight(room.fight)
+			combat.start_group(room.enemies)
 			_show_fight(_on_fight_finished)
 		"forge":
 			_show_forge(false)
@@ -142,7 +192,7 @@ func _on_fight_finished(won: bool) -> void:
 	combat.claim_fight()
 	if not won:
 		_end_run(false)
-	elif layer == MAP.size() - 1:
+	elif layer == map.size() - 1:
 		_end_run(true)
 	else:
 		_next_room()
@@ -176,7 +226,7 @@ func _end_run(won: bool) -> void:
 	var narrator := "The chapel goes quiet." if won else ("The Warden will remember your back." if combat.is_boss_fight() else "The dungeon keeps what you dropped.")
 	_show_notice(title, [
 		narrator,
-		"Depth reached: room %d of %d" % [mini(layer + 1, MAP.size()), MAP.size()],
+		"Depth reached: room %d of %d" % [mini(layer + 1, map.size()), map.size()],
 		"Enemies slain: %d" % combat.kills,
 		"Boss damage dealt: %d%%" % boss_pct,
 		"Embers earned: +%d" % earned,
