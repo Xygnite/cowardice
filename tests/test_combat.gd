@@ -32,6 +32,7 @@ func _init() -> void:
 	_lasting_curse()
 	_event_helpers()
 	_events()
+	_backdrop_life()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -538,6 +539,20 @@ func _backdrop_life() -> void:
 	var keys: Array = BackdropLife.LIFE.keys()
 	keys.sort()
 	check(keys == ["camp", "fight", "menu"], "backdrop life: menu, camp and fight only")
+	for art: String in keys:
+		for part: Dictionary in BackdropLife.LIFE[art].parts:
+			check(ResourceLoader.exists("res://assets/ui/life/%s.png" % part.art), "backdrop life: %s art %s exists" % [art, part.art])
+	for want: Array in [["menu", 2], ["camp", 1], ["fight", 2]]:
+		var flames: Array = BackdropLife.LIFE[want[0]].parts.filter(func(p): return p.kind == "flame")
+		check(flames.size() >= want[1], "backdrop life: %s has %d+ flames, got %d" % [want[0], want[1], flames.size()])
+	var rect := TextureRect.new()
+	var life: BackdropLife = BackdropLife.attach(rect, "fight")
+	var parts: Array = BackdropLife.LIFE.fight.parts
+	var kids: Array = life.stage.get_children()
+	check(kids.size() == parts.size(), "backdrop life: attach builds every fight part")
+	var s0: AnimatedSprite2D = kids[0]
+	check(s0.is_playing() and s0.position == parts[0].at and s0.scale == Vector2(2, 2), "backdrop life: a flame plays at its spot, px-scaled")
+	rect.free()
 
 	var dir := "user://test_life/"
 	DirAccess.make_dir_recursive_absolute(dir)
@@ -546,7 +561,7 @@ func _backdrop_life() -> void:
 	var f := FileAccess.open(dir + "sheet.json", FileAccess.WRITE)
 	f.store_string(JSON.stringify({"frames": {
 		"zz": {"frame": {"x": 0, "y": 0, "w": 4, "h": 4}}, "aa": {"frame": {"x": 4, "y": 0, "w": 4, "h": 4}},
-		"mm": {"frame": {"x": 8, "y": 0, "w": 4, "h": 4}}}}))
+		"mm": {"frame": {"x": 8, "y": 0, "w": 4, "h": 4}}}}, "", false))  # unsorted, as pxl writes
 	f.close()
 	var sf: SpriteFrames = BackdropLife.frames("sheet", 6.0, dir)
 	check(sf.get_frame_count("default") == 3 and sf.get_animation_speed("default") == 6.0, "backdrop life: frames() reads 3 frames at fps")

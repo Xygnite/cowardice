@@ -1,0 +1,190 @@
+{
+ "frames": {
+  "campfire_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_1": {
+   "frame": {
+    "x": 18,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_2": {
+   "frame": {
+    "x": 36,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_3": {
+   "frame": {
+    "x": 54,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_4": {
+   "frame": {
+    "x": 72,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_5": {
+   "frame": {
+    "x": 90,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_6": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  },
+  "campfire_7": {
+   "frame": {
+    "x": 126,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 27
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 27
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "campfire.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 144,
+   "h": 27
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "campfire",
+    "from": 0,
+    "to": 7,
+    "direction": "forward"
+   }
+  ]
+ }
+}

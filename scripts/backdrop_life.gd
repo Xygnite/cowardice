@@ -6,10 +6,24 @@ extends Control
 const IMAGE := Vector2(1024, 572)
 ## Per backdrop art: `px` is how many image px one pxl pixel covers; `parts` are dictionaries
 ## {"kind": "flame" | "fog" | "chain", "art": sheet name, "at": Vector2 (image px, top-left), ...}.
+## A flame also has "fps". Its sheet covers the painted flame under it on every frame.
 const LIFE := {
-	"menu": {"px": 2, "parts": []},
-	"camp": {"px": 4, "parts": []},
-	"fight": {"px": 2, "parts": []},
+	"menu": {"px": 2, "parts": [
+		{"kind": "flame", "art": "torch", "at": Vector2(290, 314), "fps": 10.0},
+		{"kind": "flame", "art": "torch_r", "at": Vector2(698, 314), "fps": 10.0},
+	]},
+	"camp": {"px": 4, "parts": [
+		{"kind": "flame", "art": "campfire", "at": Vector2(173, 396), "fps": 8.0},
+	]},
+	"fight": {"px": 2, "parts": [
+		{"kind": "flame", "art": "candle", "at": Vector2(157, 265), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(262, 266), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(277, 248), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(290, 274), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(737, 266), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(755, 253), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(865, 274), "fps": 8.0},
+	]},
 }
 
 var stage: Node2D
@@ -33,8 +47,27 @@ static func attach(backdrop: TextureRect, art: String) -> BackdropLife:
 	life.stage.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	life.add_child(life.stage)
 	life.resized.connect(func(): life.stage.transform = cover(life.size))
+	for part: Dictionary in LIFE[art].parts:
+		var node := _part(part)
+		node.position = part.at
+		node.scale = Vector2.ONE * LIFE[art].px
+		life.stage.add_child(node)
 	backdrop.add_child(life)
 	return life
+
+
+## The node for one LIFE part, by its kind.
+static func _part(part: Dictionary) -> Node2D:
+	match part.kind:
+		"flame":
+			var s := AnimatedSprite2D.new()
+			s.sprite_frames = frames(part.art, part.fps)
+			s.centered = false
+			s.play()
+			s.frame = randi() % s.sprite_frames.get_frame_count("default")  # neighbours don't flicker in step
+			return s
+	push_error("BackdropLife: unknown part kind %s" % part.kind)
+	return Node2D.new()
 
 
 ## A looping "default" animation from `<dir><sheet>.png` and `.json` (pxl frame sheet: frames taken in

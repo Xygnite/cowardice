@@ -1,0 +1,148 @@
+{
+ "frames": {
+  "candle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "sourceSize": {
+    "w": 3,
+    "h": 7
+   },
+   "duration": 125
+  },
+  "candle_1": {
+   "frame": {
+    "x": 3,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "sourceSize": {
+    "w": 3,
+    "h": 7
+   },
+   "duration": 125
+  },
+  "candle_2": {
+   "frame": {
+    "x": 6,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "sourceSize": {
+    "w": 3,
+    "h": 7
+   },
+   "duration": 125
+  },
+  "candle_3": {
+   "frame": {
+    "x": 9,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "sourceSize": {
+    "w": 3,
+    "h": 7
+   },
+   "duration": 125
+  },
+  "candle_4": {
+   "frame": {
+    "x": 12,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "sourceSize": {
+    "w": 3,
+    "h": 7
+   },
+   "duration": 125
+  },
+  "candle_5": {
+   "frame": {
+    "x": 15,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 3,
+    "h": 7
+   },
+   "sourceSize": {
+    "w": 3,
+    "h": 7
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "candle.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 18,
+   "h": 7
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "candle",
+    "from": 0,
+    "to": 5,
+    "direction": "forward"
+   }
+  ]
+ }
+}
