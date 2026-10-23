@@ -1,14 +1,15 @@
 class_name CampScreen
 extends Control
-## The perk board: unlock perks with Embers, equip up to Meta.SLOTS of them, start a run.
+## The perk board: unlock perks with Embers, equip up to Meta.SLOTS of them, start a run (in the Mine too, once unlocked).
 
-signal start_run
+signal start_run(floor_id: String)
 signal main_menu
 
 var meta: Meta
 var embers_label: Label
 var loadout_label: Label
 var cards := {}  # perk id -> {state: Label, button: Button}
+var floor_id := "chapel"  # where Start run begins
 
 
 func _ready() -> void:
@@ -51,7 +52,15 @@ func _ready() -> void:
 	var bottom := UI.row(root)
 	UI.button(bottom, "Main menu", main_menu.emit).custom_minimum_size = Vector2(200, 48)
 	UI.button(bottom, "Settings", SettingsPanel.open.bind(self, meta)).custom_minimum_size = Vector2(200, 48)
-	var start := UI.button(bottom, "Start run", start_run.emit)
+	if meta.mine_unlocked:
+		var floors := ButtonGroup.new()
+		for f in [["chapel", "Sunken Chapel"], ["mine", "Hollow Mine"]]:
+			var b := UI.button(bottom, f[1], func() -> void: floor_id = f[0])
+			b.custom_minimum_size = Vector2(200, 48)
+			b.toggle_mode = true
+			b.button_group = floors
+			b.button_pressed = f[0] == floor_id
+	var start := UI.button(bottom, "Start run", func() -> void: start_run.emit(floor_id))
 	start.custom_minimum_size = Vector2(240, 48)
 	start.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_refresh()

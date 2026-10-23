@@ -72,7 +72,8 @@ const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acoly
 	["treant", "moss"], ["grieve", "archivist"], ["warden"]]
 
 var rng := RandomNumberGenerator.new()
-var perks: Array = []  # perk ids from Meta.PERKS equipped for this run
+var perks: Array = []  # perk ids from Meta.PERKS equipped for this run, plus the bonus one
+var bonus_perk := ""  # the perk picked after the Warden, active this run only
 var max_hp := PLAYER_MAX_HP
 var player_hp := PLAYER_MAX_HP
 var shards := 0
@@ -103,6 +104,17 @@ func apply_perks(ids: Array) -> void:
 	perks = ids.duplicate()
 	max_hp = PLAYER_MAX_HP + (10 if "thick_skin" in perks else 0)
 	player_hp = max_hp
+
+
+## Adds a perk mid-run (the bonus after the Warden). Thick Skin's +10 max HP comes with +10 HP, once.
+func add_perk(id: String) -> void:
+	if id in perks:
+		return
+	perks.append(id)
+	bonus_perk = id
+	if id == "thick_skin":
+		max_hp += 10
+		player_hp += 10
 
 
 func heal(amount: int) -> void:

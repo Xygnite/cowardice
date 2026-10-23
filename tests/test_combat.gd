@@ -346,6 +346,24 @@ func _perks() -> void:
 	c.apply_perks(["gamblers_heart"])
 	check(c.cleave_damage() == 18, "Gambler's Heart: a pair of 1s counts as 12, so 18")
 	_new_perks()
+	_bonus_perk()
+
+
+## The perk picked after the Warden: added for this run, Thick Skin's HP given once, never one already equipped.
+func _bonus_perk() -> void:
+	var c := fresh()
+	c.apply_perks(["steady_hand"])
+	c.player_hp = 30
+	c.add_perk("thick_skin")
+	c.add_perk("thick_skin")
+	check(c.perks == ["steady_hand", "thick_skin"] and c.bonus_perk == "thick_skin", "add_perk adds the perk once")
+	check(c.max_hp == 50 and c.player_hp == 40, "a bonus Thick Skin gives +10 max HP and +10 HP, once")
+	var ok := true
+	for i in 50:
+		var offer: Array = PerkPickScreen.offer(["thick_skin", "scavenger"])
+		ok = ok and offer.size() == 3 and offer.all(func(id): return Meta.PERKS.has(id) and id not in ["thick_skin", "scavenger"])
+		ok = ok and offer[0] != offer[1] and offer[0] != offer[2] and offer[1] != offer[2]
+	check(ok, "the bonus pick offers 3 different perks, never an equipped one")
 
 
 ## The perks past the first three, each against its own rule with and without it.
@@ -616,7 +634,7 @@ func _floor(id: String) -> void:
 
 func _meta() -> void:
 	check(Meta.embers_for(7, 3, 50, false) == 35 + 30 + 25, "Embers: 5 per kill, 10 per room, half the boss %")
-	check(Meta.embers_for(0, 0, 0, true) == 50, "a win adds 50")
+	check(Meta.embers_for(0, 0, 0, true) == 100, "a win (the Pit King) adds 100")
 	var m := Meta.new()
 	m.embers = 120
 	check(m.unlock("thick_skin") and m.embers == 20, "unlock spends Embers")
@@ -633,6 +651,10 @@ func _meta() -> void:
 	var back := Meta.load_from(path)
 	check(back.embers == m.embers and back.owned == m.owned and back.equipped == m.equipped and back.tutorial_done, "save and load round-trip")
 	check(back.music == 1.0 and back.sounds == 1.0 and not back.muted, "sound starts at full volume, unmuted")
+	check(not back.mine_unlocked, "the Mine starts locked")
+	m.mine_unlocked = true
+	m.save()
+	check(Meta.load_from(path).mine_unlocked, "an unlocked Mine round-trips")
 	m.music = 0.25
 	m.sounds = 0.0
 	m.muted = true
@@ -644,6 +666,7 @@ func _meta() -> void:
 	f.close()
 	back = Meta.load_from(path)
 	check(back.music == 1.0 and back.sounds == 0.0, "out-of-range volumes in a save are clamped")
+	check(not back.mine_unlocked, "an old save without the Mine loads it locked")
 	AudioServer.add_bus()
 	AudioServer.set_bus_name(AudioServer.bus_count - 1, "Music")
 	back.music = 0.5

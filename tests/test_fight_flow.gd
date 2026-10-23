@@ -27,6 +27,8 @@ func _init() -> void:
 	await _map_moves()
 	await _play_events()
 	await _hulk_swap()
+	await _two_floors()
+	await _mine_start()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"], ["pit_king"]]
 	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
@@ -149,6 +151,72 @@ func _hulk_swap() -> void:
 	check(screen.log_lines.any(func(l): return "collapses into Rubble" in l), "the log tells the Hulk fell to Rubble")
 	check(screen.enemy_ui[0].hp.text.begins_with("Rubble") and screen.enemy_ui[0].bar.max_value == 8, "the slot shows Rubble's name and HP bar")
 	check(errors.count == errors_before, "the Hulk swap runs with no errors")
+	game.queue_free()
+	await process_frame
+
+
+## A run beats the Warden, picks a bonus perk, rests at a campfire, walks into the Mine with what it had,
+## and beating the Pit King pays for the rooms of both floors.
+func _two_floors() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.layer = game.map.size() - 1
+	game.combat.start_group(["warden"])
+	game._show_fight(game._on_fight_finished)
+	game.combat.enemies[0].hp = 1
+	await _fight_out(game, "warden at 1 HP")
+	check(game.screen is PerkPickScreen, "beating the Warden offers a bonus perk")
+	if not game.screen is PerkPickScreen:
+		game.queue_free()
+		return
+	check(Meta.load_from(SAVE).mine_unlocked, "beating the Warden unlocks the Mine, saved")
+	var pick: PerkPickScreen = game.screen
+	check(pick.choices.size() == 3 and not pick.choices.any(func(p): return p in game.combat.perks), "the pick offers 3 perks, none equipped")
+	var hp: int = game.combat.player_hp
+	var shards: int = game.combat.shards
+	var id: String = pick.choices.filter(func(p): return p != "thick_skin")[0]
+	var buttons: Array = pick.find_children("*", "Button", true, false)
+	buttons[pick.choices.find(id)].pressed.emit()
+	await process_frame
+	check(game.screen is NoticeScreen and game.screen.title == "Campfire", "after the pick comes a campfire")
+	check(id in game.combat.perks, "the picked perk is active")
+	var heal: int = game.combat.campfire_heal_amount()
+	game.screen.choices[0][1].call()  # Rest
+	await process_frame
+	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "then the Mine's map, from its entrance")
+	check(game.combat.player_hp == mini(game.combat.max_hp, hp + heal) and game.combat.shards == shards, "HP and Shards carry down")
+	game.layer = game.map.size() - 1
+	game.combat.start_group(["pit_king"])
+	game._show_fight(game._on_fight_finished)
+	check(game.screen.backdrop == "mine", "Mine fights ask for the Mine backdrop")
+	game.combat.enemies[0].hp = 1
+	var embers: int = game.meta.embers
+	await _fight_out(game, "pit king at 1 HP")
+	var want: int = Meta.embers_for(game.combat.kills, 2 * game.map.size(), 100, true)
+	check(game.screen is NoticeScreen and game.screen.title == "The Pit King falls.", "beating the Pit King wins the run")
+	check(game.meta.embers - embers == want, "the win pays rooms from both floors and +100 (got %d, want %d)" % [game.meta.embers - embers, want])
+	check(game.screen is NoticeScreen and "Depth reached: The Hollow Mine, room 10 of 10" in game.screen.lines, "the tally names the floor")
+	await create_timer(0.5).timeout
+	check(errors.count == errors_before, "two floors play through with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## Once the Mine is unlocked the camp can start a run there, without a bonus perk.
+func _mine_start() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.meta.mine_unlocked = true
+	game._show_camp()
+	await process_frame
+	var buttons: Array = game.screen.find_children("*", "Button", true, false)
+	buttons.filter(func(b): return b.text == "Hollow Mine")[0].pressed.emit()
+	buttons.filter(func(b): return b.text == "Start run")[0].pressed.emit()
+	await process_frame
+	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
+	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "a Mine start shows with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
 

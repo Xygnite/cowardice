@@ -46,6 +46,7 @@ const MURMURS := [
 ]
 
 var combat: Combat  # set by game.gd before the screen enters the tree
+var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
 var busy := false  # true while the enemies act, and after the fight ends
 var acting := -1  # enemy currently acting, highlighted
 
@@ -277,7 +278,8 @@ func _log(line: String) -> void:
 func _build() -> void:
 	var root := UI.page(self)
 	# Placed by _ground_backdrop once the fighters are laid out; the rest sinks behind the dice tray.
-	crypt = UI.backdrop(self, "fight")
+	# ponytail: falls back to the crypt until bg_mine.webp lands (Task 6); FLOOR_LEDGE is the crypt's.
+	crypt = UI.backdrop(self, backdrop if ResourceLoader.exists("res://assets/ui/bg_%s.webp" % backdrop) else "fight")
 	# The strip it uncovers at the bottom takes the colour of the picture's bottom edge, so no seam shows.
 	var art := crypt.texture.get_image()
 	(get_child(0) as ColorRect).color = art.get_pixel(art.get_width() / 2, art.get_height() - 1)
