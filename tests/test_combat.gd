@@ -30,6 +30,7 @@ func _init() -> void:
 	_meta()
 	_floors()
 	_mine_enemies()
+	_mine_sprites()
 	_pit_king()
 	_lasting_curse()
 	_event_helpers()
@@ -457,6 +458,13 @@ func _mine_group(keys: Array, at_turn := 0) -> CombatScript:
 	c.start_turn()
 	return c
 
+
+## Every Hollow Mine type is drawn: a sprite with its baked frames scene, so no placeholder box shows.
+func _mine_sprites() -> void:
+	for key in ["miner", "crawler", "hulk", "rubble", "canary", "shaft_foreman", "pit_king"]:
+		var sprite: String = CombatScript.TYPES[key].get("sprite", "")
+		check(sprite != "" and FileAccess.file_exists("res://assets/sprites/%s.png" % sprite)
+			and FileAccess.file_exists("res://scenes/%s_frames.tscn" % sprite), "%s has a sprite and its frames scene" % key)
 
 func _mine_enemies() -> void:
 	var c := _mine_group(["miner"], 2)

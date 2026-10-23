@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "canary_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 80
+  },
+  "canary_attack_1": {
+   "frame": {
+    "x": 54,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 80
+  },
+  "canary_attack_2": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 40
+  },
+  "canary_attack_3": {
+   "frame": {
+    "x": 162,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 100
+  },
+  "canary_attack_4": {
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 100
+  },
+  "canary_attack_5": {
+   "frame": {
+    "x": 270,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 100
+  },
+  "canary_attack_6": {
+   "frame": {
+    "x": 324,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "canary_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 378,
+   "h": 60
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "canary_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

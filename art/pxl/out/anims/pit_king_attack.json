@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "pit_king_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 80
+  },
+  "pit_king_attack_1": {
+   "frame": {
+    "x": 178,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 80
+  },
+  "pit_king_attack_2": {
+   "frame": {
+    "x": 356,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 40
+  },
+  "pit_king_attack_3": {
+   "frame": {
+    "x": 534,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_attack_4": {
+   "frame": {
+    "x": 712,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_attack_5": {
+   "frame": {
+    "x": 890,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_attack_6": {
+   "frame": {
+    "x": 1068,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "pit_king_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1246,
+   "h": 178
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "pit_king_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

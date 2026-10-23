@@ -1,0 +1,349 @@
+{
+ "frames": {
+  "hulk_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 500
+  },
+  "hulk_idle_1": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 300
+  },
+  "hulk_idle_2": {
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 500
+  },
+  "hulk_idle_3": {
+   "frame": {
+    "x": 324,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 300
+  },
+  "hulk_attack_0": {
+   "frame": {
+    "x": 432,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 80
+  },
+  "hulk_attack_1": {
+   "frame": {
+    "x": 540,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 80
+  },
+  "hulk_attack_2": {
+   "frame": {
+    "x": 648,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 40
+  },
+  "hulk_attack_3": {
+   "frame": {
+    "x": 756,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "hulk_attack_4": {
+   "frame": {
+    "x": 864,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "hulk_attack_5": {
+   "frame": {
+    "x": 972,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "hulk_attack_6": {
+   "frame": {
+    "x": 1080,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 60
+  },
+  "hulk_hurt_0": {
+   "frame": {
+    "x": 1188,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 70
+  },
+  "hulk_hurt_1": {
+   "frame": {
+    "x": 1296,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 130
+  },
+  "hulk_hurt_2": {
+   "frame": {
+    "x": 1404,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "hulk_hurt_3": {
+   "frame": {
+    "x": 1512,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "hulk_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1620,
+   "h": 112
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "hulk_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "hulk_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "hulk_hurt",
+    "from": 11,
+    "to": 14,
+    "direction": "forward"
+   }
+  ]
+ }
+}

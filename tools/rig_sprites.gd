@@ -131,6 +131,50 @@ const RIGS := {
 	"grave_bell": {"facing": -1, "body": Vector2(34, 55), "legs_top": 59,
 		"weapon": {"pivot": Vector2(14, 8), "swing": [-0.5, 0.45],
 			"outline": [Vector2(10, 9), Vector2(18, 9), Vector2(18, 17), Vector2(26, 17), Vector2(26, 42), Vector2(1, 42), Vector2(1, 17), Vector2(10, 17)]}},
+	# The Hollow Mine (drawn in art/pxl/mine_cast.px.js).
+	# The far arm and its pick from the shoulder: back behind him, then over the top toward the hero.
+	"miner": {"facing": -1, "body": Vector2(23, 38), "legs_top": 38,
+		"weapon": {"pivot": Vector2(31, 20), "swing": [-2.6, -4.9],
+			"outline": [Vector2(30, 19), Vector2(34, 19), Vector2(37, 27), Vector2(37, 31), Vector2(40, 40), Vector2(46, 41), Vector2(46, 51), Vector2(31, 51), Vector2(32, 46), Vector2(36, 43), Vector2(35, 36), Vector2(33, 32), Vector2(32, 26), Vector2(31, 22)]},
+		"head": {"pivot": Vector2(22, 17),
+			"outline": [Vector2(11, 3), Vector2(32, 3), Vector2(32, 16), Vector2(27, 18), Vector2(17, 18), Vector2(11, 13)]}},
+	# The eyeless head bites: snout tipped up, then snapped down.
+	"crawler": {"facing": -1, "body": Vector2(25, 21), "legs_top": 22,
+		"weapon": {"pivot": Vector2(16, 17), "swing": [0.5, -0.3],
+			"outline": [Vector2(1, 9), Vector2(17, 9), Vector2(17, 25), Vector2(1, 25)]}},
+	# The loose front stone is shoved up and brought down like a fist; the heap has no legs.
+	"rubble": {"facing": -1, "body": Vector2(18, 26), "legs_top": 30,
+		"weapon": {"pivot": Vector2(11, 16), "swing": [0.6, -0.3],
+			"outline": [Vector2(1, 11), Vector2(11, 11), Vector2(12, 16), Vector2(11, 21), Vector2(1, 21)]}},
+	# The near arm and its boulder fist from the shoulder: hoisted up in front, then slammed down.
+	"hulk": {"facing": -1, "body": Vector2(31, 44), "legs_top": 46,
+		"weapon": {"pivot": Vector2(18, 23), "swing": [2.2, 0.4], "patch": [Color("2a303a"), 45],
+			"outline": [Vector2(9, 17), Vector2(24, 17), Vector2(24, 30), Vector2(21, 37), Vector2(20, 39), Vector2(20, 55), Vector2(1, 55), Vector2(1, 38), Vector2(8, 30), Vector2(9, 25)]},
+		"head": {"pivot": Vector2(25, 20),
+			"outline": [Vector2(17, 7), Vector2(31, 7), Vector2(32, 14), Vector2(31, 20), Vector2(17, 20)]}},
+	# The beaked head pecks; the misty tail ends trail behind, and the whole bird floats (no legs).
+	"canary": {"facing": -1, "body": Vector2(20, 28), "legs_top": 44,
+		"weapon": {"pivot": Vector2(16, 17), "swing": [0.5, -0.35],
+			"outline": [Vector2(1, 4), Vector2(19, 4), Vector2(20, 13), Vector2(17, 18), Vector2(10, 20), Vector2(1, 16)]},
+		"skirt": [
+			[Vector2(21, 30), Vector2(27, 30), Vector2(27, 41), Vector2(21, 41)],
+			[Vector2(27, 28), Vector2(36, 28), Vector2(36, 40), Vector2(27, 40)]]},
+	# The far arm and its coiled whip from the shoulder: back over his head, then lashed out toward the hero.
+	# The ledger is his shield.
+	"shaft_foreman": {"facing": -1, "body": Vector2(25, 52), "legs_top": 52,
+		"weapon": {"pivot": Vector2(36, 24), "swing": [-2.6, -4.9],
+			"outline": [Vector2(36, 21), Vector2(40, 21), Vector2(43, 30), Vector2(42, 37), Vector2(49, 40), Vector2(50, 50), Vector2(50, 63), Vector2(38, 63), Vector2(38, 52), Vector2(37, 40), Vector2(37, 30)]},
+		"shield": {"pivot": Vector2(12, 35),
+			"outline": [Vector2(3, 26), Vector2(18, 26), Vector2(18, 41), Vector2(3, 41)]},
+		"head": {"pivot": Vector2(24, 21),
+			"outline": [Vector2(14, 3), Vector2(33, 3), Vector2(33, 14), Vector2(29, 21), Vector2(17, 21), Vector2(14, 14)]}},
+	# The far arm and the great pick from the shoulder: back behind him, then over the top toward the hero.
+	# The mound of buried miners stays put; the hunched body above it moves.
+	"pit_king": {"facing": -1, "body": Vector2(44, 64), "legs_top": 64,
+		"weapon": {"pivot": Vector2(66, 33), "swing": [-2.3, -5.0],
+			"outline": [Vector2(60, 26), Vector2(76, 26), Vector2(80, 36), Vector2(88, 52), Vector2(92, 70), Vector2(98, 70), Vector2(98, 94), Vector2(77, 94), Vector2(77, 86), Vector2(84, 82), Vector2(80, 62), Vector2(76, 60), Vector2(76, 52), Vector2(70, 48), Vector2(63, 42), Vector2(59, 34)]},
+		"head": {"pivot": Vector2(43, 34),
+			"outline": [Vector2(29, 2), Vector2(56, 2), Vector2(56, 26), Vector2(52, 35), Vector2(32, 35), Vector2(29, 26)]}},
 }
 
 

@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "hulk_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 500
+  },
+  "hulk_idle_1": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 300
+  },
+  "hulk_idle_2": {
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 500
+  },
+  "hulk_idle_3": {
+   "frame": {
+    "x": 324,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 300
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "hulk_idle.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 432,
+   "h": 112
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "hulk_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

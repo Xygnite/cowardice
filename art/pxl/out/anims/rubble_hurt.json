@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "rubble_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "sourceSize": {
+    "w": 52,
+    "h": 46
+   },
+   "duration": 70
+  },
+  "rubble_hurt_1": {
+   "frame": {
+    "x": 52,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "sourceSize": {
+    "w": 52,
+    "h": 46
+   },
+   "duration": 130
+  },
+  "rubble_hurt_2": {
+   "frame": {
+    "x": 104,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "sourceSize": {
+    "w": 52,
+    "h": 46
+   },
+   "duration": 100
+  },
+  "rubble_hurt_3": {
+   "frame": {
+    "x": 156,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 52,
+    "h": 46
+   },
+   "sourceSize": {
+    "w": 52,
+    "h": 46
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "rubble_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 208,
+   "h": 46
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "rubble_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

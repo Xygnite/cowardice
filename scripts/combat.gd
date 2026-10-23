@@ -49,20 +49,20 @@ const TYPES := {
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
 	# The Hollow Mine. "pack": each other living one adds that much to its attack. "rallies": adds that much to every other
 	# enemy's attack. "leaves": a fresh enemy of that type takes its place when it dies.
-	"miner": {"name": "Lantern-Eye Miner", "hp": 22,
+	"miner": {"name": "Lantern-Eye Miner", "hp": 22, "sprite": "miner",
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "attack", "value": 6}, {"kind": "unblockable", "value": 7}]},
-	"crawler": {"name": "Tunnel Crawler", "hp": 8, "pack": 1,
+	"crawler": {"name": "Tunnel Crawler", "hp": 8, "sprite": "crawler", "pack": 1,
 		"phase1": [{"kind": "attack", "value": 3}]},
-	"hulk": {"name": "Rubble Hulk", "hp": 30, "leaves": "rubble",
+	"hulk": {"name": "Rubble Hulk", "hp": 30, "sprite": "hulk", "leaves": "rubble",
 		"phase1": [{"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}]},
-	"rubble": {"name": "Rubble", "hp": 8,
+	"rubble": {"name": "Rubble", "hp": 8, "sprite": "rubble",
 		"phase1": [{"kind": "attack", "value": 3}]},
-	"canary": {"name": "Canary Wraith", "hp": 12,
+	"canary": {"name": "Canary Wraith", "hp": 12, "sprite": "canary",
 		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
-	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "rallies": 2,
+	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "sprite": "shaft_foreman", "rallies": 2,
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
 	# Cave-ins bury a die (see bury_one). The Pit King's phase 2 attacks all carry one.
-		"pit_king": {"name": "Pit King", "hp": 110, "boss": true,
+		"pit_king": {"name": "Pit King", "hp": 110, "sprite": "pit_king", "boss": true,
 			"phase1": [{"kind": "attack", "value": 7}, {"kind": "cave_in"}, {"kind": "attack", "value": 10}, {"kind": "guard", "value": 6}],
 			"phase2": [{"kind": "attack", "value": 9, "cave_in": true}, {"kind": "attack", "value": 12, "cave_in": true}, {"kind": "attack", "value": 8, "cave_in": true}]},
 }

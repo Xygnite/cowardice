@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "miner_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 70
+  },
+  "miner_hurt_1": {
+   "frame": {
+    "x": 96,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 130
+  },
+  "miner_hurt_2": {
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 100
+  },
+  "miner_hurt_3": {
+   "frame": {
+    "x": 288,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "miner_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 384,
+   "h": 102
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "miner_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}
