@@ -28,7 +28,7 @@ func _init() -> void:
 	await _play_events()
 	await _hulk_swap()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
-	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"]]
+	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"], ["pit_king"]]
 	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
 		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))

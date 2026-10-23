@@ -21,6 +21,7 @@ const CAMPFIRE_HEAL := 0.3  # share of max HP
 ## "rig_pair_turn": that turn's roll always contains a pair, so the Cleave lesson can happen.
 ## "bone_wall": blocks your highest Attack die aimed at it.
 ## "sprite": file name in assets/sprites/; enemies without one show a placeholder box.
+## A buried die ("buried" > 0) keeps its value and slot, and can't be rolled, locked or placed, for the next turn.
 ## A "ring" intent turns another enemy's attack this turn unblockable.
 const TYPES := {
 	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5, "rig_pair_turn": 2,
@@ -60,7 +61,10 @@ const TYPES := {
 		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
 	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "rallies": 2,
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
-	"pit_king": {"name": "Pit King", "hp": 100, "boss": true, "phase1": [{"kind": "attack", "value": 4}]},
+	# Cave-ins bury a die (see bury_one). The Pit King's phase 2 attacks all carry one.
+		"pit_king": {"name": "Pit King", "hp": 110, "boss": true,
+			"phase1": [{"kind": "attack", "value": 7}, {"kind": "cave_in"}, {"kind": "attack", "value": 10}, {"kind": "guard", "value": 6}],
+			"phase2": [{"kind": "attack", "value": 9, "cave_in": true}, {"kind": "attack", "value": 12, "cave_in": true}, {"kind": "attack", "value": 8, "cave_in": true}]},
 }
 
 ## Set fights for the tutorial (0), the boss (6), tests and the --fight shortcut. A run deals its own groups in game.gd.
@@ -91,7 +95,7 @@ func _init(seed_value := -1) -> void:
 	if seed_value >= 0:
 		rng.seed = seed_value
 	for i in 3:
-		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}})
+		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}, "buried": 0})
 	start_fight(0)
 
 
@@ -220,6 +224,9 @@ func start_turn() -> void:
 	_apply_bonuses()
 	_apply_rings()
 	for d in dice:
+		d.buried = maxi(0, d.buried - 1)  # buried at 2: held this turn (1), free the next
+		if d.buried > 0:
+			continue
 		d.locked = false
 		d.slot = Slot.NONE
 		_roll(d)
@@ -261,16 +268,20 @@ func reroll() -> bool:
 		return false
 	rerolls -= 1
 	for d in dice:
-		if not d.locked:
+		if not d.locked and d.buried == 0:
 			_roll(d)
 	return true
 
 
 func toggle_lock(i: int) -> void:
+	if dice[i].buried > 0:
+		return
 	dice[i].locked = not dice[i].locked
 
 
 func assign(i: int, slot: Slot) -> void:
+	if dice[i].buried > 0:
+		return
 	dice[i].slot = slot
 
 
@@ -333,7 +344,7 @@ func rolled_pair() -> int:
 
 
 func unplaced_count() -> int:
-	return _values_in(Slot.NONE).size()
+	return dice.filter(func(d): return d.slot == Slot.NONE and d.buried == 0).size()  # a buried die gives no Grit
 
 
 ## Damage your placed dice would deal to enemy i right now: Attack hits the target, Cleave is shared out.
@@ -375,7 +386,7 @@ func resolve_player() -> int:
 	for d in dice:
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
-		if d.slot == Slot.NONE:
+		if d.slot == Slot.NONE and d.buried == 0:
 			grit += 2 if "grit_teeth" in perks else 1
 	guard_pool = guard_total()
 	if not alive(target):
@@ -417,6 +428,8 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 				guard_pool = maxi(0, guard_pool - blocked)
 			player_hp -= hit
 			text = "%s%s hits for %d." % [["", "Good block! ", "Perfect block! "][grade], e.name, hit]
+			if e.intent.get("cave_in", false):
+				text += " " + _cave_in()
 		"unblockable":
 			if grade == Grade.PERFECT:
 				text = "Parried %s!" % e.name
@@ -436,6 +449,8 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 			text = "%s braced behind its guard." % e.name
 		"ring":
 			text = "%s tolls." % e.name
+		"cave_in":
+			text = _cave_in()
 	player_hp = maxi(0, player_hp)
 	return text
 
@@ -450,7 +465,7 @@ func intent_text(i: int) -> String:
 	var it: Dictionary = enemies[i].intent
 	match it.get("kind"):
 		"attack":
-			return "Attack %d" % it.value
+			return "Attack %d%s" % [it.value, " + cave-in" if it.get("cave_in", false) else ""]
 		"guard":
 			return "Guard %d" % it.value
 		"curse":
@@ -459,7 +474,27 @@ func intent_text(i: int) -> String:
 			return "UNBLOCKABLE %d" % it.value
 		"ring":
 			return "Ring"
+		"cave_in":
+			return "Cave-in"
 	return ""
+
+
+## Buries one random unburied die until the turn after next. Never the last unburied one. Returns its index, or -1.
+func bury_one() -> int:
+	var free: Array = []
+	for i in dice.size():
+		if dice[i].buried == 0:
+			free.append(i)
+	if free.size() < 2:
+		return -1
+	var i: int = free[rng.randi_range(0, free.size() - 1)]
+	dice[i].buried = 2
+	return i
+
+
+func _cave_in() -> String:
+	var i := bury_one()
+	return "Rubble buries die %d." % (i + 1) if i >= 0 else "Rubble falls, but your last free die holds."
 
 
 func _next_intent(e: Dictionary) -> Dictionary:

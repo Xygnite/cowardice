@@ -30,6 +30,7 @@ func _init() -> void:
 	_meta()
 	_floors()
 	_mine_enemies()
+	_pit_king()
 	_lasting_curse()
 	_event_helpers()
 	_events()
@@ -477,6 +478,77 @@ func _mine_enemies() -> void:
 	check(c.enemies[0].name == "Rubble" and c.enemies[1].hp == 0 and not c.fight_won(), "a Cleave kills the Hulk and a Crawler: Rubble stands")
 	c = _mine_group(["canary", "miner"])
 	check(c.enemies[1].intent.kind == "unblockable" and c.enemies[1].intent.value == 5, "a Canary's ring makes another's attack unblockable")
+
+
+func _pit_king() -> void:
+	var c := _mine_group(["pit_king"], 1)  # turn 1 is the cave-in
+	check(c.is_boss_fight() and c.enemies[0].type.hp == 110, "the Pit King is a 110 HP boss")
+	check(c.enemies[0].intent.kind == "cave_in" and c.intent_text(0) == "Cave-in", "the Pit King's second move is a cave-in")
+	place(c, 0, 4, CombatScript.Slot.GUARD)
+	place(c, 1, 2, CombatScript.Slot.CLEAVE)
+	place(c, 2, 2, CombatScript.Slot.CLEAVE)
+	c.resolve_player()
+	var buried := 0
+	c.resolve_enemy(0, CombatScript.Grade.MISS)
+	check(c.dice.filter(func(d): return d.buried > 0).size() == 1, "a cave-in buries exactly one die")
+	for i in 3:
+		if c.dice[i].buried > 0:
+			buried = i
+	var value: int = c.dice[buried].value
+	var slot: int = c.dice[buried].slot
+	c.end_enemy_phase()
+	c.start_turn()
+	check(c.dice[buried].value == value and c.dice[buried].slot == slot, "a buried die keeps its value and slot")
+	c.assign(buried, CombatScript.Slot.ATTACK)
+	c.toggle_lock(buried)
+	check(c.dice[buried].slot == slot and not c.dice[buried].locked, "a buried die can't be placed or locked")
+	c.rerolls = 5
+	for n in 20:
+		c.reroll()
+		check(c.dice[buried].value == value, "reroll leaves a buried die alone")
+	c.resolve_player()
+	c.end_enemy_phase()
+	c.start_turn()
+	check(c.dice[buried].buried == 0 and c.dice[buried].slot == CombatScript.Slot.NONE, "a buried die is free the turn after")
+	# Two buried: nothing more to bury, the last free die stays free.
+	c = fresh()
+	c.dice[0].buried = 2
+	c.dice[1].buried = 1
+	check(c.bury_one() == -1, "the last unburied die is never buried")
+	c.dice[1].buried = 0
+	check(c.bury_one() in [1, 2], "with two free dice one can be buried")
+	# A buried Guard die guards again; a buried Cleave pair cleaves again.
+	c = _mine_group(["pit_king"], 1)
+	place(c, 0, 5, CombatScript.Slot.GUARD)
+	c.dice[0].buried = 2
+	c.start_turn()
+	place(c, 1, 1, CombatScript.Slot.NONE)
+	c.resolve_player()
+	check(c.guard_pool == 5, "a buried die in Guard guards again with the same value")
+	c = _mine_group(["pit_king"], 1)
+	place(c, 0, 3, CombatScript.Slot.CLEAVE)
+	place(c, 1, 3, CombatScript.Slot.CLEAVE)
+	c.dice[1].buried = 2
+	c.start_turn()
+	check(c.dice[1].slot == CombatScript.Slot.CLEAVE and c.dice[1].value == 3, "a buried die keeps its Cleave slot and value")
+	place(c, 0, 3, CombatScript.Slot.CLEAVE)
+	check(c.cleave_ready(), "a buried die in Cleave keeps its pair")
+	# Unplaced buried dice give no Grit.
+	c = _mine_group(["pit_king"], 1)
+	c.dice[0].buried = 2
+	c.start_turn()
+	c.assign(1, CombatScript.Slot.ATTACK)
+	c.assign(2, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	check(c.grit == 0, "a buried die gives no Grit")
+	# Phase 2: every attack comes with a cave-in.
+	for t in 3:
+		c = _mine_group(["pit_king"], t)
+		c.enemies[0].hp = 55
+		c.start_turn()
+		check(c.enemies[0].intent.kind == "attack" and c.enemies[0].intent.get("cave_in", false), "phase 2 attack %d carries a cave-in" % t)
+	c.resolve_enemy(0, CombatScript.Grade.MISS)
+	check(c.dice.any(func(d): return d.buried > 0), "a phase 2 attack buries a die")
 
 
 func _floors() -> void:

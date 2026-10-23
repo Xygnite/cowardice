@@ -109,7 +109,7 @@ func _on_reroll() -> void:
 	if not combat.reroll():
 		return
 	_refresh()
-	_roll_anim(range(combat.dice.size()).filter(func(i): return not combat.dice[i].locked))
+	_roll_anim(range(combat.dice.size()).filter(func(i): return not combat.dice[i].locked and combat.dice[i].buried == 0))
 
 
 func _on_lock(i: int) -> void:
@@ -178,6 +178,7 @@ func _on_end_turn() -> void:
 			_play(enemy_ui[i].rig, "block")
 		var hp_before := combat.player_hp
 		_log(combat.resolve_enemy(i, grade))
+		_refresh()  # a cave-in shows its rubble at once
 		var at: Control = hero.get_parent()
 		if combat.player_hp < hp_before:
 			_play(hero, "hurt")
@@ -199,7 +200,7 @@ func _on_end_turn() -> void:
 		combat.start_turn()
 		busy = false
 		_refresh()
-		_roll_anim(range(combat.dice.size()))
+		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0))
 
 
 ## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
@@ -232,9 +233,10 @@ func _refresh() -> void:
 		var ui: Dictionary = enemy_ui[i]
 		var up := combat.alive(i)
 		var kind: String = e.intent.get("kind", "") if up else ""
-		ui.icon.texture = load(UI.ART % ("intent_" + kind)) if kind else null
-		ui.intent.text = ("die %d" % (e.intent.target + 1)) if kind == "curse" else str(e.intent.get("value", ""))
-		ui.intent.add_theme_color_override("font_color", UI.DANGER if kind in ["unblockable", "curse"] else Color.WHITE)
+		ui.icon.texture = load(UI.ART % ("intent_" + ("unblockable" if kind == "cave_in" else kind))) if kind else null  # no rocks icon: the label says it
+		var cave: bool = kind == "cave_in" or e.intent.get("cave_in", false)
+		ui.intent.text = ("die %d" % (e.intent.target + 1)) if kind == "curse" else ("CAVE-IN" if kind == "cave_in" else str(e.intent.get("value", "")) + (" + cave-in" if cave else ""))
+		ui.intent.add_theme_color_override("font_color", UI.DANGER if kind in ["unblockable", "curse"] or cave else Color.WHITE)
 		ui.rune.visible = up and e.intent.get("rung", false)
 		ui.arcs.visible = kind == "ring"
 		if ui.rig == null:
@@ -254,7 +256,7 @@ func _refresh() -> void:
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
 		var art := "cursed" if d.value == Combat.CURSE else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
-		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked)
+		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0)
 	var pair := "   Pair of %ds" % combat.rolled_pair() if combat.rolled_pair() else ""
 	summary_label.text = "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() else Color.WHITE)
@@ -439,7 +441,7 @@ func _build_dice(parent: Node) -> void:
 
 
 func _on_die_clicked(i: int) -> void:
-	if busy:
+	if busy or combat.dice[i].buried > 0:
 		return
 	var d: Dictionary = combat.dice[i]
 	menu_die = i

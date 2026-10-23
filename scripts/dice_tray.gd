@@ -19,6 +19,7 @@ const BADGE := Vector3(0.5, 0.5, -0.5)  # where the slot badge is centred on a r
 const BADGE_SIZE := 16  # pixels across the badge disc, at the dice's pixel size
 const CHAIN_WIDTH := 1.0  # cube widths: as wide as the die
 const CHAIN_DROP := 0.2  # cube widths toward the camera's bottom, so the padlock just overlaps the number's foot
+const RUBBLE_SIZE := 40  # pixels across the rubble sprite at the dice's pixel size: one cube width
 const FELT := preload("res://assets/ui/cut/tray_felt.png")  # the tray floor's repeating tile, made by tools/make_ui.gd
 
 const GRAVITY_SCALE := 3.0  # a cube width is a metre to the physics; small dice fall faster than that
@@ -161,6 +162,15 @@ func add_die() -> void:
 	chain.rotation = FACE_UP  # lies flat on the top face, reading upright from the camera
 	chain.hide()
 	camera.get_parent().add_child(chain)
+	var rubble := Sprite3D.new()  # heaped on a buried die like the chain
+	rubble.texture = _rubble()
+	rubble.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	rubble.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	rubble.shaded = true
+	rubble.pixel_size = 1.0 / RUBBLE_SIZE
+	rubble.rotation = FACE_UP
+	rubble.hide()
+	camera.get_parent().add_child(rubble)
 	var slot := TextureRect.new()  # the badge disc; its icon sits in the middle
 	slot.texture = _disc()
 	var icon := TextureRect.new()
@@ -170,7 +180,7 @@ func add_die() -> void:
 	slot.add_child(icon)
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(slot)
-	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "slot": slot, "icon": icon,
+	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "rubble": rubble, "slot": slot, "icon": icon,
 		"faces": [], "value": 0, "rolling": false, "t": 0.0})
 	for i in dice.size():  # the row stays centred as it grows
 		dice[i].body.position = _spot(i)
@@ -178,9 +188,9 @@ func add_die() -> void:
 
 ## Shows die i's faces in `art` (bone, locked, placed, cursed) with `value` up, and the icon
 ## assets/ui/cut/slot_<slot_icon>.png in its top-right corner, or none if `slot_icon` is empty;
-## a locked die is wrapped in chains.
+## a locked die is wrapped in chains, a buried one heaped with rubble.
 ## Mid-throw it only repaints; the throw lands on its own value.
-func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool) -> void:
+func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false) -> void:
 	var d := dice[i]
 	d.faces = faces
 	d.value = value
@@ -190,6 +200,7 @@ func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, 
 		d.labels[k].modulate = Color(0.16, 0.13, 0.1) if art == "bone" else Color.WHITE
 	d.icon.texture = load(UI.ART % ("slot_" + slot_icon)) if slot_icon else null
 	d.chain.visible = locked
+	d.rubble.visible = buried
 	if not d.rolling:
 		d.body.quaternion = _rest(d)
 
@@ -259,6 +270,7 @@ func _process(_delta: float) -> void:
 		var top: Vector3 = d.body.position
 		d.chain.position = top + Vector3(0, 0.53, CHAIN_DROP)  # above the number (at 0.51), so it covers it
 		# A badge in the top-right corner of the top face, put away while the die tumbles.
+		d.rubble.position = top + Vector3(0, 0.54, 0)
 		d.slot.position = _screen(top + BADGE) - d.slot.size / 2
 		d.slot.visible = d.icon.texture != null and not d.rolling
 	if in_flight and not dice.any(func(d): return d.rolling):
@@ -350,6 +362,20 @@ static func _atlas(art: String) -> Texture2D:
 				img.blit_rect(tile, Rect2i(0, 0, w, h), Vector2i(x * w, y * h))
 		_atlases[art] = ImageTexture.create_from_image(img)
 	return _atlases[art]
+
+
+## A heap of grey stones over the whole top face, in dice pixels, with dark rims and a lit upper-left edge. Fixed, so a heap never shifts.
+static func _rubble() -> Texture2D:
+	var img := Image.create_empty(RUBBLE_SIZE, RUBBLE_SIZE, false, Image.FORMAT_RGBA8)
+	# Stones as x, y, radius, painted back to front.
+	for s: Array in [[12, 28, 9], [29, 29, 9], [20, 20, 10], [9, 14, 7], [30, 12, 8], [21, 33, 6], [20, 7, 6]]:
+		for y in RUBBLE_SIZE:
+			for x in RUBBLE_SIZE:
+				var d := Vector2(x + 0.5 - s[0], y + 0.5 - s[1]).length()
+				if d <= s[2]:
+					var lit: bool = x + y < s[0] + s[1] - s[2] * 0.4
+					img.set_pixel(x, y, Color("070e10") if d > s[2] - 1.5 else (Color("8c8a82") if lit else (Color("6a6862") if d < s[2] - 4 else Color("4d4b47"))))
+	return ImageTexture.create_from_image(img)
 
 
 ## The badge disc: a bone coin (like a bone die, so the dark iron icons stand out) with a near-black rim, in game pixels blown up to the dice's 2x.
