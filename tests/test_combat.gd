@@ -554,6 +554,36 @@ func _backdrop_life() -> void:
 	check(s0.is_playing() and s0.position == parts[0].at and s0.scale == Vector2(2, 2), "backdrop life: a flame plays at its spot, px-scaled")
 	rect.free()
 
+	for want: Array in [["menu", "moat"], ["camp", "ground"]]:
+		var fogs: Array = BackdropLife.LIFE[want[0]].parts.filter(func(p): return p.kind == "fog" and p.art == want[1])
+		check(fogs.size() == 1, "backdrop life: %s has %s fog" % want)
+	for art: String in keys:
+		for part: Dictionary in BackdropLife.LIFE[art].parts:
+			if part.kind != "fog" or not ResourceLoader.exists("res://assets/ui/life/%s.png" % part.art):
+				continue
+			var band: Image = (load("res://assets/ui/life/%s.png" % part.art) as Texture2D).get_image()
+			var p: int = part.period
+			var h := band.get_height()
+			check(band.get_width() % p == 0 and band.get_width() >= 2 * p, "backdrop life: %s band is whole periods" % part.art)
+			check(band.get_region(Rect2i(0, 0, p, h)).get_data() == band.get_region(Rect2i(p, 0, p, h)).get_data(), "backdrop life: %s band repeats without a seam" % part.art)
+			if art == "fight":
+				var bottom: float = part.at.y + h * BackdropLife.LIFE.fight.px
+				check(bottom < CombatScreen.FLOOR_LEDGE * 572, "backdrop life: fight fog stays above the floor ledge, bottom %s" % bottom)
+	var menu := TextureRect.new()
+	var mlife: BackdropLife = BackdropLife.attach(menu, "menu")
+	var mparts: Array = BackdropLife.LIFE.menu.parts
+	var fi: int = mparts.find_custom(func(p): return p.kind == "fog")
+	var fog: Sprite2D = mlife.stage.get_child(fi)
+	var fp: Dictionary = mparts[fi]
+	check(fog.region_enabled and fog.texture_repeat == CanvasItem.TEXTURE_REPEAT_ENABLED and fog.region_rect.size.x == fp.width / BackdropLife.LIFE.menu.px, "backdrop life: fog is a repeating region as wide as its part")
+	var tick: Timer = fog.get_child(0)
+	for n in fp.period:
+		tick.timeout.emit()
+		if n == 0:
+			check(fog.region_rect.position.x == 1, "backdrop life: fog steps one pxl pixel per tick")
+	check(fog.region_rect.position.x == 0 and is_equal_approx(tick.wait_time, fp.step_s), "backdrop life: fog wraps at its period")
+	menu.free()
+
 	var dir := "user://test_life/"
 	DirAccess.make_dir_recursive_absolute(dir)
 	var img := Image.create(12, 4, false, Image.FORMAT_RGBA8)

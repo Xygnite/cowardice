@@ -1,7 +1,7 @@
-// Flames laid over the backdrop paintings (scripts/backdrop_life.gd). One pxl pixel is the painting's
+// Flames and fog laid over the backdrop paintings (scripts/backdrop_life.gd). One pxl pixel is the painting's
 // own pixel: 2 image px on menu and fight, 4 on camp.
 // Build: node .claude/skills/pxl-pixel-art/bin/pxl.js build art/pxl/life.px.js
-// then copy out/anims/<name>.png + .json to assets/ui/life/.
+// then copy out/anims/<name>.png + .json (flames) and out/sprites/<name>.png (fog) to assets/ui/life/.
 
 // A looping flame over a painted one. `mask` is the painted flame's silhouette, read off the backdrop at
 // its pxl pixel size: every frame keeps all of it opaque, so the still painting never shows through.
@@ -147,3 +147,36 @@ anim("candle", { w: 3, h: 7, fps: 8 }, grid(0, 2, `
 	frame(grid(1, 1, "o"), grid(0, 3, "oww\nyyy")),
 	frame(grid(0, 0, "R.\n.o")),
 	frame(grid(1, 1, "R"), grid(0, 4, "wwy")))
+
+// A still fog band two `period`s wide that tiles seamlessly: BackdropLife scrolls it one pxl pixel at a
+// time and wraps at `period`. Keys a/b/c are thin/mid/dense tones (alpha baked in), deepening inwards
+// from its wavy top and bottom edges, with thinner streaks running through the core.
+function fog(name, { period, h, seed }) {
+	sprite(name, { w: period * 2, h }, (c) => {
+		// Whole cycles per period, evaluated on x mod period, so both halves are bit-identical.
+		const wave = (x, f, ph) => Math.sin((2 * Math.PI * f * (x % period)) / period + ph)
+		for (let x = 0; x < c.w; x++) {
+			const top = Math.round(h * 0.4 + h * 0.16 * wave(x, 1, seed) + h * 0.08 * wave(x, 3, seed * 2))
+			const bot = Math.min(h - 1, Math.round(h * 0.84 + h * 0.1 * wave(x, 2, seed + 1)))
+			for (let y = Math.max(0, top); y <= bot; y++) {
+				const d = Math.min(y - top, bot - y)
+				const streak = wave(x, 2 + (y % 3), seed + y) > 0.6 ? 1 : 0
+				c.px(x, y, "abc"[Math.max(0, Math.min(2, Math.floor(d / 2)) - streak)])
+			}
+			if (wave(x, 5, seed * 3) > 0.7 && top >= 3) c.px(x, top - 2, "a")  // a stray wisp above
+		}
+	})
+}
+
+// Menu: across the moat (2 image px a pixel).
+pal({ a: "#4f7a8640", b: "#6f97a370", c: "#9cc0cc98" })
+fog("moat", { period: 96, h: 28, seed: 1 })
+
+// Camp: low ground fog in the strip between the perk board and the buttons (4 image px a pixel).
+pal({ a: "#4c627340", b: "#5f758570", c: "#7a8e9c98" })
+fog("ground", { period: 64, h: 13, seed: 2 })
+
+// Fight: mist along the foot of the back wall, ending above the floor ledge (2 image px a pixel); paler
+// than the others, as the floor there is already the fog's grey.
+pal({ a: "#6f8a9840", b: "#8aa4b270", c: "#a8bfcb98" })
+fog("floor", { period: 96, h: 12, seed: 3 })
