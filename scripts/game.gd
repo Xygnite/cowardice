@@ -22,9 +22,16 @@ const CONFIRM := preload("res://assets/audio/confirm.wav")
 
 
 func _ready() -> void:
+	for bus in ["Music", "SFX"]:  # made here rather than in a bus layout file; Meta.apply_sound sets their volume
+		if AudioServer.get_bus_index(bus) < 0:
+			AudioServer.add_bus()
+			AudioServer.set_bus_name(AudioServer.bus_count - 1, bus)
+	meta.apply_sound()
 	music.volume_db = -8.0
+	music.bus = "Music"
 	music.finished.connect(music.play)  # loop without touching the wav import settings
 	add_child(music)
+	ui_sfx.bus = "SFX"
 	add_child(ui_sfx)
 	get_tree().node_added.connect(_on_node_added)
 	for arg in OS.get_cmdline_user_args():  # dev shortcut: `-- --fight=6` jumps straight into that fight
@@ -39,6 +46,7 @@ func _ready() -> void:
 func _show_menu() -> void:
 	var s := MenuScreen.new()
 	s.tutorial_done = meta.tutorial_done
+	s.meta = meta
 	s.play.connect(_on_play)
 	s.tutorial.connect(_show_tutorial)
 	_show(s)
@@ -68,6 +76,14 @@ func _show(next: Control) -> void:
 	if music.stream != track:
 		music.stream = track
 		music.play()
+
+
+## M mutes or unmutes everything, on any screen.
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_M:
+		meta.muted = not meta.muted
+		meta.apply_sound()
+		meta.save()
 
 
 func _on_node_added(node: Node) -> void:

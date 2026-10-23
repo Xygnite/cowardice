@@ -18,6 +18,9 @@ func _ready() -> void:
 	UI.image(top, "logo")
 	UI.spacer(top)
 	embers_label = UI.label(top, 22)
+	var sound := SoundControls.new()
+	sound.meta = meta
+	top.add_child(sound)
 	UI.heading(root, 32, "Camp: perk board")
 	var grid := UI.row(root, 24)
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL

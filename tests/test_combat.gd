@@ -447,5 +447,24 @@ func _meta() -> void:
 	m.save()
 	var back := Meta.load_from(path)
 	check(back.embers == m.embers and back.owned == m.owned and back.equipped == m.equipped and back.tutorial_done, "save and load round-trip")
+	check(back.music == 1.0 and back.sounds == 1.0 and not back.muted, "sound starts at full volume, unmuted")
+	m.music = 0.25
+	m.sounds = 0.0
+	m.muted = true
+	m.save()
+	back = Meta.load_from(path)
+	check(back.music == 0.25 and back.sounds == 0.0 and back.muted, "sound settings round-trip")
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string('{"music": 7, "sounds": -2}')
+	f.close()
+	back = Meta.load_from(path)
+	check(back.music == 1.0 and back.sounds == 0.0, "out-of-range volumes in a save are clamped")
+	AudioServer.add_bus()
+	AudioServer.set_bus_name(AudioServer.bus_count - 1, "Music")
+	back.music = 0.5
+	back.apply_sound()
+	check(is_equal_approx(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music")), linear_to_db(0.5)), "apply_sound sets the Music bus")
+	back.muted = false
+	back.apply_sound()
 	DirAccess.remove_absolute(path)
 	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")

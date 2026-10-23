@@ -85,6 +85,7 @@ var sfx := AudioStreamPlayer.new()
 func _ready() -> void:
 	_build()
 	sfx.max_polyphony = 4  # a cleave hits several enemies at once
+	sfx.bus = "SFX"
 	add_child(sfx)  # after _build: it expects page()'s background as child 0
 	_log(", ".join(combat.enemies.map(func(e): return e.name)) + ".")
 	if combat.is_boss_fight():
