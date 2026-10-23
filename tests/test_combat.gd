@@ -495,6 +495,14 @@ func _mine_enemies() -> void:
 	var before := c.kills
 	c.claim_fight()
 	check(c.fight_won() and c.kills - before == 2, "Hulk and Rubble are two kills")
+	c = _mine_group(["hulk", "hulk"], 1)
+	c.enemies[0].hp = 3
+	c.enemies[1].hp = 3
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	c.target = 1
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble A" and c.enemies[1].name == "Rubble B", "two Hulks leave Rubble A and B, got %s and %s" % [c.enemies[0].name, c.enemies[1].name])
 	c = _mine_group(["hulk", "crawler"], 1)
 	c.enemies[0].hp = 3
 	c.enemies[1].hp = 2

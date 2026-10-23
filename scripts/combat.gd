@@ -394,7 +394,9 @@ func resolve_player() -> int:
 			enemies[i].hp = maxi(floor_hp, enemies[i].hp - hits[i])
 			if enemies[i].hp == 0 and enemies[i].type.has("leaves"):
 				var t: Dictionary = TYPES[enemies[i].type.leaves]
-				enemies[i] = {"type": t, "name": t.name, "hp": t.hp, "intent": {}, "from": enemies[i].name}  # acts from next turn; "from" lets the screen show the swap
+				var old: String = enemies[i].name
+				var tag: String = old.substr(enemies[i].type.name.length())  # a Hulk's " A" stays on its Rubble
+				enemies[i] = {"type": t, "name": t.name + tag, "hp": t.hp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
 				replaced += 1
 	for d in dice:
 		if d.slot == Slot.GUARD and d.value == CURSE:

@@ -149,6 +149,11 @@ func _hulk_swap() -> void:
 	screen._on_end_turn()
 	await create_timer(3.0).timeout
 	check(screen.log_lines.any(func(l): return "collapses into Rubble" in l), "the log tells the Hulk fell to Rubble")
+	for i in screen.combat.dice.size():
+		screen.combat.assign(i, Combat.Slot.NONE)  # a quiet second turn
+	screen._on_end_turn()
+	await create_timer(4.0).timeout
+	check(screen.log_lines.filter(func(l): return "collapses into Rubble" in l).size() == 1, "the collapse is logged once, not every turn")
 	check(screen.enemy_ui[0].hp.text.begins_with("Rubble") and screen.enemy_ui[0].bar.max_value == 8, "the slot shows Rubble's name and HP bar")
 	check(errors.count == errors_before, "the Hulk swap runs with no errors")
 	game.queue_free()
@@ -223,6 +228,9 @@ func _mine_start() -> void:
 	check(game.screen.crypt.texture.resource_path == "res://assets/ui/bg_mine.webp", "Mine fights show the Mine backdrop")
 	check(game.screen.fight_label.text == "Mine", "a Mine fight is labelled Mine, got %s" % game.screen.fight_label.text)
 	check(game.screen.murmur_label.text == CombatScreen.MURMURS.mine[0], "a Mine fight murmurs the Mine's lines")
+	game._show_tutorial()
+	await process_frame
+	check(game.screen.backdrop == "fight", "the replayed tutorial shows the fight backdrop after a Mine run, got %s" % game.screen.backdrop)
 	await create_timer(0.3).timeout
 	check(errors.count == errors_before, "a Mine start shows with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()

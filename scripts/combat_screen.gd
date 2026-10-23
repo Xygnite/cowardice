@@ -160,6 +160,7 @@ func _on_end_turn() -> void:
 		if swapped:
 			_log("The %s collapses into %s." % [combat.enemies[i].from, combat.enemies[i].name])
 			_swap_body(i)
+			combat.enemies[i].erase("from")  # handled; later turns must not replay the swap
 	if unplaced > 0:
 		_log("+%d Grit." % unplaced)
 	_refresh()

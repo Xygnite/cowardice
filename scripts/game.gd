@@ -62,6 +62,7 @@ func _on_play() -> void:
 
 
 func _show_tutorial() -> void:
+	floor_id = "chapel"  # the tutorial's backdrop, even after a Mine run
 	combat = Combat.new()  # a new Combat starts on fight 0, the tutorial
 	_show_fight(_on_tutorial_finished)
 
