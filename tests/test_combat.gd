@@ -29,6 +29,8 @@ func _init() -> void:
 	_fight_rewards()
 	_meta()
 	_maps()
+	_lasting_curse()
+	_event_helpers()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -51,6 +53,43 @@ func fresh(fight := SKELETON_BELL) -> CombatScript:
 func place(c: CombatScript, i: int, value: int, slot: int) -> void:
 	c.dice[i].value = value
 	c.dice[i].slot = slot
+
+
+func _lasting_curse() -> void:
+	var c := CombatScript.new(7)
+	c.curse_face(0, 5)  # the 6
+	check(c.dice[0].base[5] == CombatScript.CURSE and c.dice[0].faces[5] == CombatScript.CURSE, "a lasting curse is on the die")
+	c.start_fight(SKELETON_BELL)
+	check(c.dice[0].faces[5] == CombatScript.CURSE, "it survives into the next fight")
+	c.dice[0].value = CombatScript.CURSE
+	c.assign(0, CombatScript.Slot.GUARD)
+	c.resolve_player()
+	check(c.dice[0].faces[5] == CombatScript.CURSE, "Guard doesn't burn a lasting curse off")
+	c.forge(0, 5, true)
+	check(c.dice[0].base[5] == 6, "forging clears it back to the old face")
+	c.forge(0, 5, true)
+	check(c.dice[0].base[5] == 6 + CombatScript.FORGE_STEP, "after that, forging adds as usual")
+	var k := CombatScript.new(7)
+	var g: int = k.carve(1, 0)
+	check(k.dice[1].base[0] == 9 and g != 0 and k.dice[1].base[g] == CombatScript.CURSE, "carve: a 9, and another face cursed")
+	var all := CombatScript.new(7)
+	for f in range(1, 6):
+		all.curse_face(2, f)
+	check(all.carve(2, 0) == -1 and all.dice[2].base[0] == 9, "carving with every other face cursed curses nothing more")
+
+
+func _event_helpers() -> void:
+	var c := CombatScript.new(7)
+	c.player_hp = 3
+	check(c.hurt(6) == 2 and c.player_hp == 1, "hurt stops at 1 HP")
+	c.player_hp = 3
+	c.lose_max_hp(5)
+	check(c.max_hp == CombatScript.PLAYER_MAX_HP - 5 and c.player_hp == 3, "max HP drops; HP below it stays")
+	c.player_hp = c.max_hp
+	c.lose_max_hp(5)
+	check(c.player_hp == c.max_hp, "HP is capped by the new max")
+	var v: Array = c.roll_dice([0, 2])
+	check(v.size() == 2 and v[0] == c.dice[0].value and v[1] == c.dice[2].value, "roll_dice returns the rolled values")
 
 
 func _timing_grades() -> void:

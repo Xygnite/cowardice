@@ -6,7 +6,7 @@ extends RefCounted
 enum Slot { NONE, ATTACK, GUARD, CLEAVE }
 enum Grade { MISS, GOOD, PERFECT }
 
-const CURSE := 0  # a cursed face rolls as 0 and counts for nothing
+const CURSE := 0  # a cursed face rolls as 0 and counts for nothing; a lasting curse is written into `base`
 const REROLLS_PER_TURN := 2
 const PLAYER_MAX_HP := 40
 const GOOD_MS := 250
@@ -67,13 +67,14 @@ var enemies: Array[Dictionary] = []  # {type, name, hp, intent}
 var target := 0
 var guard_pool := 0  # Guard left to soak this turn's hits; set when you end your turn
 var turn := 0
+var bonus_embers := 0  # extra embers an event promised for the end of the run
 
 
 func _init(seed_value := -1) -> void:
 	if seed_value >= 0:
 		rng.seed = seed_value
 	for i in 3:
-		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE})
+		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}})
 	start_fight(0)
 
 
@@ -97,9 +98,60 @@ func forge(i: int, f: int, no_cost := false) -> bool:
 		if shards < FORGE_COST:
 			return false
 		shards -= FORGE_COST
-	dice[i].base[f] += FORGE_STEP
-	dice[i].faces = dice[i].base.duplicate()
+	var d: Dictionary = dice[i]
+	if d.uncursed.has(f):  # forging a lasting curse lifts it instead
+		d.base[f] = d.uncursed[f]
+		d.uncursed.erase(f)
+	else:
+		d.base[f] += FORGE_STEP
+	d.faces = d.base.duplicate()
 	return true
+
+
+## Lasting curse: face f of die i is cursed for the rest of the run, and forging it restores the old face.
+func curse_face(i: int, f: int) -> void:
+	var d: Dictionary = dice[i]
+	d.uncursed[f] = d.base[f]
+	d.base[f] = CURSE
+	d.faces = d.base.duplicate()
+
+
+## Turns face f of die i into a 9 and lastingly curses another uncursed face. Returns that face, or -1 if none.
+func carve(i: int, f: int) -> int:
+	var d: Dictionary = dice[i]
+	d.base[f] = 9
+	d.uncursed.erase(f)
+	d.faces = d.base.duplicate()
+	var options: Array = []
+	for o in d.base.size():
+		if o != f and d.base[o] != CURSE:
+			options.append(o)
+	if options.is_empty():
+		return -1
+	var pick: int = options[rng.randi_range(0, options.size() - 1)]
+	curse_face(i, pick)
+	return pick
+
+
+## Loses up to `amount` HP but never the last one. Returns what was actually lost.
+func hurt(amount: int) -> int:
+	var lost := mini(amount, player_hp - 1)
+	player_hp -= lost
+	return lost
+
+
+func lose_max_hp(amount: int) -> void:
+	max_hp -= amount
+	player_hp = clampi(player_hp, 1, max_hp)
+
+
+## Rolls the dice at the indices in `which`; returns their new values in order.
+func roll_dice(which: Array) -> Array:
+	var out: Array = []
+	for i in which:
+		_roll(dice[i])
+		out.append(dice[i].value)
+	return out
 
 
 ## Call once when a fight ends, won or lost: counts kills and pays Shards for them.
