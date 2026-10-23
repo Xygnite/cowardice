@@ -1,0 +1,127 @@
+{
+ "frames": {
+  "chain_mine_1_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "sourceSize": {
+    "w": 22,
+    "h": 118
+   },
+   "duration": 125
+  },
+  "chain_mine_1_1": {
+   "frame": {
+    "x": 22,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "sourceSize": {
+    "w": 22,
+    "h": 118
+   },
+   "duration": 125
+  },
+  "chain_mine_1_2": {
+   "frame": {
+    "x": 44,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "sourceSize": {
+    "w": 22,
+    "h": 118
+   },
+   "duration": 125
+  },
+  "chain_mine_1_3": {
+   "frame": {
+    "x": 66,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "sourceSize": {
+    "w": 22,
+    "h": 118
+   },
+   "duration": 125
+  },
+  "chain_mine_1_4": {
+   "frame": {
+    "x": 88,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 22,
+    "h": 118
+   },
+   "sourceSize": {
+    "w": 22,
+    "h": 118
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "chain_mine_1.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 110,
+   "h": 118
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "chain_mine_1",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   }
+  ]
+ }
+}

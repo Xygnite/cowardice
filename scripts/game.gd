@@ -115,9 +115,10 @@ func _start_run(first_floor := "chapel") -> void:
 	_enter_floor(first_floor)
 
 
-## A fresh map of floor `id`, from its entrance. HP, Shards, dice, perks and seen events stay as they are.
+## A fresh map of floor `id`, from its entrance. HP, Shards, dice, perks and seen events stay as they are; the murmurs start over.
 func _enter_floor(id: String) -> void:
 	floor_id = id
+	combat.dungeon_turns = 0
 	map = Floor.deal(floor_id)
 	layer = 0
 	path.clear()

@@ -1,5 +1,5 @@
 // Flames and fog laid over the backdrop paintings (scripts/backdrop_life.gd). One pxl pixel is the painting's
-// own pixel: 2 image px on menu and fight, 4 on camp.
+// own pixel: 2 image px on menu and fight, 4 on camp. The Mine draws its own, in bg_mine.px.js.
 // Build: node .claude/skills/pxl-pixel-art/bin/pxl.js build art/pxl/life.px.js
 // then copy out/anims/<name>.png + .json (flames) and out/sprites/<name>.png (fog) to assets/ui/life/.
 

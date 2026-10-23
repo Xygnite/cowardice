@@ -2,7 +2,7 @@ class_name CombatScreen
 extends Control
 ## One fight on screen, built in code. The hero and enemies with a sprite are rigs from scenes/
 ## (made by tools/rig_sprites.gd); enemies without one are placeholder boxes.
-## Rules are taught only in the tutorial fight; the boss is hinted at only by murmurs in the dungeon fights.
+## Rules are taught only in the tutorial fight; a floor's boss is hinted at only by murmurs in the fights before him.
 ## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up. Click an enemy to target it,
 ## a die for its actions (lock, place).
 
@@ -11,7 +11,8 @@ signal finished(won: bool)
 const SLOT_NAMES := ["-", "Attack", "Guard", "Cleave"]
 const SLOT_ICONS := ["", "attack", "guard", "cleave"]  # assets/ui/cut/slot_*.png, by Combat.Slot
 const SPRITE_SCALE := 3  # whole-number scaling keeps every game pixel square
-const FLOOR_LEDGE := 0.683  # how far down the crypt picture (as a fraction) its stone floor's top edge is
+## How far down each fight picture (as a fraction) its floor's top edge is, by backdrop.
+const LEDGES := {"fight": 0.683, "mine": 0.671}
 const FEET_SINK := 10  # screen pixels the fighters' feet stand below that edge, on the floor's surface
 const SPRITE_PAD := 2  # empty rows under every sprite (tools/make_sprites.gd "pad")
 const TRAY_HEIGHT := 230  # screen pixels; leaves the fight row room for the tallest fight (the boss)
@@ -36,14 +37,20 @@ const LESSONS := [
 	"Red means no shield will hold. Put a die in Guard and press SPACE inside the red zone to parry. A higher die gives you more time.",
 ]
 
-## Cryptic hints about the Bone Warden, one per turn across the dungeon fights before him.
-const MURMURS := [
+## Cryptic hints about the floor's boss (Bone Warden, Pit King), one per turn across the fights before him, by backdrop.
+const MURMURS := {"fight": [
 	"The walls murmur: \"...he keeps the tallest bone for himself...\"",
 	"The walls murmur: \"...two of a kind walk where one cannot...\"",
 	"The walls murmur: \"...when he cracks in half, he writes on your bones...\"",
 	"The walls murmur: \"...hold the stained bone to your shield, and it burns clean...\"",
 	"The walls murmur: \"...at the last, he swings what no shield can hold...\"",
-]
+], "mine": [
+	"The timbers creak: \"...the King keeps what the mountain takes...\"",
+	"The timbers creak: \"...when the roof speaks, one die goes under...\"",
+	"The timbers creak: \"...the rock gives back what it buries, in time...\"",
+	"The timbers creak: \"...he never takes the last one. He wants you digging...\"",
+	"The timbers creak: \"...wounded, he brings the roof down with every swing...\"",
+]}
 
 var combat: Combat  # set by game.gd before the screen enters the tree
 var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
@@ -228,7 +235,7 @@ func _refresh() -> void:
 	hp_label.text = "%d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards]
 	hp_bar.max_value = combat.max_hp
 	hp_bar.value = combat.player_hp
-	fight_label.text = "Tutorial" if combat.is_tutorial() else ("Boss" if combat.is_boss_fight() else "Dungeon")
+	fight_label.text = "Tutorial" if combat.is_tutorial() else ("Boss" if combat.is_boss_fight() else ("Mine" if backdrop == "mine" else "Dungeon"))
 	for i in enemy_ui.size():
 		var e: Dictionary = combat.enemies[i]
 		var ui: Dictionary = enemy_ui[i]
@@ -253,7 +260,8 @@ func _refresh() -> void:
 		lesson_label.text = LESSONS[combat.turn]
 	# Blank rather than hidden: the murmur label is the gap that pushes the enemies to the right.
 	var murmurs := not combat.is_tutorial() and not combat.is_boss_fight()
-	murmur_label.text = MURMURS[mini(combat.dungeon_turns, MURMURS.size() - 1)] if murmurs else ""
+	var lines: Array = MURMURS[backdrop]
+	murmur_label.text = lines[mini(combat.dungeon_turns, lines.size() - 1)] if murmurs else ""
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
 		var art := "cursed" if d.value == Combat.CURSE else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
@@ -278,8 +286,7 @@ func _log(line: String) -> void:
 func _build() -> void:
 	var root := UI.page(self)
 	# Placed by _ground_backdrop once the fighters are laid out; the rest sinks behind the dice tray.
-	# ponytail: falls back to the crypt until bg_mine.webp lands (Task 6); FLOOR_LEDGE is the crypt's.
-	crypt = UI.backdrop(self, backdrop if ResourceLoader.exists("res://assets/ui/bg_%s.webp" % backdrop) else "fight")
+	crypt = UI.backdrop(self, backdrop)
 	# The strip it uncovers at the bottom takes the colour of the picture's bottom edge, so no seam shows.
 	var art := crypt.texture.get_image()
 	(get_child(0) as ColorRect).color = art.get_pixel(art.get_width() / 2, art.get_height() - 1)
@@ -542,6 +549,6 @@ static func _arrow(color: Color) -> Texture2D:
 func _process(_delta: float) -> void:
 	var holder: Control = hero.get_parent()
 	var feet := holder.get_global_rect().end.y - SPRITE_PAD * SPRITE_SCALE - global_position.y
-	var shift: float = feet - FEET_SINK - FLOOR_LEDGE * size.y
+	var shift: float = feet - FEET_SINK - LEDGES[backdrop] * size.y
 	crypt.offset_top = shift
 	crypt.offset_bottom = shift

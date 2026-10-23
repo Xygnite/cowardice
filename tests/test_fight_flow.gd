@@ -185,10 +185,12 @@ func _two_floors() -> void:
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "then the Mine's map, from its entrance")
 	check(game.combat.player_hp == mini(game.combat.max_hp, hp + heal) and game.combat.shards == shards, "HP and Shards carry down")
+	check(game.combat.dungeon_turns == 0, "the Mine's murmurs start from their first line")
 	game.layer = game.map.size() - 1
 	game.combat.start_group(["pit_king"])
 	game._show_fight(game._on_fight_finished)
 	check(game.screen.backdrop == "mine", "Mine fights ask for the Mine backdrop")
+	check(game.screen.fight_label.text == "Boss" and game.screen.murmur_label.text == "", "the Pit King's fight says Boss, no murmurs")
 	game.combat.enemies[0].hp = 1
 	var embers: int = game.meta.embers
 	await _fight_out(game, "pit king at 1 HP")
@@ -215,6 +217,12 @@ func _mine_start() -> void:
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
 	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")
+	game.combat.start_group(["miner"])
+	game._show_fight(game._on_fight_finished)
+	await process_frame
+	check(game.screen.crypt.texture.resource_path == "res://assets/ui/bg_mine.webp", "Mine fights show the Mine backdrop")
+	check(game.screen.fight_label.text == "Mine", "a Mine fight is labelled Mine, got %s" % game.screen.fight_label.text)
+	check(game.screen.murmur_label.text == CombatScreen.MURMURS.mine[0], "a Mine fight murmurs the Mine's lines")
 	await create_timer(0.3).timeout
 	check(errors.count == errors_before, "a Mine start shows with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()

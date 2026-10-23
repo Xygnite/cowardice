@@ -9,7 +9,7 @@ const IMAGE := Vector2(1024, 572)
 ## A flame also has "fps". Its sheet covers the painted flame under it on every frame.
 ## A fog band also has "width" (image px it covers), "period" (pxl px after which the band repeats),
 ## "step_s" (seconds per one-pxl-pixel drift step) and "alpha".
-## A chain (cut out of the painting by tools/cut_chains.gd, in image px) also has "period": seconds for one
+## A chain (a strip in image px: cut out of the painting by tools/cut_chains.gd, or drawn so) also has "period": seconds for one
 ## swing there and back across its 5 sway frames.
 const LIFE := {
 	"menu": {"px": 2, "parts": [
@@ -34,11 +34,24 @@ const LIFE := {
 		{"kind": "flame", "art": "candle", "at": Vector2(737, 266), "fps": 8.0},
 		{"kind": "flame", "art": "candle", "at": Vector2(755, 253), "fps": 8.0},
 		{"kind": "flame", "art": "candle", "at": Vector2(865, 274), "fps": 8.0},
-		# Ends at y 390, above the floor ledge (CombatScreen.FLOOR_LEDGE), so the fighters stand in front of it.
+		# Ends at y 390, above the floor ledge (CombatScreen.LEDGES), so the fighters stand in front of it.
 		{"kind": "fog", "art": "floor", "at": Vector2(0, 366), "width": 1024.0, "period": 96, "step_s": 0.55, "alpha": 0.8},
 		{"kind": "chain", "art": "chain_fight_0", "at": Vector2(104, 106), "period": 3.2},
 		{"kind": "chain", "art": "chain_fight_1", "at": Vector2(596, 62), "period": 3.8},
 		{"kind": "chain", "art": "chain_fight_2", "at": Vector2(889, 68), "period": 3.5},
+	]},
+	# Drawn as one with its parts in art/pxl/bg_mine.px.js: flames on the glass of its LANTERNS, chains under
+	# its CHAINS eye bolts.
+	"mine": {"px": 2, "parts": [
+		{"kind": "flame", "art": "lantern", "at": Vector2(426, 150), "fps": 6.0},
+		{"kind": "flame", "art": "lantern", "at": Vector2(592, 150), "fps": 6.0},
+		{"kind": "flame", "art": "lantern", "at": Vector2(328, 194), "fps": 6.0},
+		{"kind": "flame", "art": "lantern", "at": Vector2(688, 194), "fps": 6.0},
+		# Ends at y 380, above the floor ledge (CombatScreen.LEDGES), so the fighters stand in front of it.
+		{"kind": "fog", "art": "dust", "at": Vector2(0, 300), "width": 1024.0, "period": 128, "step_s": 0.6, "alpha": 1.0},
+		{"kind": "chain", "art": "chain_mine_0", "at": Vector2(194, 68), "period": 3.4},
+		{"kind": "chain", "art": "chain_mine_1", "at": Vector2(798, 68), "period": 3.9},
+		{"kind": "chain", "art": "chain_mine_2", "at": Vector2(506, 140), "period": 3.1},
 	]},
 }
 

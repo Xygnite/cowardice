@@ -699,11 +699,11 @@ func _backdrop_life() -> void:
 	check(mid.is_equal_approx(Vector2(906, 360)), "backdrop life: image centre stays centred, got %s" % mid)
 	var keys: Array = BackdropLife.LIFE.keys()
 	keys.sort()
-	check(keys == ["camp", "fight", "menu"], "backdrop life: menu, camp and fight only")
+	check(keys == ["camp", "fight", "menu", "mine"], "backdrop life: menu, camp, fight and mine only")
 	for art: String in keys:
 		for part: Dictionary in BackdropLife.LIFE[art].parts:
 			check(ResourceLoader.exists("res://assets/ui/life/%s.png" % part.art), "backdrop life: %s art %s exists" % [art, part.art])
-	for want: Array in [["menu", 2], ["camp", 1], ["fight", 2]]:
+	for want: Array in [["menu", 2], ["camp", 1], ["fight", 2], ["mine", 2]]:
 		var flames: Array = BackdropLife.LIFE[want[0]].parts.filter(func(p): return p.kind == "flame")
 		check(flames.size() >= want[1], "backdrop life: %s has %d+ flames, got %d" % [want[0], want[1], flames.size()])
 	var rect := TextureRect.new()
@@ -715,7 +715,7 @@ func _backdrop_life() -> void:
 	check(s0.is_playing() and s0.position == parts[0].at and s0.scale == Vector2(2, 2), "backdrop life: a flame plays at its spot, px-scaled")
 	rect.free()
 
-	for want: Array in [["menu", "moat"], ["camp", "ground"]]:
+	for want: Array in [["menu", "moat"], ["camp", "ground"], ["mine", "dust"]]:
 		var fogs: Array = BackdropLife.LIFE[want[0]].parts.filter(func(p): return p.kind == "fog" and p.art == want[1])
 		check(fogs.size() == 1, "backdrop life: %s has %s fog" % want)
 	for art: String in keys:
@@ -727,9 +727,9 @@ func _backdrop_life() -> void:
 			var h := band.get_height()
 			check(band.get_width() % p == 0 and band.get_width() >= 2 * p, "backdrop life: %s band is whole periods" % part.art)
 			check(band.get_region(Rect2i(0, 0, p, h)).get_data() == band.get_region(Rect2i(p, 0, p, h)).get_data(), "backdrop life: %s band repeats without a seam" % part.art)
-			if art == "fight":
-				var bottom: float = part.at.y + h * BackdropLife.LIFE.fight.px
-				check(bottom < CombatScreen.FLOOR_LEDGE * 572, "backdrop life: fight fog stays above the floor ledge, bottom %s" % bottom)
+			if CombatScreen.LEDGES.has(art):
+				var bottom: float = part.at.y + h * BackdropLife.LIFE[art].px
+				check(bottom < CombatScreen.LEDGES[art] * 572, "backdrop life: %s fog stays above the floor ledge, bottom %s" % [art, bottom])
 	var menu := TextureRect.new()
 	var mlife: BackdropLife = BackdropLife.attach(menu, "menu")
 	var mparts: Array = BackdropLife.LIFE.menu.parts
@@ -806,3 +806,11 @@ func _chains() -> void:
 	check(is_equal_approx(s.sprite_frames.get_animation_speed("default"), 8.0 / parts[ci].period), "chains: one swing there and back per period")
 	check(s.is_playing() and s.scale == Vector2.ONE, "chains: strips are in image px, unscaled")
 	rect.free()
+	# The mine draws its chains as strips from the start (art/pxl/bg_mine.px.js), so nothing is cut for it.
+	var mine: Texture2D = load("res://assets/ui/bg_mine.webp")
+	check(mine != null and mine.get_size() == BackdropLife.IMAGE, "mine: backdrop is 1024x572")
+	var mchains: Array = BackdropLife.LIFE.mine.parts.filter(func(p): return p.kind == "chain")
+	check(mchains.size() >= 1, "mine: has a swaying chain")
+	for part: Dictionary in mchains:
+		check(BackdropLife.frames(part.art, 1.0).get_frame_count("default") == 5 and part.period >= 3.0 and part.period <= 4.0, "mine: %s is a 5-frame strip swinging in 3-4 s" % part.art)
+	check(CombatScreen.LEDGES.keys() == ["fight", "mine"], "mine: a floor ledge per fight backdrop")
