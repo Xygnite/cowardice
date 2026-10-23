@@ -11,24 +11,24 @@ const GAMBLER_BET := 4
 ## `dice` per choice: 0 = no roll, 1 = the player throws one die, 3 = all dice. The last choice is the way out, except in the corridor.
 const EVENTS := {
 	"shrine": {
-		"title": "Split Shrine",
-		"text": "A shrine split down the middle. Something still listens.",
+		"title": "Cracked Shrine",
+		"text": "A cracked shrine, split down the middle. Something still listens.",
 		"choices": [
-			{"label": "Pray (-6 HP, forge a face)", "dice": 0},
+			{"label": "Bleed for it (-6 HP, forge a face)", "dice": 0},
 			{"label": "Walk on", "dice": 0},
 		],
 	},
 	"pilgrim": {
-		"title": "The Pilgrim",
-		"text": "A pilgrim sits by the road, alive for now. He offers you something.",
+		"title": "Drowned Pilgrim",
+		"text": "A pilgrim, drowned in a puddle that is barely a puddle. Their pockets are not empty.",
 		"choices": [
-			{"label": "Take his Shards (+6)", "dice": 0},
-			{"label": "Take his bandages (+5 HP)", "dice": 0},
+			{"label": "Take their coin (+6 Shards)", "dice": 0},
+			{"label": "Close their eyes (+5 HP)", "dice": 0},
 		],
 	},
 	"altar": {
-		"title": "Bone Altar",
-		"text": "An altar of knuckles and teeth. It wants something you can't grow back.",
+		"title": "Weeping Altar",
+		"text": "An altar that weeps without eyes. It wants something you can't grow back.",
 		"choices": [
 			{"label": "Give (-5 max HP, forge two faces)", "dice": 0},
 			{"label": "Refuse", "dice": 0},
@@ -50,7 +50,7 @@ const EVENTS := {
 		],
 	},
 	"corridor": {
-		"title": "Falling Corridor",
+		"title": "Collapsing Corridor",
 		"text": "The ceiling is coming down in pieces. Run, and hope your dice are quick.",
 		"choices": [
 			{"label": "Run for it (throw all dice)", "dice": 3},
@@ -58,15 +58,15 @@ const EVENTS := {
 		],
 	},
 	"chest": {
-		"title": "Locked Chest",
-		"text": "A chest, locked. The lock is old and so is your patience.",
+		"title": "Rusted Chest",
+		"text": "A rusted chest. The lock is old and so is your patience.",
 		"choices": [
 			{"label": "Pick the lock (throw a die)", "dice": 1},
 			{"label": "Leave it", "dice": 0},
 		],
 	},
 	"gambler": {
-		"title": "The Skull Gambler",
+		"title": "Gambler's Skull",
 		"text": "A skull on a barrel, with three dice of its own. It wants 4 Shards to play.",
 		"choices": [
 			{"label": "Bet 4 Shards (throw all dice)", "dice": 3},
@@ -74,8 +74,8 @@ const EVENTS := {
 		],
 	},
 	"cursed_cast": {
-		"title": "Cursed Cast",
-		"text": "A mold for casting a perfect face. It will take payment from another.",
+		"title": "Cursed Die Cast",
+		"text": "A mold for casting a die face. It will take payment from another.",
 		"choices": [
 			{"label": "Carve a 9 (curse another face)", "dice": 0},
 			{"label": "Leave it", "dice": 0},
@@ -103,10 +103,10 @@ static func resolve(id: String, choice: int, c: Combat, rolled: Array, tries := 
 			r = {"text": "The shrine takes its due. -%d HP. A face is forged." % c.hurt(6), "forge": 1}
 		["pilgrim", 0]:
 			c.shards += 6
-			r.text = "He presses a handful of Shards into your palm. +6 Shards."
+			r.text = "They have no further use for it. +6 Shards."
 		["pilgrim", 1]:
 			c.heal(5)
-			r.text = "The bandages are clean. Somehow. +5 HP."
+			r.text = "A small kindness. It steadies you. +5 HP."
 		["altar", 0]:
 			c.lose_max_hp(5)
 			r = {"text": "The altar takes it. -5 max HP. Two faces are forged.", "forge": 2}
