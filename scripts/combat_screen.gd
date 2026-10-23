@@ -144,10 +144,14 @@ func _on_end_turn() -> void:
 	if dealt > 0:
 		await _play(hero, "attack")
 	for i in combat.enemies.size():
-		if combat.enemies[i].hp < enemy_hp_before[i]:
+		var swapped: bool = combat.enemies[i].has("from")  # a Hulk died and Rubble stands in its slot
+		if swapped or combat.enemies[i].hp < enemy_hp_before[i]:
 			_play(enemy_ui[i].rig, "hurt")
 			_slash(enemy_ui[i].body)
-			_float(enemy_ui[i].body, "-%d" % (enemy_hp_before[i] - combat.enemies[i].hp), UI.DANGER)
+			_float(enemy_ui[i].body, "-%d" % (enemy_hp_before[i] - (0 if swapped else combat.enemies[i].hp)), UI.DANGER)
+		if swapped:
+			_log("The %s collapses into %s." % [combat.enemies[i].from, combat.enemies[i].name])
+			_swap_body(i)
 	if unplaced > 0:
 		_log("+%d Grit." % unplaced)
 	_refresh()
@@ -377,6 +381,19 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 	arcs.flip_h = true  # the sound travels left, toward the hero
 	arcs.position = Vector2(-arcs.texture.get_width(), body.custom_minimum_size.y * 0.25)
 	return {"intent": intent, "icon": icon, "rune": rune, "arcs": arcs, "body": body, "rig": rig, "hp": hp, "bar": bar, "mark": mark}
+
+
+## The slot's Rubble replaces its Hulk: new HP bar max, and a new rig if the new type has a sprite.
+func _swap_body(i: int) -> void:
+	var ui: Dictionary = enemy_ui[i]
+	ui.bar.max_value = combat.enemies[i].type.hp
+	if ui.rig:
+		ui.rig.queue_free()
+		ui.rig = null
+	var sprite: String = combat.enemies[i].type.get("sprite", "")
+	if sprite:
+		ui.body.flat = true
+		ui.rig = _add_rig(ui.body, sprite)
 
 
 ## Puts the rigged scene scenes/<sprite>.tscn inside `holder`, sized to the sprite at game scale.

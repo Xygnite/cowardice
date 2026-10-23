@@ -26,6 +26,7 @@ func _init() -> void:
 	Engine.time_scale = SPEED
 	await _map_moves()
 	await _play_events()
+	await _hulk_swap()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"]]
 	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
@@ -129,6 +130,27 @@ func _fight_out(game: Node, fight: String) -> void:
 		await process_frame
 	check(not game.screen is CombatScreen, "fight %s ends within %d turns" % [fight, TURN_LIMIT])
 	print("fight %s: %d turns, %s" % [fight, turns, "won" if game.combat.fight_won() else "lost"])
+
+
+## A Hulk dies on screen: its slot shows Rubble's name and HP, the log says so, no engine errors.
+func _hulk_swap() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.combat.start_group(["hulk"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	screen.combat.enemies[0].hp = 3
+	screen.combat.turn = 1  # the Hulk attacks instead of guarding, so any hit kills
+	screen.combat.start_turn()
+	for i in screen.combat.dice.size():
+		screen.combat.assign(i, Combat.Slot.ATTACK)
+	screen._on_end_turn()
+	await create_timer(3.0).timeout
+	check(screen.log_lines.any(func(l): return "collapses into Rubble" in l), "the log tells the Hulk fell to Rubble")
+	check(screen.enemy_ui[0].hp.text.begins_with("Rubble") and screen.enemy_ui[0].bar.max_value == 8, "the slot shows Rubble's name and HP bar")
+	check(errors.count == errors_before, "the Hulk swap runs with no errors")
+	game.queue_free()
+	await process_frame
 
 
 ## A game started straight onto a run's map, skipping the menu and the tutorial.

@@ -460,6 +460,7 @@ func _mine_enemies() -> void:
 	place(c, 0, 5, CombatScript.Slot.ATTACK)
 	c.resolve_player()
 	check(c.enemies[0].name == "Rubble" and c.enemies[0].hp == 8 and c.enemies[0].intent.is_empty(), "a dead Hulk leaves Rubble in its place")
+	check(c.enemies[0].from == "Rubble Hulk", "the Rubble is marked as coming from the Hulk")
 	check(not c.fight_won() and c.replaced == 1, "the Hulk's kill is counted and the fight goes on")
 	c.start_turn()
 	check(c.enemies[0].intent.kind == "attack", "Rubble acts from next turn")
