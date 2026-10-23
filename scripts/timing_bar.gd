@@ -1,11 +1,13 @@
 class_name TimingBar
 extends Control
-## Enemy wind-up for the timed block and parry: the marker runs right, impact is the right edge.
-## One SPACE press per attack; pressing early or not at all is a miss.
+## Enemy wind-up for the timed block and parry: the marker runs right, and impact lands at a random
+## point along the bar each attack, where the windows end. One SPACE press per attack; pressing early,
+## late or not at all is a miss.
 
 signal finished(grade: int)
 
-const WINDUP_MS := 1400.0
+const WINDUP_MS := 900.0  # how long the marker takes to cross the whole bar
+const EARLIEST_IMPACT := 0.45  # share of the bar before which impact never lands, so even a Good window fits
 const LATE_GRACE_MS := 200.0  # how long the bar waits past impact before calling it a miss
 const INSET := 8.0  # frame border width in screen pixels
 static var FRAME := _frame()
@@ -20,6 +22,7 @@ static func _frame() -> StyleBoxTexture:
 var combat: Combat
 var enemy := 0
 var elapsed := 0.0
+var impact_ms := WINDUP_MS  # when this attack lands, measured like elapsed
 var running := false
 
 
@@ -27,6 +30,7 @@ func start(c: Combat, enemy_index: int) -> void:
 	combat = c
 	enemy = enemy_index
 	elapsed = 0.0
+	impact_ms = c.rng.randf_range(WINDUP_MS * EARLIEST_IMPACT, WINDUP_MS)
 	running = true
 	show()
 	queue_redraw()
@@ -36,7 +40,7 @@ func _process(delta: float) -> void:
 	if not running:
 		return
 	elapsed += delta * 1000.0
-	if elapsed > WINDUP_MS + LATE_GRACE_MS:
+	if elapsed > impact_ms + LATE_GRACE_MS:
 		_finish(Combat.Grade.MISS)
 	queue_redraw()
 
@@ -44,7 +48,7 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if running and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
 		get_viewport().set_input_as_handled()
-		_finish(combat.grade_for(WINDUP_MS - elapsed, enemy))
+		_finish(combat.grade_for(impact_ms - elapsed, enemy))
 
 
 func _finish(grade: int) -> void:
@@ -59,16 +63,18 @@ func _draw() -> void:
 	var w := size.x
 	var h := size.y
 	draw_style_box(FRAME, Rect2(0, 0, w, h))
-	var px_per_ms := w / WINDUP_MS
+	var px_per_ms := (w - INSET * 2) / WINDUP_MS
+	var impact := INSET + impact_ms * px_per_ms
 	if combat.enemies[enemy].intent.kind == "attack":
-		_window(Combat.GOOD_MS * px_per_ms, Color(0.25, 0.45, 0.8, 0.5))
-		_window(combat.perfect_window_ms() * px_per_ms, Color(0.4, 0.65, 1.0))
+		_window(impact, Combat.GOOD_MS * px_per_ms, Color(0.25, 0.45, 0.8, 0.5))
+		_window(impact, combat.perfect_window_ms() * px_per_ms, Color(0.4, 0.65, 1.0))
 	else:
-		_window(combat.parry_window_ms() * px_per_ms, Color(0.85, 0.25, 0.25))
-	var x := minf(elapsed * px_per_ms, w)
+		_window(impact, combat.parry_window_ms() * px_per_ms, Color(0.85, 0.25, 0.25))
+	var x := minf(INSET + elapsed * px_per_ms, w - INSET)
 	draw_rect(Rect2(x - 2, -6, 4, h + 12), Color(1, 0.85, 0.4))
 
 
-## A timing window ending at impact (the right edge), kept inside the frame.
-func _window(width: float, color: Color) -> void:
-	draw_rect(Rect2(size.x - INSET - width, INSET, width, size.y - INSET * 2), color)
+## A timing window ending at impact, kept inside the frame.
+func _window(impact: float, width: float, color: Color) -> void:
+	var left := maxf(INSET, impact - width)
+	draw_rect(Rect2(left, INSET, impact - left, size.y - INSET * 2), color)
