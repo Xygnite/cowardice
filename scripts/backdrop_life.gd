@@ -28,6 +28,7 @@ static func attach(backdrop: TextureRect, art: String) -> BackdropLife:
 	var life := BackdropLife.new()
 	life.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	life.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	life.clip_contents = true  # parts near the image edge stay inside the cropped painting
 	life.stage = Node2D.new()
 	life.stage.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	life.add_child(life.stage)
@@ -36,16 +37,21 @@ static func attach(backdrop: TextureRect, art: String) -> BackdropLife:
 	return life
 
 
-## A looping "default" animation from res://assets/ui/life/<sheet>.png and .json (pxl frame sheet,
-## frames in order along one row).
-static func frames(sheet: String, fps: float) -> SpriteFrames:
-	var base := "res://assets/ui/life/" + sheet
-	var tex: Texture2D = load(base + ".png")
+## A looping "default" animation from `<dir><sheet>.png` and `.json` (pxl frame sheet: frames taken in
+## order, whatever they are named). `dir` is overridable for tests.
+static func frames(sheet: String, fps: float, dir := "res://assets/ui/life/") -> SpriteFrames:
+	var base := dir + sheet
+	var tex: Texture2D
+	if ResourceLoader.exists(base + ".png"):
+		tex = load(base + ".png")
+	else:  # a loose file (not imported), as the tests write
+		tex = ImageTexture.create_from_image(Image.load_from_file(base + ".png"))
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(base + ".json"))
+	var list: Array = data.frames.values() if data.frames is Dictionary else data.frames
 	var sf := SpriteFrames.new()
 	sf.set_animation_speed("default", fps)
-	for i in data.frames.size():
-		var r: Dictionary = data.frames[sheet + "_" + str(i)].frame
+	for f: Dictionary in list:
+		var r: Dictionary = f.frame
 		var at := AtlasTexture.new()
 		at.atlas = tex
 		at.region = Rect2(r.x, r.y, r.w, r.h)

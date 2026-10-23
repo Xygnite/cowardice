@@ -538,3 +538,22 @@ func _backdrop_life() -> void:
 	var keys: Array = BackdropLife.LIFE.keys()
 	keys.sort()
 	check(keys == ["camp", "fight", "menu"], "backdrop life: menu, camp and fight only")
+
+	var dir := "user://test_life/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	var img := Image.create(12, 4, false, Image.FORMAT_RGBA8)
+	img.save_png(dir + "sheet.png")
+	var f := FileAccess.open(dir + "sheet.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify({"frames": {
+		"zz": {"frame": {"x": 0, "y": 0, "w": 4, "h": 4}}, "aa": {"frame": {"x": 4, "y": 0, "w": 4, "h": 4}},
+		"mm": {"frame": {"x": 8, "y": 0, "w": 4, "h": 4}}}}))
+	f.close()
+	var sf: SpriteFrames = BackdropLife.frames("sheet", 6.0, dir)
+	check(sf.get_frame_count("default") == 3 and sf.get_animation_speed("default") == 6.0, "backdrop life: frames() reads 3 frames at fps")
+	var xs: Array = []
+	for i in sf.get_frame_count("default"):
+		xs.append((sf.get_frame_texture("default", i) as AtlasTexture).region.position.x)
+	check(xs == [0.0, 4.0, 8.0], "backdrop life: frames() keeps sheet order, got %s" % [xs])
+	for n in ["sheet.png", "sheet.json"]:
+		DirAccess.remove_absolute(dir + n)
+	DirAccess.remove_absolute(dir)
