@@ -28,7 +28,7 @@ func _init() -> void:
 	_forge_and_campfire()
 	_fight_rewards()
 	_meta()
-	_maps()
+	_floors()
 	_lasting_curse()
 	_event_helpers()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
@@ -298,32 +298,56 @@ func _fight_rewards() -> void:
 	check(c.dungeon_turns == 1, "only dungeon turns advance the murmurs")
 
 
-## Many dealt floors, each checked against the run's shape in game.gd's make_map().
-func _maps() -> void:
-	var game := preload("res://scripts/game.gd")
-	var firsts := {}
+## Many dealt floors, each checked against the branching map's rules in Floor.deal().
+func _floors() -> void:
+	var kinds_mid := {}
+	var shapes := {}
 	for n in 200:
-		var m: Array = game.make_map()
+		var f: Array = Floor.deal()
 		var groups := []
-		var kinds := []
-		for li in m.size():
-			check(m[li].size() == (1 if li in [0, m.size() - 1] else 2), "layer %d has the right number of rooms" % li)
-			check(m[li].any(func(r): return r.kind == "fight"), "layer %d has a fight" % li)
-			var hp: Array = game.ENTRANCE_HP if li == 0 else (game.EARLY_HP if li <= game.EARLY_LAYERS else game.LATE_HP)
-			for r in m[li]:
-				kinds.append(r.kind)
-				if r.kind == "fight" and li < m.size() - 1:
+		check(f.size() == 10, "a floor is ten columns")
+		for c in f.size():
+			var col: Array = f[c]
+			check(col.size() == 1 if c in [0, 9] else (col.size() >= 2 and col.size() <= 5), "column %d has a legal room count" % c)
+			var lanes: Array = col.map(func(r): return r.lane)
+			var sorted_lanes := lanes.duplicate()
+			sorted_lanes.sort()
+			check(lanes == sorted_lanes and sorted_lanes.all(func(l): return l >= 0 and l < 5), "column %d lanes are sorted and in 0..4" % c)
+			check(lanes.size() == sorted_lanes.reduce(func(u, l): return u if l in u else u + [l], []).size(), "column %d lanes are distinct" % c)
+			var hp: Array = Floor.ENTRANCE_HP if c == 0 else (Floor.EARLY_HP if c <= 4 else Floor.LATE_HP)
+			var linked := {}
+			for r in col:
+				check(r.next.size() > 0 or c == 9, "column %d room has a way on" % c)
+				for i in r.next:
+					check(i >= 0 and i < f[c + 1].size(), "a link points at a real room")
+					linked[i] = true
+					var child: Dictionary = f[c + 1][i]
+					check(not (r.kind in ["forge", "campfire"] and child.kind == r.kind), "no forge/campfire links to its own kind")
+					for r2 in col:
+						for j in r2.next:
+							check(not (r.lane < r2.lane and child.lane > f[c + 1][j].lane), "links don't cross")
+				if c < 9:
+					kinds_mid[r.kind] = kinds_mid.get(r.kind, 0) + (1 if c in range(3, 8) else 0)
+				if c == 8:
+					check(r.kind == "campfire", "column 8 is all campfires")
+				if c in [1, 2]:
+					check(r.kind in ["fight", "unknown"], "columns 1-2 are fights or ?")
+				if r.kind == "fight" and c < 9:
 					var total: int = r.enemies.reduce(func(t, k): return t + CombatScript.TYPES[k].hp, 0)
-					check(total >= hp[0] and total <= hp[1], "layer %d fight has %d HP, wants %s" % [li, total, hp])
-					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in game.ENEMIES), "a fight is 1-3 dungeon enemies")
+					check(total >= hp[0] and total <= hp[1], "column %d fight has %d HP, wants %s" % [c, total, hp])
+					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in Floor.ENEMIES), "a fight is 1-3 dungeon enemies")
 					groups.append(r.enemies)
-		check(m.size() == 10, "a floor is ten layers")
-		check(m[-1][0].enemies == ["warden"] and m[-1][0].label == "Boss: Bone Warden", "the boss is last")
-		check(m[-2].any(func(r): return r.kind == "campfire"), "a campfire right before the boss")
-		check(kinds.count("forge") == 2 and kinds.count("campfire") == 2, "two forges and two campfires")
+			if c < 9:
+				check(linked.size() == f[c + 1].size(), "every room in column %d has a parent" % (c + 1))
+		shapes[str([f[1].size(), f[1].map(func(r): return r.lane)])] = true
+		check(f[-1][0].enemies == ["warden"] and f[-1][0].label == "Boss: Bone Warden" and f[-1][0].next == [], "the boss is last")
 		check(groups.size() == groups.reduce(func(u, g): return u if g in u else u + [g], []).size(), "no group twice")
-		firsts[m[0][0].label] = true
-	check(firsts.size() > 5, "floors differ from run to run")
+	for k in ["fight", "unknown", "forge", "campfire"]:
+		check(kinds_mid.get(k, 0) > 0, "%s shows up in columns 3-7" % k)
+	check(shapes.size() > 5, "column 1 differs from floor to floor")
+	var used := {}
+	for i in 100:  # more groups than fit, so repeats must be accepted instead of looping forever
+		Floor.group(Floor.ENTRANCE_HP, used)
 	var c := CombatScript.new(7)
 	c.start_group(["rat", "rat", "rat"])
 	check(c.enemies.map(func(e): return e.name) == ["Bone Rat A", "Bone Rat B", "Bone Rat C"], "a dealt group starts like a set fight")

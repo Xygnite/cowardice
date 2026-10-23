@@ -2,20 +2,9 @@ extends Control
 ## Runs the game: a title menu, the tutorial on first play, then runs of map -> rooms -> boss,
 ## with Embers and perks carried between runs by Meta.
 
-## Enemies a run can deal into its fights, and how much total enemy HP a fight gets by depth.
-const ENEMIES := ["rat", "skeleton", "acolyte", "doctor", "bell", "treant", "moss", "grieve", "archivist"]
-const ENTRANCE_HP := [18, 26]
-const EARLY_HP := [18, 38]
-const LATE_HP := [42, 56]
-const BOSS := 6  # Combat.FIGHTS index
-const LAYERS := 10
-const EARLY_LAYERS := 4  # layers 1-4 get EARLY_HP fights, the rest LATE_HP
-## Forges and campfires: each lands on one layer of its band, so they spread out. The last sits right before the boss.
-const SPECIALS := [["forge", [1, 2]], ["campfire", [3, 4]], ["forge", [5, 6]], ["campfire", [8]]]
-
 var meta := Meta.load_from()
 var combat: Combat
-var map: Array = []  # this run's floor, from make_map()
+var map: Array = []  # this run's floor, from Floor.deal()
 var layer := 0
 var path: Array = []  # room picked on each layer so far
 var screen: Control
@@ -101,57 +90,10 @@ func _on_tutorial_finished(_won: bool) -> void:
 func _start_run() -> void:
 	combat = Combat.new()
 	combat.apply_perks(meta.equipped)
-	map = make_map()
+	map = Floor.deal()
 	layer = 0
 	path.clear()
 	_show_map()
-
-
-## One floor of the Sunken Chapel, dealt fresh each run, entrance first: an easy fight, eight layers of
-## two rooms (two fights, or a fight and a forge or campfire), then the boss. Every fight is a fresh
-## random group, and no group appears twice.
-static func make_map() -> Array:
-	var used := {}
-	var result := [[_fight_room(_group(ENTRANCE_HP, used))]]
-	var specials := {}
-	for s in SPECIALS:
-		specials[s[1].pick_random()] = s[0]
-	for li in range(1, LAYERS - 1):
-		var row := []
-		if specials.has(li):
-			row.append({"kind": specials[li], "label": specials[li].capitalize()})
-		while row.size() < 2:
-			row.append(_fight_room(_group(EARLY_HP if li <= EARLY_LAYERS else LATE_HP, used)))
-		row.shuffle()
-		result.append(row)
-	result.append([_fight_room(Combat.FIGHTS[BOSS])])
-	return result
-
-
-## One to three random ENEMIES whose total HP is within `hp`, a group not yet in `used`.
-static func _group(hp: Array, used: Dictionary) -> Array:
-	while true:
-		var keys := []
-		for i in randi_range(1, 3):
-			keys.append(ENEMIES.pick_random())
-		keys.sort()
-		var total: int = keys.reduce(func(t, k): return t + Combat.TYPES[k].hp, 0)
-		var id := ",".join(keys)
-		if total >= hp[0] and total <= hp[1] and not used.has(id):
-			used[id] = true
-			return keys
-	return []
-
-
-## "Fight: Archivist, Bone Rats" from the fight's enemies.
-static func _fight_room(keys: Array) -> Dictionary:
-	var names := []
-	for key in keys:
-		var name: String = Combat.TYPES[key].name + ("s" if keys.count(key) > 1 else "")
-		if name not in names:
-			names.append(name)
-	var boss: bool = Combat.TYPES[keys[0]].get("boss", false)
-	return {"kind": "fight", "enemies": keys, "label": ("Boss: " if boss else "Fight: ") + ", ".join(names)}
 
 
 func _show_map() -> void:
