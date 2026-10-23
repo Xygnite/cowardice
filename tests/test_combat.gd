@@ -339,12 +339,12 @@ func _floors() -> void:
 					groups.append(r.enemies)
 			if c < 9:
 				check(linked.size() == f[c + 1].size(), "every room in column %d has a parent" % (c + 1))
-		shapes[str([f[1].size(), f[1].map(func(r): return r.lane)])] = true
+		shapes[str(f[4].map(func(r): return r.lane))] = true
 		check(f[-1][0].enemies == ["warden"] and f[-1][0].label == "Boss: Bone Warden" and f[-1][0].next == [], "the boss is last")
 		check(groups.size() == groups.reduce(func(u, g): return u if g in u else u + [g], []).size(), "no group twice")
 	for k in ["fight", "unknown", "forge", "campfire"]:
 		check(kinds_mid.get(k, 0) > 0, "%s shows up in columns 3-7" % k)
-	check(shapes.size() > 5, "column 1 differs from floor to floor")
+	check(shapes.size() > 5, "column 4 differs from floor to floor")
 	var used := {}
 	for i in 100:  # more groups than fit, so repeats must be accepted instead of looping forever
 		Floor.group(Floor.ENTRANCE_HP, used)

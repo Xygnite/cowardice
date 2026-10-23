@@ -54,12 +54,17 @@ static func deal() -> Array:
 	return floor_map
 
 
-## Five walkers start one per lane, then step a lane up, down or straight each
+## Five walkers leave the entrance, first to lanes 0, 1, 3, 4 and a random one, then step a lane up, down or straight each
 ## column without crossing another link; every column-8 room links to the boss.
 static func _walk(rooms: Array, links: Array) -> void:
 	rooms.append({MID: {"lane": MID}})
-	var walkers: Array = [0, 1, 2, 3, 4]
-	for c in range(1, COLUMNS - 1):
+	var walkers: Array = [0, 1, 3, 4, randi_range(0, LANES - 1)]
+	var first := {}
+	for l in walkers:
+		first[l] = {"lane": l}
+	links.append(first.keys().map(func(t): return [MID, t]))
+	rooms.append(first)
+	for c in range(2, COLUMNS - 1):
 		var gap: Array = []
 		var col := {}
 		walkers.sort()
@@ -74,7 +79,7 @@ static func _walk(rooms: Array, links: Array) -> void:
 				gap.append([l, t])
 			walkers[i] = t
 			col[t] = {"lane": t}
-		links.append(gap if c > 1 else col.keys().map(func(t): return [MID, t]))  # the entrance feeds every column-1 room
+		links.append(gap)
 		rooms.append(col)
 	links.append(rooms[COLUMNS - 2].keys().map(func(l): return [l, MID]))
 	rooms.append({MID: {"lane": MID}})
