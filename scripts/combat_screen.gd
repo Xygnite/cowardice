@@ -309,7 +309,11 @@ func _build() -> void:
 	actions.custom_minimum_size.x = 280
 	bottom_row.add_child(actions)
 	reroll_button = UI.button(actions, "", _on_reroll)
+	reroll_button.custom_minimum_size.y = 56
 	end_button = UI.button(actions, "End turn  [Enter]", _on_end_turn)
+	end_button.custom_minimum_size.y = 80  # the main action: biggest, in gold
+	end_button.add_theme_font_size_override("font_size", 32)
+	end_button.add_theme_color_override("font_color", UI.GOLD)
 
 	log_label = UI.label(actions, 16)
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

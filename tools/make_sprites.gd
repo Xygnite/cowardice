@@ -38,8 +38,8 @@ const SPRITES := [
 			Vector2i(36, 50), Vector2i(43, 53), Vector2i(43, 56)]},  # between the legs; arm and ribs; shield rim; belt
 	{"src": "mother_moss", "out": "mother_moss", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2,
 		"holes": [Vector2i(42, 17), Vector2i(76, 41), Vector2i(60, 65), Vector2i(57, 67), Vector2i(26, 74)]},  # between roots
-	{"src": "foreman_grieve", "out": "foreman_grieve", "cell": 20.83, "pad": 2,
-		"holes": [Vector2i(54, 15), Vector2i(16, 21), Vector2i(46, 57), Vector2i(41, 60)]},  # between spikes and tatters; not the lantern glass
+	{"src": "foreman_grieve", "out": "foreman_grieve", "cell": 20.83, "flip": true, "pad": 2,
+		"holes": [Vector2i(22, 15), Vector2i(60, 21), Vector2i(30, 57), Vector2i(35, 60)]},  # between spikes and tatters; not the lantern glass
 	{"src": "archivist", "out": "archivist", "cell": 10.0, "shrink": 2, "pad": 2},
 	{"src": "gambler", "out": "gambler", "cell": 20.0, "pad": 2},
 	{"src": "monk", "out": "monk", "cell": 20.0, "pad": 2},

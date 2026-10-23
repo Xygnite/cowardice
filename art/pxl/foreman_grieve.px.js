@@ -4,12 +4,12 @@ include("foreman_grieve_parts.px.js")
 include("lib.px.js")
 
 // The apron at the waist, painted under the pick's handle, so the cut took it (the dark cloth of row 51).
-RIG.under = [24, 52, `
-0111111111111111h
-0111111111111111h
-0111111111111111h
-0111111111111111h
-0111111111111111h
-0111111111111111h
-0111111111111111h`]
+RIG.under = [36, 52, `
+h5555555555555550
+h5555555555555550
+h5555555555555550
+h5555555555555550
+h5555555555555550
+h5555555555555550
+h5555555555555550`]
 standard("foreman_grieve")
