@@ -27,7 +27,8 @@ func _init() -> void:
 	await _map_moves()
 	await _play_events()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
-	for keys in Combat.FIGHTS + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
+	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"]]
+	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
 		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	print("FAILED: %d" % failures if failures else "All fight-flow checks passed.")

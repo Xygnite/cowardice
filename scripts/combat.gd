@@ -46,12 +46,20 @@ const TYPES := {
 	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
-	# Mine stubs so floors can deal them; Tasks 2 and 3 replace these with the real enemies.
-	"miner": {"name": "Miner", "hp": 12, "phase1": [{"kind": "attack", "value": 4}]},
-	"crawler": {"name": "Crawler", "hp": 8, "phase1": [{"kind": "attack", "value": 4}]},
-	"hulk": {"name": "Hulk", "hp": 26, "phase1": [{"kind": "attack", "value": 4}]},
-	"canary": {"name": "Canary", "hp": 10, "phase1": [{"kind": "attack", "value": 4}]},
-	"shaft_foreman": {"name": "Shaft Foreman", "hp": 28, "phase1": [{"kind": "attack", "value": 4}]},
+	# The Hollow Mine. "pack": each other living one adds that much to its attack. "rallies": adds that much to every other
+	# enemy's attack. "leaves": a fresh enemy of that type takes its place when it dies.
+	"miner": {"name": "Lantern-Eye Miner", "hp": 22,
+		"phase1": [{"kind": "attack", "value": 5}, {"kind": "attack", "value": 6}, {"kind": "unblockable", "value": 7}]},
+	"crawler": {"name": "Tunnel Crawler", "hp": 8, "pack": 1,
+		"phase1": [{"kind": "attack", "value": 3}]},
+	"hulk": {"name": "Rubble Hulk", "hp": 30, "leaves": "rubble",
+		"phase1": [{"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}]},
+	"rubble": {"name": "Rubble", "hp": 8,
+		"phase1": [{"kind": "attack", "value": 3}]},
+	"canary": {"name": "Canary Wraith", "hp": 12,
+		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
+	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "rallies": 2,
+		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
 	"pit_king": {"name": "Pit King", "hp": 100, "boss": true, "phase1": [{"kind": "attack", "value": 4}]},
 }
 
@@ -65,6 +73,7 @@ var max_hp := PLAYER_MAX_HP
 var player_hp := PLAYER_MAX_HP
 var shards := 0
 var kills := 0
+var replaced := 0  # enemies this fight that died and were replaced (a Hulk's Rubble); they still count as kills
 var dungeon_turns := 0  # enemy turns in dungeon fights this run; drives the murmurs
 var dice: Array[Dictionary] = []
 var rerolls := 0
@@ -164,7 +173,7 @@ func roll_dice(which: Array) -> Array:
 
 ## Call once when a fight ends, won or lost: counts kills and pays Shards for them.
 func claim_fight() -> void:
-	var dead := enemies.filter(func(e): return e.hp == 0).size()
+	var dead := enemies.filter(func(e): return e.hp == 0).size() + replaced
 	kills += dead
 	if not is_tutorial():
 		shards += dead * (SHARDS_PER_KILL + (1 if "scavenger" in perks else 0))
@@ -185,6 +194,7 @@ func start_fight(index: int) -> void:
 ## Starts a fight against `keys` (TYPES keys, at most three of one type).
 func start_group(keys: Array) -> void:
 	enemies.clear()
+	replaced = 0
 	var seen := {}
 	for key in keys:
 		var t: Dictionary = TYPES[key]
@@ -207,6 +217,7 @@ func start_turn() -> void:
 	grit = 0
 	for e in enemies:
 		e.intent = _next_intent(e) if e.hp > 0 else {}
+	_apply_bonuses()
 	_apply_rings()
 	for d in dice:
 		d.locked = false
@@ -357,6 +368,10 @@ func resolve_player() -> int:
 	for i in enemies.size():
 		if alive(i):
 			enemies[i].hp = maxi(floor_hp, enemies[i].hp - hits[i])
+			if enemies[i].hp == 0 and enemies[i].type.has("leaves"):
+				var t: Dictionary = TYPES[enemies[i].type.leaves]
+				enemies[i] = {"type": t, "name": t.name, "hp": t.hp, "intent": {}}  # acts from next turn
+				replaced += 1
 	for d in dice:
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
@@ -453,6 +468,21 @@ func _next_intent(e: Dictionary) -> Dictionary:
 	if next.kind == "curse":
 		next.target = rng.randi_range(0, dice.size() - 1)
 	return next
+
+
+## Pack and rally bonuses on attack values, from who is alive now, so the intent shows the final number.
+func _apply_bonuses() -> void:
+	var rally := 0
+	for e in enemies:
+		if e.hp > 0:
+			rally += e.type.get("rallies", 0)
+	for e in enemies:
+		if e.intent.get("kind") not in ["attack", "unblockable"]:
+			continue
+		var pack: int = e.type.get("pack", 0)
+		if pack:
+			e.intent.value += pack * (enemies.filter(func(o): return o.hp > 0 and o.type == e.type).size() - 1)
+		e.intent.value += rally - e.type.get("rallies", 0)
 
 
 ## A ringing enemy makes the first other enemy's attack this turn unblockable, shown in its intent.

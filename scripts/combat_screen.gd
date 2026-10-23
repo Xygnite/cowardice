@@ -155,7 +155,7 @@ func _on_end_turn() -> void:
 		_end(true)
 		return
 	for i in combat.enemies.size():
-		if not combat.alive(i):
+		if not combat.alive(i) or combat.enemies[i].intent.is_empty():  # a fresh Rubble waits a turn
 			continue
 		acting = i
 		_refresh()

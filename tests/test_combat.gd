@@ -29,6 +29,7 @@ func _init() -> void:
 	_fight_rewards()
 	_meta()
 	_floors()
+	_mine_enemies()
 	_lasting_curse()
 	_event_helpers()
 	_events()
@@ -430,6 +431,53 @@ func _fight_rewards() -> void:
 
 
 ## Many dealt floors, each checked against the branching map's rules in Floor.deal().
+func _mine_group(keys: Array, at_turn := 0) -> CombatScript:
+	var c := fresh()
+	c.start_group(keys)
+	c.turn = at_turn
+	c.start_turn()
+	return c
+
+
+func _mine_enemies() -> void:
+	var c := _mine_group(["miner"], 2)
+	check(c.enemies[0].intent.kind == "unblockable", "the Miner's third intent is unblockable")
+	c = _mine_group(["crawler", "crawler"])
+	check(c.enemies.all(func(e): return e.intent.value == 4), "two Crawlers attack for base + 1")
+	c = _mine_group(["crawler", "crawler", "crawler"])
+	check(c.enemies.all(func(e): return e.intent.value == 5), "three Crawlers attack for base + 2")
+	c.enemies[0].hp = 0
+	c.start_turn()
+	check(c.enemies[1].intent.value == 4 and c.enemies[2].intent.value == 4, "after a Crawler dies the others drop")
+	c = _mine_group(["skeleton", "shaft_foreman"])
+	check(c.enemies[0].intent.value == 7 and c.enemies[1].intent.value == 5, "the Foreman adds 2 to others, not himself")
+	c = _mine_group(["skeleton", "shaft_foreman"], 1)
+	check(c.enemies[0].intent.kind == "guard" and c.enemies[0].intent.value == 4, "a guard intent is unchanged")
+	c = _mine_group(["crawler", "crawler", "shaft_foreman"])
+	check(c.enemies[0].intent.value == 3 + 1 + 2, "Crawler bonus and Foreman bonus add")
+	c = _mine_group(["hulk"], 1)
+	c.enemies[0].hp = 3
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble" and c.enemies[0].hp == 8 and c.enemies[0].intent.is_empty(), "a dead Hulk leaves Rubble in its place")
+	check(not c.fight_won() and c.replaced == 1, "the Hulk's kill is counted and the fight goes on")
+	c.start_turn()
+	check(c.enemies[0].intent.kind == "attack", "Rubble acts from next turn")
+	c.enemies[0].hp = 0
+	var before := c.kills
+	c.claim_fight()
+	check(c.fight_won() and c.kills - before == 2, "Hulk and Rubble are two kills")
+	c = _mine_group(["hulk", "crawler"], 1)
+	c.enemies[0].hp = 3
+	c.enemies[1].hp = 2
+	place(c, 0, 3, CombatScript.Slot.CLEAVE)
+	place(c, 1, 3, CombatScript.Slot.CLEAVE)
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble" and c.enemies[1].hp == 0 and not c.fight_won(), "a Cleave kills the Hulk and a Crawler: Rubble stands")
+	c = _mine_group(["canary", "miner"])
+	check(c.enemies[1].intent.kind == "unblockable" and c.enemies[1].intent.value == 5, "a Canary's ring makes another's attack unblockable")
+
+
 func _floors() -> void:
 	for id in Floor.FLOORS:
 		_floor(id)
