@@ -24,6 +24,7 @@ class ErrorCounter extends Logger:
 func _init() -> void:
 	OS.add_logger(errors)
 	Engine.time_scale = SPEED
+	await _map_moves()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	for keys in Combat.FIGHTS + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
 		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
@@ -36,6 +37,44 @@ func check(ok: bool, what: String) -> void:
 	if not ok:
 		failures += 1
 		push_error("FAIL: " + what)
+
+
+## The drawn map: only the rooms linked from the last one taken can be entered.
+func _map_moves() -> void:
+	var errors_before := errors.count
+	var game: Node = load("res://main.tscn").instantiate()
+	game.meta = Meta.load_from(SAVE)
+	game.meta.tutorial_done = true
+	root.add_child(game)
+	await process_frame
+	game._start_run()
+	await process_frame
+	var screen: MapScreen = game.screen
+	check(screen.pickable() == [0], "the entrance is the only room on column 0")
+	_check_buttons(screen)
+	var p: int = game.map[0][0].next[0]
+	game.layer = 2
+	game.path = [0, p]
+	game._show_map()
+	await process_frame
+	screen = game.screen
+	var want: Array = game.map[1][p].next
+	check(screen.pickable() == want, "after room %d the pickable rooms are its links %s" % [p, want])
+	_check_buttons(screen)
+	await process_frame
+	check(game.layer == 2, "the map alone doesn't move the player on")
+	check(errors.count == errors_before, "the map shows with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+func _check_buttons(screen: MapScreen) -> void:
+	var ok := true
+	for c in screen.room_buttons.size():
+		for i in screen.room_buttons[c].size():
+			var should: bool = c == screen.layer and i in screen.pickable()
+			ok = ok and screen.room_buttons[c][i].disabled != should
+	check(ok, "only pickable rooms are enabled")
 
 
 ## Starts a run straight into a fight against `keys`, as the --fight dev shortcut does, and plays it out.

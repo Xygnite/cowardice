@@ -113,6 +113,9 @@ func _on_room_picked(i: int) -> void:
 		"fight":
 			combat.start_group(room.enemies)
 			_show_fight(_on_fight_finished)
+		"unknown":
+			combat.start_group(Floor.group(Floor.EARLY_HP, {}))  # until mystery events exist
+			_show_fight(_on_fight_finished)
 		"forge":
 			_show_forge(false)
 		"campfire":
