@@ -7,6 +7,15 @@ signal finished(grade: int)
 
 const WINDUP_MS := 1400.0
 const LATE_GRACE_MS := 200.0  # how long the bar waits past impact before calling it a miss
+const INSET := 8.0  # frame border width in screen pixels
+static var FRAME := _frame()
+
+
+static func _frame() -> StyleBoxTexture:
+	var s := StyleBoxTexture.new()
+	s.texture = preload("res://assets/ui/cut/bar_frame.png")
+	s.set_texture_margin_all(INSET)
+	return s
 
 var combat: Combat
 var enemy := 0
@@ -49,14 +58,17 @@ func _draw() -> void:
 		return
 	var w := size.x
 	var h := size.y
-	draw_rect(Rect2(0, 0, w, h), Color(0.18, 0.19, 0.22))
+	draw_style_box(FRAME, Rect2(0, 0, w, h))
 	var px_per_ms := w / WINDUP_MS
 	if combat.enemies[enemy].intent.kind == "attack":
-		draw_rect(Rect2(w - Combat.GOOD_MS * px_per_ms, 0, Combat.GOOD_MS * px_per_ms, h), Color(0.25, 0.45, 0.8, 0.5))
-		var perfect := combat.perfect_window_ms() * px_per_ms
-		draw_rect(Rect2(w - perfect, 0, perfect, h), Color(0.4, 0.65, 1.0))
+		_window(Combat.GOOD_MS * px_per_ms, Color(0.25, 0.45, 0.8, 0.5))
+		_window(combat.perfect_window_ms() * px_per_ms, Color(0.4, 0.65, 1.0))
 	else:
-		var parry := combat.parry_window_ms() * px_per_ms
-		draw_rect(Rect2(w - parry, 0, parry, h), Color(0.85, 0.25, 0.25))
+		_window(combat.parry_window_ms() * px_per_ms, Color(0.85, 0.25, 0.25))
 	var x := minf(elapsed * px_per_ms, w)
 	draw_rect(Rect2(x - 2, -6, 4, h + 12), Color(1, 0.85, 0.4))
+
+
+## A timing window ending at impact (the right edge), kept inside the frame.
+func _window(width: float, color: Color) -> void:
+	draw_rect(Rect2(size.x - INSET - width, INSET, width, size.y - INSET * 2), color)

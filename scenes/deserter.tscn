@@ -43,7 +43,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [Vector2(32, 64)]
+"values": [Vector2(30, 51)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -67,7 +67,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [Vector2(16, -22)]
+"values": [Vector2(13, -13)]
 }
 tracks/5/type = "value"
 tracks/5/imported = false
@@ -96,7 +96,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.8),
 "transitions": PackedFloat32Array(1, 1),
 "update": 1,
-"values": [Vector2(32, 64), Vector2(32, 65)]
+"values": [Vector2(30, 51), Vector2(30, 52)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -108,7 +108,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 1),
 "transitions": PackedFloat32Array(1, 1),
 "update": 1,
-"values": [Vector2(16, -22), Vector2(16, -21)]
+"values": [Vector2(13, -13), Vector2(13, -12)]
 }
 
 [sub_resource type="Animation" id="Animation_attack"]
@@ -136,7 +136,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.08, 0.2, 0.26, 0.34, 0.46, 0.62),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(32, 64), Vector2(32, 65), Vector2(31, 64), Vector2(33, 65), Vector2(33, 65), Vector2(32, 64), Vector2(32, 64)]
+"values": [Vector2(30, 51), Vector2(30, 52), Vector2(29, 51), Vector2(31, 52), Vector2(31, 52), Vector2(30, 51), Vector2(30, 51)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -172,7 +172,7 @@ tracks/4/keys = {
 "times": PackedFloat32Array(0, 0.08, 0.2, 0.26, 0.34, 0.46, 0.62),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(16, -22), Vector2(16, -22), Vector2(15, -21), Vector2(17, -23), Vector2(17, -23), Vector2(16, -22), Vector2(16, -22)]
+"values": [Vector2(13, -13), Vector2(13, -13), Vector2(12, -12), Vector2(14, -14), Vector2(14, -14), Vector2(13, -13), Vector2(13, -13)]
 }
 
 [sub_resource type="Animation" id="Animation_block"]
@@ -188,7 +188,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.06, 0.3, 0.4),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(16, -22), Vector2(18, -25), Vector2(17, -24), Vector2(16, -22)]
+"values": [Vector2(13, -13), Vector2(15, -16), Vector2(14, -15), Vector2(13, -13)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -261,28 +261,28 @@ texture = ExtResource("legs")
 centered = false
 
 [node name="Body" type="Sprite2D" parent="Rig"]
-position = Vector2(32, 64)
+position = Vector2(30, 51)
 texture = ExtResource("body")
 centered = false
-offset = Vector2(-32, -64)
+offset = Vector2(-30, -51)
 
 [node name="Weapon" type="Sprite2D" parent="Rig/Body"]
-position = Vector2(-11, -42)
+position = Vector2(-8, -32)
 texture = ExtResource("weapon")
 centered = false
-offset = Vector2(-21, -22)
+offset = Vector2(-22, -19)
 
 [node name="Shield" type="Sprite2D" parent="Rig/Body"]
-position = Vector2(16, -22)
+position = Vector2(13, -13)
 texture = ExtResource("shield")
 centered = false
-offset = Vector2(-48, -42)
+offset = Vector2(-43, -38)
 
 [node name="Head" type="Sprite2D" parent="Rig/Body"]
-position = Vector2(5, -49)
+position = Vector2(5, -37)
 texture = ExtResource("head")
 centered = false
-offset = Vector2(-37, -15)
+offset = Vector2(-35, -14)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

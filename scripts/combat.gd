@@ -23,17 +23,17 @@ const CAMPFIRE_HEAL := 0.3  # share of max HP
 ## "sprite": file name in assets/sprites/; enemies without one show a placeholder box.
 ## A "ring" intent turns another enemy's attack this turn unblockable.
 const TYPES := {
-	"dummy": {"name": "Training Dummy", "hp": 30, "turns": 5, "rig_pair_turn": 2,
+	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5, "rig_pair_turn": 2,
 		"phase1": [{"kind": "attack", "value": 3}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 2}, {"kind": "attack", "value": 3}, {"kind": "unblockable", "value": 5}]},
-	"rat": {"name": "Bone Rat", "hp": 6,
+	"rat": {"name": "Bone Rat", "hp": 6, "sprite": "bone_rat",
 		"phase1": [{"kind": "attack", "value": 2}]},
 	"skeleton": {"name": "Skeleton", "hp": 20, "sprite": "skeleton",
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
-	"acolyte": {"name": "Shield Acolyte", "hp": 18,
+	"acolyte": {"name": "Shield Acolyte", "hp": 18, "sprite": "acolyte",
 		"phase1": [{"kind": "guard", "value": 8}, {"kind": "guard", "value": 8}, {"kind": "attack", "value": 10}]},
 	"doctor": {"name": "Plague Doctor", "hp": 22, "sprite": "plague_doctor",
 		"phase1": [{"kind": "attack", "value": 6}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 5}]},
-	"bell": {"name": "Grave Bell", "hp": 14,
+	"bell": {"name": "Grave Bell", "hp": 14, "sprite": "grave_bell",
 		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
 	"treant": {"name": "Rotwood Treant", "hp": 26, "sprite": "rotwood_treant",
 		"phase1": [{"kind": "guard", "value": 6}, {"kind": "attack", "value": 9}]},
@@ -390,6 +390,7 @@ func _apply_rings() -> void:
 		for e in enemies:
 			if not is_same(e, bell) and e.intent.get("kind") == "attack":
 				e.intent.kind = "unblockable"
+				e.intent.rung = true  # only for show: the screen marks who the bell empowered
 				break
 
 

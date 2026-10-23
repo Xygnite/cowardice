@@ -6,10 +6,13 @@ var title := ""
 var lines: Array = []
 var highlight := -1  # index of the line to show in gold
 var choices: Array = []  # [button text, Callable]
+var backdrop := ""  # picture behind it, assets/ui/bg_<backdrop>.webp; none if empty
 
 
 func _ready() -> void:
 	var root := UI.page(self)
+	if backdrop:
+		UI.backdrop(self, backdrop)
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
 	_centered(UI.heading(root, 48, title))
 	for i in lines.size():

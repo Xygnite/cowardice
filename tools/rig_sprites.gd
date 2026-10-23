@@ -3,6 +3,8 @@ extends SceneTree
 ## assets/sprites/<name>/<part>.png and scenes/<name>.tscn with idle, attack, hurt (and block, given a shield).
 ## Every part keeps the full sprite canvas, so the scene only needs pivots, not per-part offsets.
 ## Re-run after tools/make_sprites.gd changes a sprite; it overwrites the parts and the scene.
+## If assets/sprites/<name>_body.png exists (a drawn body layer, see art/character_prompts.md), the holes
+## that the weapon, shield and head leave in the body and legs are filled from it instead of guessed.
 ## Hand edits to a generated scene are lost on the next run, so change RIGS instead.
 ## Run: godot --headless --path . -s tools/rig_sprites.gd [-- --only=<name>] [--preview=<png path>]
 ## then once more with --import so Godot picks up new part textures.
@@ -31,16 +33,17 @@ const GLOW_FLARE := Color(1.5, 1.3, 1.1)
 ## shear it about the pivot row (never rotated); the pixels inside "glow" flicker on their own layer.
 ## skirt (optional): outlines of cloth strips that trail every move by 1 px, one strip a frame behind the last.
 const RIGS := {
-	"deserter": {"facing": 1, "body": Vector2(32, 64), "legs_top": 64,
+	# Coordinates scaled from the 78 px sprite when it was shrunk to 64 (tools/make_sprites.gd "shrink").
+	"deserter": {"facing": 1, "body": Vector2(30, 51), "legs_top": 51,
 		# The whole sword arm, shoulder to blade, swings from the shoulder.
-		"weapon": {"pivot": Vector2(21, 22), "swing": [-2.2, 0.5], "patch": [Color("1c202c"), 46],
+		"weapon": {"pivot": Vector2(22, 19), "swing": [-2.2, 0.5], "patch": [Color("1c202c"), 36],
 			# Pull back, raise it behind him, chop over the top to forward-down, then fall back to rest (TAU = 0).
 			"flourish": [0.4, 2.4, 5.5, 5.6, 6.0, TAU],
-			"outline": [Vector2(16, 19), Vector2(26, 19), Vector2(27, 30), Vector2(26, 43), Vector2(30, 49), Vector2(43, 63), Vector2(42, 67), Vector2(38, 67), Vector2(26, 56), Vector2(19, 52), Vector2(13, 46), Vector2(13, 42), Vector2(16, 38), Vector2(15, 26)]},
-		"shield": {"pivot": Vector2(48, 42),
-			"outline": [Vector2(46, 30), Vector2(52, 30), Vector2(57, 38), Vector2(57, 50), Vector2(53, 56), Vector2(46, 56)]},
-		"head": {"pivot": Vector2(37, 15),
-			"outline": [Vector2(29, 1), Vector2(46, 1), Vector2(46, 15), Vector2(30, 15), Vector2(29, 8)]}},
+			"outline": [Vector2(20, 16), Vector2(26, 16), Vector2(26, 22), Vector2(22, 28), Vector2(21, 36), Vector2(18, 36), Vector2(18, 66), Vector2(13, 66), Vector2(13, 36), Vector2(13, 27), Vector2(18, 22)]},
+		"shield": {"pivot": Vector2(43, 38),
+			"outline": [Vector2(40, 25), Vector2(48, 25), Vector2(54, 31), Vector2(54, 47), Vector2(46, 50), Vector2(40, 50), Vector2(38, 37)]},
+		"head": {"pivot": Vector2(35, 14),
+			"outline": [Vector2(28, 1), Vector2(42, 1), Vector2(42, 13), Vector2(36, 15), Vector2(30, 15), Vector2(28, 10)]}},
 	"skeleton": {"facing": -1, "body": Vector2(22, 34), "legs_top": 34,
 		"weapon": {"pivot": Vector2(31, 32), "swing": [1.9, -0.5],
 			"outline": [Vector2(36, 26), Vector2(42, 26), Vector2(42, 31), Vector2(33, 36), Vector2(27, 42), Vector2(18, 44), Vector2(17, 40), Vector2(26, 34), Vector2(30, 30)]},
@@ -93,6 +96,29 @@ const RIGS := {
 			[Vector2(33, 57), Vector2(38, 57), Vector2(38, 67), Vector2(33, 67)],
 			[Vector2(38, 56), Vector2(44, 56), Vector2(44, 64), Vector2(38, 64)],
 			[Vector2(44, 52), Vector2(50, 52), Vector2(50, 61), Vector2(44, 61)]]},
+	# The post and stone base stay put; only the straw body above them moves.
+	"dummy": {"facing": -1, "body": Vector2(21, 30), "legs_top": 31,
+		"weapon": {"pivot": Vector2(15, 17), "swing": [0.9, -0.4],
+			"outline": [Vector2(7, 13), Vector2(15, 13), Vector2(15, 22), Vector2(11, 28), Vector2(5, 37), Vector2(1, 37), Vector2(1, 32), Vector2(8, 24), Vector2(7, 20)]},
+		"shield": {"pivot": Vector2(34, 18),
+			"outline": [Vector2(29, 11), Vector2(41, 11), Vector2(41, 35), Vector2(29, 35)]},
+		"head": {"pivot": Vector2(21, 15),
+			"outline": [Vector2(14, 1), Vector2(28, 1), Vector2(28, 14), Vector2(14, 14)]}},
+	# The skull is its weapon: it bites by tipping the snout up, then snapping down.
+	"bone_rat": {"facing": -1, "body": Vector2(35, 20), "legs_top": 24,
+		"weapon": {"pivot": Vector2(20, 16), "swing": [0.55, -0.3],
+			"outline": [Vector2(1, 7), Vector2(21, 7), Vector2(21, 23), Vector2(1, 23)]}},
+	"acolyte": {"facing": -1, "body": Vector2(30, 46), "legs_top": 50,
+		"weapon": {"pivot": Vector2(46, 34), "swing": [0.8, -0.4],
+			"outline": [Vector2(35, 30), Vector2(51, 30), Vector2(51, 46), Vector2(35, 46)]},
+		"shield": {"pivot": Vector2(12, 30),
+			"outline": [Vector2(1, 9), Vector2(21, 9), Vector2(21, 56), Vector2(1, 56)]},
+		"head": {"pivot": Vector2(28, 17),
+			"outline": [Vector2(21, 1), Vector2(35, 1), Vector2(35, 16), Vector2(21, 16)]}},
+	# The bell is the weapon (it strikes when rung), swinging from the top of its chain; the gallows stays put.
+	"grave_bell": {"facing": -1, "body": Vector2(34, 55), "legs_top": 59,
+		"weapon": {"pivot": Vector2(14, 8), "swing": [-0.5, 0.45],
+			"outline": [Vector2(10, 9), Vector2(18, 9), Vector2(18, 17), Vector2(26, 17), Vector2(26, 42), Vector2(1, 42), Vector2(1, 17), Vector2(10, 17)]}},
 }
 
 
@@ -145,7 +171,16 @@ func _cut(name: String, rig: Dictionary) -> Dictionary:
 			# The body keeps a copy under the chest, so breathing in stretches the waist instead of opening it.
 			if part == "chest" or (part == "legs" and y < rig.legs_top + BODY_OVERLAP):
 				parts.body.set_pixel(x, y, c)
-	_fill_holes(parts.body, [parts.get("weapon"), parts.get("shield")], rig.legs_top)
+	var layer_path := SPRITES + name + "_body.png"
+	if FileAccess.file_exists(layer_path):
+		var layer := Image.load_from_file(ProjectSettings.globalize_path(layer_path))
+		layer.convert(Image.FORMAT_RGBA8)
+		for y in src.get_height():
+			for x in src.get_width():
+				if _part_at(rig, x, y) in ROLES and layer.get_pixel(x, y).a > 0.0:
+					parts["legs" if y >= rig.legs_top else "body"].set_pixel(x, y, layer.get_pixel(x, y))
+	else:
+		_fill_holes(parts.body, [parts.get("weapon"), parts.get("shield")], rig.legs_top)
 	if rig.has("weapon") and rig.weapon.has("patch"):  # a flat shade reads as the far side of the body
 		for y in rig.weapon.patch[1] + 1:
 			for x in src.get_width():

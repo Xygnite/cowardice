@@ -6,8 +6,9 @@
 const REF := "res://art/reference/"
 const OUT := "res://assets/sprites/"
 const PALETTE_PATH := "res://assets/palette.png"
-const PALETTE_SIZE := 32
+const PALETTE_SIZE := 40  # 32 left no straw yellow or bronze once the dummy and the bell joined
 const BG_TOLERANCE := 0.14  # how close to the background colour a pixel must be to be cut out
+const MAGENTA_TINT := 0.08  # on a magenta background, a pixel whose red and blue beat its green by this is background
 
 ## h: figure height in game pixels (the game runs at 320x180, scaled up).
 ## crop: part of the reference to use, as fractions [x0, y0, x1, y1].
@@ -19,8 +20,11 @@ const BG_TOLERANCE := 0.14  # how close to the background colour a pixel must be
 ## drawn at finer detail match the others' pixel size. Shrinking blends the outline into the background, and the cut-out then leaks
 ## through the gaps into the figure.
 ## pad: empty pixels kept around the figure, for rig parts that swing past its edge.
+## body: an edit of the same reference with the moving parts removed and what was behind them drawn in
+## (see art/character_prompts.md). Saved as <out>_body.png on the same canvas, for tools/rig_sprites.gd.
+## Cell sources only.
 const SPRITES := [
-	{"src": "deserter", "out": "deserter", "cell": 20.0, "pad": 2},
+	{"src": "deserter.webp", "out": "deserter", "cell": 10.24, "shrink": 1.22, "pad": 2, "body": "deserter_body.webp"},  # 78 px tall at its own grid; the hero stands about 64
 	{"src": "skeleton_and_rotwood", "out": "skeleton", "cell": 10.0, "shrink": 2, "crop": [0.0, 0.0, 0.5, 1.0], "flip": true, "pad": 2},
 	{"src": "skeleton_and_rotwood", "out": "rotwood_treant", "cell": 10.0, "shrink": 2, "crop": [0.5, 0.0, 1.0, 1.0], "pad": 2},
 	{"src": "bone_warden", "out": "bone_warden", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2},
@@ -30,6 +34,11 @@ const SPRITES := [
 	{"src": "gambler", "out": "gambler", "cell": 20.0, "pad": 2},
 	{"src": "monk", "out": "monk", "cell": 20.0, "pad": 2},
 	{"src": "plague_doctor.webp", "out": "plague_doctor", "cell": 10.24, "flip": true, "pad": 2},
+	{"src": "dummy.webp", "out": "dummy", "cell": 10.24, "shrink": 2, "pad": 2},
+	{"src": "bone_rat.webp", "out": "bone_rat", "cell": 4.27, "shrink": 4, "pad": 2},
+	{"src": "acolyte.webp", "out": "acolyte", "cell": 5.12, "shrink": 3, "pad": 2},
+	# Drawn without a real pixel grid (measure_cells finds none), so it is shrunk like a painting.
+	{"src": "grave_bell.png", "out": "grave_bell", "h": 56, "pad": 2},
 ]
 
 
@@ -41,6 +50,8 @@ func _init() -> void:
 		var cut := _cut(s)
 		sprites[s.out] = cut[0]
 		bgs.append(cut[1])
+		if s.has("body"):
+			sprites[s.out + "_body"] = _cut(s.merged({"src": s.body}, true), cut[2])[0]
 	var palette := _palette(sprites.values())
 	for name in sprites:
 		_snap(sprites[name], palette)
@@ -57,8 +68,9 @@ func _init() -> void:
 	quit()
 
 
-## Returns [sprite Image with transparent background, background colour].
-func _cut(s: Dictionary) -> Array:
+## Returns [sprite Image with transparent background, background colour, the canvas rect it was cut to].
+## `canvas` forces that rect, so a body layer lands on the same canvas as its sprite.
+func _cut(s: Dictionary, canvas := Rect2i()) -> Array:
 	var src: String = s.src if "." in s.src else s.src + ".jpg"
 	var img := Image.load_from_file(ProjectSettings.globalize_path(REF + src))
 	img.convert(Image.FORMAT_RGBA8)
@@ -73,7 +85,8 @@ func _cut(s: Dictionary) -> Array:
 			img = _shrink(img, s.shrink)
 		if s.get("flip", false):
 			img.flip_x()
-		return [img.get_region(img.get_used_rect().grow(s.get("pad", 0))), bg_px]
+		var rect := canvas if canvas.has_area() else img.get_used_rect().grow(s.get("pad", 0))
+		return [img.get_region(rect), bg_px, rect]
 	var bg := _corner_color(img)
 
 	# Find the figure on a thumbnail, then crop the full image to it plus a band of background.
@@ -94,7 +107,8 @@ func _cut(s: Dictionary) -> Array:
 	_cut_background(img, bg)
 	if s.get("flip", false):
 		img.flip_x()
-	return [img.get_region(img.get_used_rect().grow(s.get("pad", 0))), bg]
+	var rect := img.get_used_rect().grow(s.get("pad", 0))
+	return [img.get_region(rect), bg, rect]
 
 
 ## One pixel per cell of an upscaled pixel-art image, averaged over the cell's middle so blur and
@@ -117,22 +131,24 @@ func _read_cells(img: Image, cell: float) -> Image:
 ## Each k x k block becomes its most common opaque colour (near-equal colours count as one, ties go
 ## to the one nearest the block's average), or transparent if fewer than half of it is opaque.
 ## Averaging instead would blend 1-pixel outlines into the fill.
-func _shrink(img: Image, k: int) -> Image:
-	var out := Image.create_empty(img.get_width() / k, img.get_height() / k, false, Image.FORMAT_RGBA8)
+## k may be uneven (1.22): then blocks are 1 or 2 pixels wide, by where the k-steps fall.
+func _shrink(img: Image, k: float) -> Image:
+	var out := Image.create_empty(int(img.get_width() / k), int(img.get_height() / k), false, Image.FORMAT_RGBA8)
 	for y in out.get_height():
 		for x in out.get_width():
 			var groups := {}  # quantised colour -> [count, a real colour from the block]
 			var mean := Color(0, 0, 0, 0)
 			var opaque := 0
-			for dy in k:
-				for dx in k:
-					var c := img.get_pixel(x * k + dx, y * k + dy)
+			var block := Rect2i(int(x * k), int(y * k), maxi(1, int((x + 1) * k) - int(x * k)), maxi(1, int((y + 1) * k) - int(y * k)))
+			for by in range(block.position.y, block.end.y):
+				for bx in range(block.position.x, block.end.x):
+					var c := img.get_pixel(bx, by)
 					if c.a > 0.5:
 						var key := Vector3i(roundi(c.r * 12), roundi(c.g * 12), roundi(c.b * 12))
 						groups[key] = [groups.get(key, [0, c])[0] + 1, c]
 						mean += c
 						opaque += 1
-			if opaque * 2 < k * k:
+			if opaque * 2 < block.get_area():
 				out.set_pixel(x, y, Color(0, 0, 0, 0))
 				continue
 			mean /= opaque
@@ -187,6 +203,17 @@ func _cut_background(img: Image, bg: Color) -> void:
 			continue
 		img.set_pixelv(p, Color(0, 0, 0, 0))
 		stack.append_array([p + Vector2i.LEFT, p + Vector2i.RIGHT, p + Vector2i.UP, p + Vector2i.DOWN])
+	# A key colour like magenta is in no figure, so pockets of it the fill can't reach (between an arm
+	# and the body) are background too. A dark background is not: it matches dark parts of the figure.
+	if bg.s < 0.5:
+		return
+	# Edges shrunk or blended into magenta keep its hue (green well below red and blue), which no art uses.
+	var magenta := bg.r > 0.6 and bg.b > 0.6 and bg.g < 0.4
+	for y in h:
+		for x in w:
+			var c := img.get_pixel(x, y)
+			if _dist(c, bg) <= BG_TOLERANCE or (magenta and minf(c.r, c.b) - c.g > MAGENTA_TINT):
+				img.set_pixel(x, y, Color(0, 0, 0, 0))
 
 
 ## K-means over every opaque pixel of every sprite, so all characters share one palette.

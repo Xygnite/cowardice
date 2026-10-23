@@ -1,5 +1,5 @@
 extends Control
-## Runs the game: the tutorial on first launch, then runs of map -> rooms -> boss,
+## Runs the game: a title menu, the tutorial on first play, then runs of map -> rooms -> boss,
 ## with Embers and perks carried between runs by Meta.
 
 ## One floor of the Sunken Chapel, entrance first. You pick one room per layer.
@@ -26,11 +26,27 @@ func _ready() -> void:
 			combat.start_fight(int(arg.trim_prefix("--fight=")))
 			_show_fight(_on_fight_finished)
 			return
+	_show_menu()
+
+
+func _show_menu() -> void:
+	var s := MenuScreen.new()
+	s.tutorial_done = meta.tutorial_done
+	s.play.connect(_on_play)
+	s.tutorial.connect(_show_tutorial)
+	_show(s)
+
+
+func _on_play() -> void:
 	if meta.tutorial_done:
 		_show_camp()
 	else:
-		combat = Combat.new()  # a new Combat starts on fight 0, the tutorial
-		_show_fight(_on_tutorial_finished)
+		_show_tutorial()
+
+
+func _show_tutorial() -> void:
+	combat = Combat.new()  # a new Combat starts on fight 0, the tutorial
+	_show_fight(_on_tutorial_finished)
 
 
 func _show(next: Control) -> void:
@@ -78,7 +94,7 @@ func _on_room_picked(i: int) -> void:
 			_show_notice("Campfire", ["HP %d/%d" % [combat.player_hp, combat.max_hp]], -1, [
 				["Rest  (+%d HP)" % heal, _on_rest],
 				["Tend the dice  (one free upgrade)", _show_forge.bind(true)],
-			])
+			], "campfire")
 
 
 func _show_fight(on_finished: Callable) -> void:
@@ -131,20 +147,22 @@ func _end_run(won: bool) -> void:
 		"Boss damage dealt: %d%%" % boss_pct,
 		"Embers earned: +%d" % earned,
 		"Embers: %d" % meta.embers,
-	], 4, [["Walk back in", _start_run], ["Return to camp", _show_camp]])
+	], 4, [["Walk back in", _start_run], ["Return to camp", _show_camp]], "victory" if won else "defeat")
 
 
 func _show_camp() -> void:
 	var s := CampScreen.new()
 	s.meta = meta
 	s.start_run.connect(_start_run)
+	s.main_menu.connect(_show_menu)
 	_show(s)
 
 
-func _show_notice(title: String, lines: Array, highlight: int, choices: Array) -> void:
+func _show_notice(title: String, lines: Array, highlight: int, choices: Array, backdrop := "") -> void:
 	var s := NoticeScreen.new()
 	s.title = title
 	s.lines = lines
 	s.highlight = highlight
 	s.choices = choices
+	s.backdrop = backdrop
 	_show(s)

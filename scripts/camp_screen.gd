@@ -3,6 +3,7 @@ extends Control
 ## The perk board: unlock perks with Embers, equip up to Meta.SLOTS of them, start a run.
 
 signal start_run
+signal main_menu
 
 var meta: Meta
 var embers_label: Label
@@ -12,19 +13,22 @@ var cards := {}  # perk id -> {state: Label, button: Button}
 
 func _ready() -> void:
 	var root := UI.page(self)
+	UI.backdrop(self, "camp")
 	var top := UI.row(root)
-	UI.heading(top, 32, "Camp: perk board")
+	UI.image(top, "logo")
 	UI.spacer(top)
 	embers_label = UI.label(top, 22)
+	UI.heading(root, 32, "Camp: perk board")
 	var grid := UI.row(root, 24)
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	for id in Meta.PERKS:
 		var p: Dictionary = Meta.PERKS[id]
-		var col := VBoxContainer.new()
+		var col := UI.panel(grid)
 		col.custom_minimum_size = Vector2(300, 0)
-		col.add_theme_constant_override("separation", 8)
-		grid.add_child(col)
-		UI.label(col, 22, p.name)
+		col.get_parent().size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		var title := UI.row(col, 10)
+		UI.image(title, "perk_" + id)  # assets/ui/cut/perk_<id>.png, from tools/make_ui.gd
+		UI.label(title, 22, p.name).size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		var text := UI.label(col, 16, p.text)
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		text.add_theme_color_override("font_color", UI.QUIET)
@@ -32,7 +36,11 @@ func _ready() -> void:
 		var b := UI.button(col, "", _on_card.bind(id))
 		cards[id] = {"state": state, "button": b}
 	loadout_label = UI.label(root, 20)
-	UI.button(root, "Start run", start_run.emit).custom_minimum_size = Vector2(240, 48)
+	var bottom := UI.row(root)
+	UI.button(bottom, "Main menu", main_menu.emit).custom_minimum_size = Vector2(200, 48)
+	var start := UI.button(bottom, "Start run", start_run.emit)
+	start.custom_minimum_size = Vector2(240, 48)
+	start.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_refresh()
 
 

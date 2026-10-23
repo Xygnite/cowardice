@@ -1,129 +1,119 @@
-# UI art prompts for Gemini
+# Combat UI prompts (ChatGPT or Gemini)
 
-Reference: `art/reference/ui_reference.webp`. Attach it to every prompt as the style reference.
+Icons and effects for the fight screen. Each prompt makes one sheet: several pieces in a row on
+magenta, which `tools/make_ui.gd` cuts apart, left to right. These work in ChatGPT and in Gemini.
 
-## What to take from the reference
+## Workflow
 
-- **Mood:** near-black blue-grey backgrounds, cold iron frames, and a few warm accents (torch orange, gold highlight, blood red). The same palette as our sprites.
-- **Frames:** 1–2 px dark outline, a lighter bevel line inside it, and small riveted bracket ornaments on the corners only. The edges between corners are plain, which is what makes them stretchable (9-slice).
-- **Slots:** recessed dark squares with a 1 px inner shadow. Items sit inside them with a count in the bottom-right corner (the inventory grid).
-- **Selection:** a warm gold/bronze fill on the chosen row (the "Open" button). Everything else stays cold and grey.
-- **Bars:** thin, flat red (HP) or blue fills inside a dark recessed track, with a small icon on the left.
-- **Parchment:** the dungeon map is the one warm, light panel. It's tan paper with burnt edges, a compass rose, and dark ink lines.
-- **No text in the art.** Godot draws every label in a pixel font, so the art must have none.
+1. Start a fresh chat. Paste the **style block**, then one prompt.
+2. Check the result (see **Checks**) and regenerate until it passes.
+3. Save it under `assets/ui/` with the file name the prompt gives. Keep PNG or WebP; never JPG.
 
-## What Cowardice needs from it
-
-| Piece | Used for | Where in the code now |
-|---|---|---|
-| 1. Panel frame (9-slice) | every panel: log, dice tray, enemy column, screens | `UI.page`, `UI.box` |
-| 2. Button (4 states) | End turn, Reroll, map rooms, camp, forge | `UI.button` |
-| 3. Bar | player and enemy HP, Guard pool | HP labels in `combat_screen.gd` |
-| 4. Die and slot tiles | the 3 dice and the Attack / Guard / Cleave slots | `_build_die` |
-| 5. Intent and resource icons | enemy intents, Grit, Shards, Embers, rerolls | intent label, header text |
-| 6. Map parchment and room icons | floor map | `map_screen.gd` |
-| 7. Timing bar | block / parry wind-up | `timing_bar.gd` |
-| 8. Portrait frame | murmurs and narrator lines | murmur label |
-
-## Shared style block
-
-Paste this once at the start of the Gemini chat, with the reference image attached. Each prompt below repeats the essentials, so they also work on their own.
+## Style block (paste first)
 
 ```
-I'm making UI art for a dark-fantasy pixel-art dungeon game. The attached image is the style reference: match its iron frames, riveted corner brackets, recessed slots, dark blue-grey panels and warm gold selection highlight. Do not copy its layout, characters or text.
-
-Rules for every image I ask for:
-- Pixel art with hard square pixels: no anti-aliasing, no blur, no gradients, no soft glow, no texture noise.
-- Flat front-on view, no perspective, no drop shadow outside the piece.
-- Exactly one piece, centred, on a flat solid #FF00FF magenta background with nothing else on it.
-- No text, letters, numbers or logos anywhere.
-- Use only colours close to this palette: #030405 #0c0f10 #151221 #1a1f1e #1c202c #222734 #29323c #323d45 #3b484d #425156 #4a5e63 #586c6f #667d7e #7b9594 #a5b8af #402c25 #4b3f3a #584e46 #734935 #736558 #95826d #b3683c #e0a169
-Reply "ready" and wait for the first piece.
+You are drawing pixel art UI pieces for a dark-fantasy dice roguelike. Rules for every image:
+- Hard square pixels only: every art-pixel exactly the same size on one grid, scaled up with nearest-neighbor. No anti-aliasing, no blur, no soft glow, no gradients.
+- A closed 1-pixel near-black (#070e10) outline around every piece.
+- Flat colours, 2-3 shades each. Palette: dark iron greys and slate blues, bone white (#c1b59b), rust and bronze, gold (#e8b04a), warm orange (#e8822e), blood red (#c0392b), sickly green (#7fae4f).
+- NEVER use pink, purple, violet or magenta anywhere in the art: the background is magenta and is cut out by colour.
+- Background: one flat solid #FF00FF magenta, edge to edge, no texture or noise.
+- Pieces in ONE horizontal row, the same size, evenly spaced, with wide magenta gaps between them (at least a quarter of a piece's width) and a wide magenta margin around the edges. Pieces must not touch.
+- No text, no numbers, no labels, no frame, no watermark.
+Reply "ready" and wait.
 ```
 
-## Prompts, one piece each
+## 9. Enemy intent icons (`assets/ui/intents.png`)
 
-### 1. Panel frame (9-slice)
-
-```
-Pixel-art UI panel frame, square, 1:1. A dark iron frame of even thickness all around, with a 1-pixel near-black outline and a 1-pixel lighter steel bevel inside it. Each of the 4 corners has a small riveted bracket ornament, all four the same, mirrored. The straight edges between the corners are completely plain and identical along their length, with no ornaments, rivets or breaks, so they can be stretched. The inside is one flat dark blue-grey fill (#1a1f1e). Match the frames in the attached reference. Hard square pixels, no anti-aliasing, no gradients, no text. Centred on flat #FF00FF background.
-```
-
-### 2. Button, four states
+Shown above each enemy next to a number ("attack 5"), so they are small and must read at a glance.
 
 ```
-Pixel-art game button sprite sheet: 4 identical wide buttons (about 4:1 each) stacked vertically with a gap between them, on flat #FF00FF background. All four share the same dark iron frame with small corner rivets and plain stretchable edges, like the attached reference.
-1) normal: dark slate fill.
-2) hover: same, with a 1-pixel warm gold inner border.
-3) pressed: warm bronze-gold fill like the selected "Open" row in the reference, shifted 1 pixel down.
-4) disabled: desaturated, darker, low contrast.
-No text, no icons on the buttons. Hard square pixels, no anti-aliasing, no gradients.
+Draw 5 intent icons in one row, left to right, each about 16 by 16 art-pixels, as bold simple silhouettes:
+1. ATTACK: a straight sword pointing diagonally down-left, steel blade, gold crossguard.
+2. GUARD: a round iron shield seen from the front, with a bright steel rim and boss.
+3. UNBLOCKABLE: a sword stabbing straight down through a shield that is cracking in two, with a bright blood-red crack.
+4. CURSE: a bone die with a dripping sickly-green eye on its face, green drips running off the bottom.
+5. RING: a small bronze bell tilted mid-swing, with two orange curved sound arcs beside it.
 ```
 
-### 3. Bar (HP / Guard)
+## 10. Target marker (`assets/ui/target.png`)
+
+Floats above the enemy you are aiming at (gold) and above the enemy taking its turn (red).
 
 ```
-Pixel-art status bar pieces on flat #FF00FF background, arranged in a row with gaps:
-1) an empty bar track: long thin horizontal recessed slot, about 12:1, dark iron 1-pixel frame, near-black inside;
-2) a red fill strip that fits exactly inside that track, flat blood red with a 1-pixel lighter top highlight;
-3) the same strip in steel blue;
-4) a small pixel heart icon;
-5) a small pixel shield icon.
-Match the HP and mana bars in the attached reference. Hard square pixels, no anti-aliasing, no gradients, no text or numbers.
+Draw 2 markers in one row, each about 13 art-pixels wide and 11 tall: a chunky arrowhead pointing straight DOWN, like a cursor hovering over someone's head, with a small notch cut into its top edge.
+1. TARGET: gold (#e8b04a) with a lighter gold highlight on its upper-left edge.
+2. ACTING: blood red (#c0392b) with a lighter red highlight on its upper-left edge.
+Same shape for both, only the colour differs.
 ```
 
-### 4. Die and slot tiles
+## 11. Grave Bell ring (`assets/ui/ring.png`)
+
+The Grave Bell's "ring" makes another enemy's attack unblockable this turn. These show the link:
+the first on the bell while it rings, the second above the enemy it empowered.
 
 ```
-Pixel-art dice UI tiles on flat #FF00FF background, 5 square tiles in a row with gaps:
-1) a blank die face: bone-white rounded square with a dark outline and a 1-pixel shade on the bottom and right, completely empty (no pips, a number is drawn on it later);
-2) the same die face, darker and cracked, for a cursed die;
-3) an empty recessed slot like the inventory slots in the attached reference, dark with a 1-pixel inner shadow;
-4) the same slot with a faint warm-orange inner rim (Attack slot);
-5) the same slot with a faint cold steel-blue inner rim (Guard slot).
-Hard square pixels, no anti-aliasing, no gradients, no text, no numbers, no pips.
+Draw 2 pieces in one row:
+1. RINGING: three curved sound-wave arcs fanning out to the left, each arc thicker and fainter-coloured than the one before (warm orange #e8822e, then darker orange, then rust), about 18 art-pixels wide and 20 tall, like the sound coming out of a struck bell. Only the arcs, no bell.
+2. EMPOWERED: a small round orange-and-gold rune mark, a circle with a tiny bell shape cut out of its middle and four short rays around it, about 14 by 14 art-pixels, like a brand glowing on the enemy.
 ```
 
-### 5. Intent and resource icons
+## 12. Hit effects (`assets/ui/effects_slash.png`, `effects_spark.png`, `effects_block.png`)
+
+Short animations played over a fighter when a blow lands. Make each in its own chat message so
+every sheet holds one animation. Floating damage numbers need no art: they use the game's font.
+
+Slash, played on an enemy you hit:
 
 ```
-Pixel-art icon sheet: 10 small square icons in a 5x2 grid with even gaps, on flat #FF00FF background, each readable at 16x16 pixels with a 1-pixel dark outline, in the style of the item icons in the attached reference.
-Row 1 (enemy intents): a sword (attack), a round iron shield (guard), a shield cracked in two with a red glint (unblockable), a dark sticker or rune seal with a crack (curse), a bronze bell (ring).
-Row 2 (resources): a bloodied bandage knot (grit), a jagged pale-blue crystal shard (shards), a glowing orange ember (embers), two dice with a curved arrow (reroll), a small skull (kills).
-Hard square pixels, no anti-aliasing, no gradients, no text.
+Draw a 4-frame animation in one row, every frame the same canvas, about 40 by 40 art-pixels: a quick diagonal sword slash from top-right to bottom-left.
+Frame 1: a thin bright white-yellow line just starting at the top right.
+Frame 2: a full curved crescent slash, white core with a gold edge.
+Frame 3: the crescent wider and breaking into 3-4 separate streaks, gold fading to orange.
+Frame 4: only a few small orange flecks left where the slash was.
+Keep the slash in the same place on every frame; draw frames side by side, not overlapping.
 ```
 
-### 6. Map parchment and room icons
-
-Two prompts: the paper and the icons.
+Parry spark, played on the hero when a parry lands:
 
 ```
-Pixel-art parchment map background, 16:9, on flat #FF00FF background. Aged tan paper with darker burnt and torn edges and a small compass rose in the top-right corner, like the "Dungeon Map" panel in the attached reference, but completely empty inside: no rooms, no grid, no lines. Muted tan and brown only. Hard square pixels, no anti-aliasing, no text.
+Draw a 4-frame animation in one row, every frame the same canvas, about 32 by 32 art-pixels: a metal-on-metal parry spark bursting from the centre.
+Frame 1: a small bright white star at the centre.
+Frame 2: a bigger white-and-gold starburst with 6 sharp spikes.
+Frame 3: spikes breaking off into 8 small gold and orange sparks flying outward.
+Frame 4: 5 tiny orange embers near the edges, nothing in the middle.
+Same centre on every frame; frames side by side, not overlapping.
 ```
 
-```
-Pixel-art map icons drawn in dark brown ink, as if stamped on parchment, 6 small square icons in a row with gaps, on flat #FF00FF background: crossed swords (fight), an anvil (forge), a campfire (rest), a horned skull (boss), a dotted path segment, a small X mark (current room). Readable at 16x16 pixels each, ink-dark with a tiny gold accent. Hard square pixels, no anti-aliasing, no text.
-```
-
-### 7. Timing bar (block / parry)
+Block impact, played on the hero when a block lands:
 
 ```
-Pixel-art timing bar for a block-and-parry reaction, on flat #FF00FF background, laid out as separate pieces in a column with gaps:
-1) a long horizontal recessed track, about 16:1, dark iron 1-pixel frame, near-black inside;
-2) a short steel-blue zone that fits inside the track (good block);
-3) a narrower gold zone (perfect parry);
-4) a thin bright vertical needle marker, slightly taller than the track.
-Same frame style as the attached reference. Hard square pixels, no anti-aliasing, no gradients, no text.
+Draw a 3-frame animation in one row, every frame the same canvas, about 32 by 32 art-pixels: a blunt impact on a raised shield, seen from the side, the force coming from the right.
+Frame 1: a flat curved arc of steel-grey and white on the right side, like a shockwave just hitting.
+Frame 2: the arc wider, with 3 short white dust puffs spreading up, down and to the right.
+Frame 3: only the 3 dust puffs, fading to grey and smaller.
+Same position on every frame; frames side by side, not overlapping.
 ```
 
-### 8. Portrait frame
+## 13. Perk icons (`assets/ui/perks.png`)
+
+One per perk card on the camp's perk board, shown at the top of the card beside its name. New perks
+get added to the end of the row later, in the same style.
 
 ```
-Pixel-art portrait frame, square, 1:1, on flat #FF00FF background. Dark iron frame with riveted corner brackets like the character portraits in the attached reference, with a fully transparent-looking empty centre filled with flat #FF00FF magenta (no face, no character). Plain straight edges. Hard square pixels, no anti-aliasing, no gradients, no text.
+Draw 3 perk icons in one row, left to right, each about 24 by 24 art-pixels, each set on its own small round bronze-rimmed medallion (dark slate inside, bronze rim, 1-pixel outline) so they read as a matching set:
+1. STEADY HAND: an armoured gauntlet held flat and still, a bone die balanced upright on its open palm, two short gold "steady" lines beside it.
+2. THICK SKIN: a heart made of riveted iron plates, a small blood-red heart showing through a gap in the middle plate.
+3. GAMBLER'S HEART: two bone dice side by side each showing a single pip (snake eyes), with a small gold crown above them.
 ```
 
-## After generating
+## Checks
 
-- Gemini draws "pixel art" at high resolution on an uneven grid. Shrink each piece with nearest-neighbour scaling to its game size, then snap it to `assets/palette.png`, which is what `tools/make_sprites.gd` already does for sprites.
-- Target sizes in game pixels (shown at 3×): 9-slice corner 6–8 px, button 64×16, bar track 48×5, die and slot 20×20, icons 12–16 px, portrait 32×32.
-- Before you cut, check that the 9-slice edges are really plain. Gemini often sneaks rivets into them, and those rivets smear when the panel stretches.
+- **Background:** pure flat magenta. If the art has any pink or purple, regenerate: that colour gets
+  cut out with the background.
+- **Gaps:** every piece and frame stands alone with clear magenta all round. Touching pieces get cut
+  as one.
+- **Pixels:** zoom in. Every art-pixel must be the same size; soft or blurry edges mean regenerate,
+  or add "hard square pixels only, no smoothing" to the end of the prompt.
+- **Frames:** in an animation, the effect sits in the same spot in every frame, so it doesn't jump
+  when played.

@@ -6,6 +6,7 @@ const GOLD := Color(1, 0.85, 0.4)
 const QUIET := Color(0.6, 0.62, 0.7)
 ## Body text is m6x11, the theme default (assets/ui_theme.tres); titles use this.
 const HEADING_FONT := preload("res://assets/fonts/alagard.ttf")
+const ART := "res://assets/ui/cut/%s.png"
 
 
 ## Fills `screen` with the dark background and a padded column; returns the column.
@@ -27,12 +28,24 @@ static func page(screen: Control) -> VBoxContainer:
 	return root
 
 
+## Covers a screen made by page() with the picture assets/ui/bg_<art>.webp, behind its content.
+static func backdrop(screen: Control, art: String) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = load("res://assets/ui/bg_%s.webp" % art)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	screen.add_child(r)
+	screen.move_child(r, 1)  # over the page's flat colour, under its content
+	return r
+
+
 static func label(parent: Node, font_size: int, text := "") -> Label:
 	var l := Label.new()
 	l.text = text
 	# Pixel fonts only stay crisp at whole multiples of their 16 px design size.
 	l.add_theme_font_size_override("font_size", maxi(1, roundi(font_size / 16.0)) * 16)
-	if parent is ColorRect:
+	if parent is TextureRect:
 		l.set_anchors_preset(Control.PRESET_FULL_RECT)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -47,12 +60,28 @@ static func heading(parent: Node, font_size: int, text := "") -> Label:
 	return l
 
 
-static func box(parent: Node, color: Color, min_size: Vector2) -> ColorRect:
-	var r := ColorRect.new()
-	r.color = color
-	r.custom_minimum_size = min_size
+## A piece of UI art from assets/ui/cut/ (made by tools/make_ui.gd), stretched to `min_size` if given.
+## A label added to it is centred.
+static func image(parent: Node, art: String, min_size := Vector2.ZERO) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = load(ART % art)
+	if min_size != Vector2.ZERO:
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.custom_minimum_size = min_size
+	r.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	r.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	parent.add_child(r)
 	return r
+
+
+## A framed health bar (styled by the theme).
+static func hp_bar(parent: Node, width: float) -> ProgressBar:
+	var b := ProgressBar.new()
+	b.show_percentage = false
+	b.custom_minimum_size = Vector2(width, 26)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	parent.add_child(b)
+	return b
 
 
 static func button(parent: Node, text: String, on_press: Callable) -> Button:
@@ -62,6 +91,16 @@ static func button(parent: Node, text: String, on_press: Callable) -> Button:
 	b.pressed.connect(on_press)
 	parent.add_child(b)
 	return b
+
+
+## A framed panel (assets/ui/cut/panel.png via the theme); returns the column inside it.
+static func panel(parent: Node, separation := 8) -> VBoxContainer:
+	var p := PanelContainer.new()
+	parent.add_child(p)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", separation)
+	p.add_child(col)
+	return col
 
 
 static func spacer(parent: Node) -> void:
