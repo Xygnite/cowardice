@@ -17,9 +17,23 @@ var combat: Combat
 var layer := 0
 var path: Array = []  # room picked on each layer so far
 var screen: Control
+var music := AudioStreamPlayer.new()
+var ui_sfx := AudioStreamPlayer.new()
+
+const MENU_BGM := preload("res://assets/audio/menu_bgm.wav")
+const DUNGEON_BGM := preload("res://assets/audio/dungeon_bgm.wav")
+const BOSS_BGM := preload("res://assets/audio/boss_bgm.wav")
+const HOVER := preload("res://assets/audio/hover.wav")
+const CLICK := preload("res://assets/audio/click.wav")
+const CONFIRM := preload("res://assets/audio/confirm.wav")
 
 
 func _ready() -> void:
+	music.volume_db = -8.0
+	music.finished.connect(music.play)  # loop without touching the wav import settings
+	add_child(music)
+	add_child(ui_sfx)
+	get_tree().node_added.connect(_on_node_added)
 	for arg in OS.get_cmdline_user_args():  # dev shortcut: `-- --fight=6` jumps straight into that fight
 		if arg.begins_with("--fight="):
 			_start_run()
@@ -52,8 +66,28 @@ func _show_tutorial() -> void:
 func _show(next: Control) -> void:
 	if screen:
 		screen.queue_free()
+		_play_ui(CONFIRM)  # a press that changes screen confirms rather than clicks
 	screen = next
 	add_child(next)
+	var track: AudioStream = MENU_BGM if (next is MenuScreen or next is CampScreen) else DUNGEON_BGM
+	if next is CombatScreen and combat.is_boss_fight():
+		track = BOSS_BGM
+	if music.stream != track:
+		music.stream = track
+		music.play()
+
+
+func _on_node_added(node: Node) -> void:
+	if node is BaseButton:
+		node.mouse_entered.connect(func() -> void: if not node.disabled: _play_ui(HOVER))
+		node.pressed.connect(_play_ui.bind(CLICK))
+
+
+func _play_ui(sfx: AudioStream) -> void:
+	if sfx == CLICK and ui_sfx.stream == CONFIRM and ui_sfx.playing and ui_sfx.get_playback_position() < 0.1:
+		return  # this press already played confirm
+	ui_sfx.stream = sfx
+	ui_sfx.play()
 
 
 func _on_tutorial_finished(_won: bool) -> void:

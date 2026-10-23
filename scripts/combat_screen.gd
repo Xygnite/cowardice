@@ -23,6 +23,9 @@ const TRAY_INSET := 6  # screen pixels from the box's edge to the felt, which tu
 const LOG_LINES := 4
 const STRIKE_DELAY := 0.2  # seconds into an enemy's attack animation when the blow lands
 const MENU_LOCK := 100  # die menu id for lock/unlock; the other ids are Combat.Slot values
+const DICE_SFX := preload("res://assets/audio/dice.wav")
+const HIT_SFX := preload("res://assets/audio/hit.wav")
+const BLOCK_SFX := preload("res://assets/audio/block.wav")
 
 ## One lesson per tutorial turn, indexed by Combat.turn.
 const LESSONS := [
@@ -76,10 +79,13 @@ var timing: TimingBar
 var log_label: Label
 var log_lines: Array[String] = []
 var hero: Node2D
+var sfx := AudioStreamPlayer.new()
 
 
 func _ready() -> void:
 	_build()
+	sfx.max_polyphony = 4  # a cleave hits several enemies at once
+	add_child(sfx)  # after _build: it expects page()'s background as child 0
 	_log(", ".join(combat.enemies.map(func(e): return e.name)) + ".")
 	if combat.is_boss_fight():
 		_log("Something large stirs below.")
@@ -174,6 +180,7 @@ func _on_end_turn() -> void:
 			_float(at, "-%d" % (hp_before - combat.player_hp), UI.DANGER)
 		elif grade != Combat.Grade.MISS:
 			_play(hero, "block")
+			_sfx(BLOCK_SFX)
 			_float(at, "Parried!" if kind in ["unblockable", "curse"] else "Blocked", UI.GOLD)
 		if combat.player_hp == 0:
 			break
@@ -446,6 +453,12 @@ func _show_faces() -> void:
 ## Tumbles the dice at `which` (indices) onto the values they just rolled.
 func _roll_anim(which: Array) -> void:
 	tray.throw(which)
+	_sfx(DICE_SFX)
+
+
+func _sfx(stream: AudioStream) -> void:
+	sfx.stream = stream
+	sfx.play()
 
 
 func _face_text(f: int) -> String:
@@ -454,6 +467,7 @@ func _face_text(f: int) -> String:
 
 ## Plays the slash (assets/ui/cut/slash_*.png) over `at`, at the sprites' pixel size; `mirror` swings it the other way.
 func _slash(at: Control, mirror := false) -> void:
+	_sfx(HIT_SFX)
 	var fx := TextureRect.new()
 	fx.texture = load(UI.ART % "slash_0")
 	fx.flip_h = mirror
