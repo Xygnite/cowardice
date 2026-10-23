@@ -46,6 +46,13 @@ const TYPES := {
 	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
+	# Mine stubs so floors can deal them; Tasks 2 and 3 replace these with the real enemies.
+	"miner": {"name": "Miner", "hp": 12, "phase1": [{"kind": "attack", "value": 4}]},
+	"crawler": {"name": "Crawler", "hp": 8, "phase1": [{"kind": "attack", "value": 4}]},
+	"hulk": {"name": "Hulk", "hp": 26, "phase1": [{"kind": "attack", "value": 4}]},
+	"canary": {"name": "Canary", "hp": 10, "phase1": [{"kind": "attack", "value": 4}]},
+	"shaft_foreman": {"name": "Shaft Foreman", "hp": 28, "phase1": [{"kind": "attack", "value": 4}]},
+	"pit_king": {"name": "Pit King", "hp": 100, "boss": true, "phase1": [{"kind": "attack", "value": 4}]},
 }
 
 ## Set fights for the tutorial (0), the boss (6), tests and the --fight shortcut. A run deals its own groups in game.gd.

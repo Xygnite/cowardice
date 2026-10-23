@@ -4,6 +4,7 @@ extends Control
 
 var meta := Meta.load_from()
 var combat: Combat
+var floor_id := "chapel"
 var map: Array = []  # this run's floor, from Floor.deal()
 var layer := 0
 var path: Array = []  # room picked on each layer so far
@@ -108,7 +109,7 @@ func _on_tutorial_finished(_won: bool) -> void:
 func _start_run() -> void:
 	combat = Combat.new()
 	combat.apply_perks(meta.equipped)
-	map = Floor.deal()
+	map = Floor.deal(floor_id)
 	layer = 0
 	path.clear()
 	seen_events.clear()
@@ -118,6 +119,8 @@ func _start_run() -> void:
 func _show_map() -> void:
 	var s := MapScreen.new()
 	s.rooms = map
+	s.title = Floor.FLOORS[floor_id].title
+	s.lair = Floor.FLOORS[floor_id].lair
 	s.layer = layer
 	s.path = path
 	s.combat = combat
@@ -197,7 +200,7 @@ func _on_event_finished(result: Dictionary) -> void:
 
 func _start_ambush() -> void:
 	ambush = true
-	combat.start_group(Floor.group(Floor.EARLY_HP, {}))
+	combat.start_group(Floor.group(Floor.FLOORS[floor_id].hp[1], {}, Floor.FLOORS[floor_id].enemies))
 	_show_fight(_on_fight_finished)
 	screen._log("Something moves in the dark.")
 	screen._refresh()

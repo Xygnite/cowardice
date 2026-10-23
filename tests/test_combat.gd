@@ -431,10 +431,22 @@ func _fight_rewards() -> void:
 
 ## Many dealt floors, each checked against the branching map's rules in Floor.deal().
 func _floors() -> void:
+	for id in Floor.FLOORS:
+		_floor(id)
+	var used := {}
+	for i in 100:  # more groups than fit, so repeats must be accepted instead of looping forever
+		Floor.group(Floor.FLOORS.chapel.hp[0], used)
+	var c := CombatScript.new(7)
+	c.start_group(["rat", "rat", "rat"])
+	check(c.enemies.map(func(e): return e.name) == ["Bone Rat A", "Bone Rat B", "Bone Rat C"], "a dealt group starts like a set fight")
+
+
+func _floor(id: String) -> void:
+	var data: Dictionary = Floor.FLOORS[id]
 	var kinds_mid := {}
 	var shapes := {}
 	for n in 200:
-		var f: Array = Floor.deal()
+		var f: Array = Floor.deal(id)
 		var groups := []
 		check(f.size() == 10, "a floor is ten columns")
 		for c in f.size():
@@ -445,7 +457,7 @@ func _floors() -> void:
 			sorted_lanes.sort()
 			check(lanes == sorted_lanes and sorted_lanes.all(func(l): return l >= 0 and l < 5), "column %d lanes are sorted and in 0..4" % c)
 			check(lanes.size() == sorted_lanes.reduce(func(u, l): return u if l in u else u + [l], []).size(), "column %d lanes are distinct" % c)
-			var hp: Array = Floor.ENTRANCE_HP if c == 0 else (Floor.EARLY_HP if c <= 4 else Floor.LATE_HP)
+			var hp: Array = data.hp[0] if c == 0 else (data.hp[1] if c <= 4 else data.hp[2])
 			var linked := {}
 			for r in col:
 				check(r.next.size() > 0 or c == 9, "column %d room has a way on" % c)
@@ -466,22 +478,16 @@ func _floors() -> void:
 				if r.kind == "fight" and c < 9:
 					var total: int = r.enemies.reduce(func(t, k): return t + CombatScript.TYPES[k].hp, 0)
 					check(total >= hp[0] and total <= hp[1], "column %d fight has %d HP, wants %s" % [c, total, hp])
-					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in Floor.ENEMIES), "a fight is 1-3 dungeon enemies")
+					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in data.enemies), "a fight is 1-3 %s enemies" % id)
 					groups.append(r.enemies)
 			if c < 9:
 				check(linked.size() == f[c + 1].size(), "every room in column %d has a parent" % (c + 1))
 		shapes[str(f[4].map(func(r): return r.lane))] = true
-		check(f[-1][0].enemies == ["warden"] and f[-1][0].label == "Boss: Bone Warden" and f[-1][0].next == [], "the boss is last")
+		check(f[-1][0].enemies == data.boss and f[-1][0].label == "Boss: " + CombatScript.TYPES[data.boss[0]].name and f[-1][0].next == [], "the boss is last")
 		check(groups.size() == groups.reduce(func(u, g): return u if g in u else u + [g], []).size(), "no group twice")
 	for k in ["fight", "unknown", "forge", "campfire"]:
 		check(kinds_mid.get(k, 0) > 0, "%s shows up in columns 3-7" % k)
 	check(shapes.size() > 5, "column 4 differs from floor to floor")
-	var used := {}
-	for i in 100:  # more groups than fit, so repeats must be accepted instead of looping forever
-		Floor.group(Floor.ENTRANCE_HP, used)
-	var c := CombatScript.new(7)
-	c.start_group(["rat", "rat", "rat"])
-	check(c.enemies.map(func(e): return e.name) == ["Bone Rat A", "Bone Rat B", "Bone Rat C"], "a dealt group starts like a set fight")
 
 
 func _meta() -> void:

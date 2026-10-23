@@ -10,6 +10,8 @@ const COLUMNS := 10
 const LANES := 5
 const INSET := Vector4(0.07, 0.12, 0.07, 0.1)  # left, top, right, bottom share of the parchment, clear of its burnt edge
 
+var title := ""
+var lair := ""
 var rooms: Array = []  # columns of room dictionaries, entrance first
 var layer := 0
 var path: Array = []
@@ -37,7 +39,7 @@ func _ready() -> void:
 	var top := UI.row(root)
 	UI.label(top, 22, "HP %d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards])
 	UI.spacer(top)
-	UI.heading(top, 32, "The Sunken Chapel")
+	UI.heading(top, 32, title)
 	_field = Control.new()
 	_field.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_KEEP_SIZE, 8)
 	_field.offset_top = 72
@@ -50,9 +52,9 @@ func _ready() -> void:
 			var b := _room_button(c, i, c == layer and i in pick)
 			_field.add_child(b)
 			room_buttons[c].append(b)
-	var lair := UI.label(_field, 16, "The Warden's Lair")
-	lair.name = "Lair"
-	lair.add_theme_color_override("font_color", INK)
+	var lair_label := UI.label(_field, 16, lair)
+	lair_label.name = "Lair"
+	lair_label.add_theme_color_override("font_color", INK)
 	_field.resized.connect(_place_rooms)  # only now: it needs the buttons
 	_place_rooms()
 
@@ -119,8 +121,8 @@ func _place_rooms() -> void:
 			b.position = _spot(c, rooms[c][i].lane) - b.get_combined_minimum_size() / 2
 			b.pivot_offset = b.get_combined_minimum_size() / 2  # hover and press scale from the centre
 	var boss := _spot(rooms.size() - 1, rooms[-1][0].lane)
-	var lair: Label = _field.get_node("Lair")
-	lair.position = boss + Vector2(-lair.get_minimum_size().x / 2, 36)
+	var lair_label: Label = _field.get_node("Lair")
+	lair_label.position = boss + Vector2(-lair_label.get_minimum_size().x / 2, 36)
 	_field.queue_redraw()
 
 
