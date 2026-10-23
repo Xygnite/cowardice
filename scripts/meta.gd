@@ -11,6 +11,13 @@ const PERKS := {
 	"steady_hand": {"name": "Steady Hand", "cost": 50, "text": "+1 reroll every turn"},
 	"thick_skin": {"name": "Thick Skin", "cost": 100, "text": "+10 max HP"},
 	"gamblers_heart": {"name": "Gambler's Heart", "cost": 150, "text": "A pair of 1s in Cleave counts as 12"},
+	"scavenger": {"name": "Scavenger", "cost": 75, "text": "+1 Shard for every kill"},
+	"bonfire_keeper": {"name": "Bonfire Keeper", "cost": 100, "text": "Campfires heal 45% instead of 30%"},
+	"lucky_charm": {"name": "Lucky Charm", "cost": 125, "text": "Events never take you below 5 HP"},
+	"iron_nerve": {"name": "Iron Nerve", "cost": 150, "text": "Perfect block and parry windows +40 ms"},
+	"grit_teeth": {"name": "Grit Teeth", "cost": 150, "text": "Each die left unplaced gives +2 Grit"},
+	"hex_ward": {"name": "Hex Ward", "cost": 200, "text": "The first curse each fight fails"},
+	"lantern_bearer": {"name": "Lantern Bearer", "cost": 200, "text": "\"?\" rooms are ambushes 10% of the time, not 20%"},
 }
 
 var embers := 0

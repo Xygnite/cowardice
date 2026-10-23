@@ -342,6 +342,60 @@ func _perks() -> void:
 	check(c.cleave_damage() == 3, "a pair of 1s Cleaves for 3 without Gambler's Heart")
 	c.apply_perks(["gamblers_heart"])
 	check(c.cleave_damage() == 18, "Gambler's Heart: a pair of 1s counts as 12, so 18")
+	_new_perks()
+
+
+## The perks past the first three, each against its own rule with and without it.
+func _new_perks() -> void:
+	var c := fresh()
+	c.enemies[0].hp = 0
+	c.claim_fight()
+	var plain := c.shards
+	var s := fresh()
+	s.apply_perks(["scavenger"])
+	s.enemies[0].hp = 0
+	s.claim_fight()
+	check(plain == CombatScript.SHARDS_PER_KILL and s.shards == CombatScript.SHARDS_PER_KILL + 1, "Scavenger: +1 Shard per kill")
+
+	var b := fresh()
+	check(b.campfire_heal_amount() == 12, "a campfire heals 30% of 40")
+	b.apply_perks(["bonfire_keeper"])
+	check(b.campfire_heal_amount() == 18, "Bonfire Keeper: 45% of 40")
+
+	var l := fresh()
+	l.apply_perks(["lucky_charm"])
+	l.player_hp = 8
+	check(l.hurt(6) == 3 and l.player_hp == 5, "Lucky Charm: events stop at 5 HP")
+	l.player_hp = 3
+	check(l.hurt(6) == 0 and l.player_hp == 3, "Lucky Charm: already under 5, events take nothing")
+
+	var n := fresh()
+	var parry := n.parry_window_ms()
+	var perfect := n.perfect_window_ms()
+	n.apply_perks(["iron_nerve"])
+	check(n.parry_window_ms() == parry + 40 and n.perfect_window_ms() == perfect + 40, "Iron Nerve: +40 ms on Perfect and parry")
+
+	var g := fresh()
+	g.apply_perks(["grit_teeth"])
+	g.resolve_player()
+	check(g.grit == 2 * g.dice.size(), "Grit Teeth: +2 Grit per unplaced die")
+
+	var h := fresh()
+	h.apply_perks(["hex_ward"])
+	h.enemies[0].intent = {"kind": "curse", "target": 0}
+	h.resolve_enemy(0, CombatScript.Grade.MISS)
+	check(not h.dice[0].faces.has(CombatScript.CURSE), "Hex Ward: the first curse of a fight fails")
+	h.resolve_enemy(0, CombatScript.Grade.MISS)
+	check(h.dice[0].faces.has(CombatScript.CURSE), "Hex Ward: the second one lands")
+	h.start_fight(SKELETON_BELL)
+	check(not h.ward_spent, "Hex Ward comes back each fight")
+
+	var a := fresh()
+	check(Events.ambush_chance(a) == Events.AMBUSH_CHANCE, "ambush chance is 20% by default")
+	a.apply_perks(["lantern_bearer"])
+	check(is_equal_approx(Events.ambush_chance(a), 0.1) and Events.odds([], Events.ambush_chance(a))[0] == ["Ambush", 10.0], "Lantern Bearer: ambushes 10%, and the map's odds say so")
+	for id in Meta.PERKS:
+		check(ResourceLoader.exists(UI.ART % ("perk_" + id)), "%s has badge art" % id)
 
 
 func _forge_and_campfire() -> void:

@@ -82,7 +82,7 @@ func _room_button(c: int, i: int, can_pick: bool) -> TextureButton:
 	if room.kind == "fight":
 		b.tooltip_text = room.label
 	elif room.kind == "unknown" and not _taken(c, i):
-		b.tooltip_text = "\n".join(Events.odds(seen_events).map(func(o): return "%s  %.0f%%" % o))
+		b.tooltip_text = "\n".join(Events.odds(seen_events, Events.ambush_chance(combat)).map(func(o): return "%s  %.0f%%" % o))
 	if can_pick:
 		# Past 1.0 so the dark art actually brightens; the gold disc in _draw_links does the rest.
 		var glow := Color(1.8, 1.4, 0.6)

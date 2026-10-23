@@ -90,13 +90,18 @@ static func pick(seen: Array) -> String:
 	return "" if left.is_empty() else left.pick_random()
 
 
+## Chance a "?" room is an ambush this run: halved by the Lantern Bearer perk.
+static func ambush_chance(c: Combat) -> float:
+	return AMBUSH_CHANCE / 2.0 if "lantern_bearer" in c.perks else AMBUSH_CHANCE
+
+
 ## What a "?" room may hold, as [name, percent] pairs with the ambush first; matches game.gd's pick.
-static func odds(seen: Array) -> Array:
+static func odds(seen: Array, chance := AMBUSH_CHANCE) -> Array:
 	var left: Array = IDS.filter(func(id): return not seen.has(id))
 	if left.is_empty():
 		return [["Ambush", 100.0]]
-	var each := (1.0 - AMBUSH_CHANCE) * 100.0 / left.size()
-	return [["Ambush", AMBUSH_CHANCE * 100.0]] + left.map(func(id): return [EVENTS[id].title, each])
+	var each := (1.0 - chance) * 100.0 / left.size()
+	return [["Ambush", chance * 100.0]] + left.map(func(id): return [EVENTS[id].title, each])
 
 
 static func can_choose(id: String, choice: int, c: Combat) -> bool:

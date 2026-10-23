@@ -23,7 +23,5 @@ func _ready() -> void:
 	UI.button(choices, "Play", play.emit).custom_minimum_size = Vector2(280, 48)
 	if tutorial_done:  # the first Play is the tutorial anyway
 		UI.button(choices, "Tutorial", tutorial.emit).custom_minimum_size = Vector2(280, 48)
+	UI.button(choices, "Settings", SettingsPanel.open.bind(self, meta)).custom_minimum_size = Vector2(280, 48)
 	UI.button(choices, "Quit", get_tree().quit).custom_minimum_size = Vector2(280, 48)
-	var sound := SoundControls.new()
-	sound.meta = meta
-	choices.add_child(sound)

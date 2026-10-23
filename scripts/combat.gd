@@ -62,6 +62,7 @@ var dungeon_turns := 0  # enemy turns in dungeon fights this run; drives the mur
 var dice: Array[Dictionary] = []
 var rerolls := 0
 var grit := 0
+var ward_spent := false  # Hex Ward already took this fight's first curse
 var fight := 0
 var enemies: Array[Dictionary] = []  # {type, name, hp, intent}
 var target := 0
@@ -89,7 +90,7 @@ func heal(amount: int) -> void:
 
 
 func campfire_heal_amount() -> int:
-	return ceili(max_hp * CAMPFIRE_HEAL)
+	return ceili(max_hp * (0.45 if "bonfire_keeper" in perks else CAMPFIRE_HEAL))
 
 
 ## Raises face f of die i by FORGE_STEP for the rest of the run. Paid in Shards unless no_cost.
@@ -133,9 +134,9 @@ func carve(i: int, f: int) -> int:
 	return pick
 
 
-## Loses up to `amount` HP but never the last one. Returns what was actually lost.
+## Loses up to `amount` HP but never the last one (the last five with Lucky Charm). Returns what was actually lost.
 func hurt(amount: int) -> int:
-	var lost := mini(amount, player_hp - 1)
+	var lost := clampi(player_hp - (5 if "lucky_charm" in perks else 1), 0, amount)
 	player_hp -= lost
 	return lost
 
@@ -159,7 +160,7 @@ func claim_fight() -> void:
 	var dead := enemies.filter(func(e): return e.hp == 0).size()
 	kills += dead
 	if not is_tutorial():
-		shards += dead * SHARDS_PER_KILL
+		shards += dead * (SHARDS_PER_KILL + (1 if "scavenger" in perks else 0))
 
 
 ## How much of the boss's HP you took, 0 to 100. 0 outside a boss fight.
@@ -188,6 +189,7 @@ func start_group(keys: Array) -> void:
 	target = 0
 	turn = 0
 	grit = 0
+	ward_spent = false
 	for d in dice:
 		d.faces = d.base.duplicate()  # boss tampering ends with the fight
 	start_turn()
@@ -268,12 +270,17 @@ func cleave_ready() -> bool:
 
 
 func parry_window_ms() -> int:
-	return 60 + 10 * _best_guard_pip()
+	return 60 + 10 * _best_guard_pip() + _nerve_ms()
 
 
 ## A high Guard die widens the Perfect window too, so a lone 1 in Guard can't Perfect everything.
 func perfect_window_ms() -> int:
-	return 40 + 10 * _best_guard_pip()
+	return 40 + 10 * _best_guard_pip() + _nerve_ms()
+
+
+## Iron Nerve's extra time on the Perfect block and parry windows.
+func _nerve_ms() -> int:
+	return 40 if "iron_nerve" in perks else 0
 
 
 ## Total Cleave damage, split evenly across living enemies by cleave_share().
@@ -347,7 +354,7 @@ func resolve_player() -> int:
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
 		if d.slot == Slot.NONE:
-			grit += 1
+			grit += 2 if "grit_teeth" in perks else 1
 	guard_pool = guard_total()
 	if not alive(target):
 		for i in enemies.size():
@@ -397,6 +404,9 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 		"curse":
 			if grade == Grade.PERFECT:
 				text = "Parried the Curse sticker!"
+			elif "hex_ward" in perks and not ward_spent:
+				ward_spent = true
+				text = "The Hex Ward takes the curse."
 			else:
 				_curse(dice[e.intent.target])
 				text = "Die %d got a Curse face." % (e.intent.target + 1)

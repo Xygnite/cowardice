@@ -135,7 +135,7 @@ func _on_room_picked(i: int) -> void:
 			_show_fight(_on_fight_finished)
 		"unknown":
 			var id: String = Events.pick(seen_events)
-			if id == "" or randf() < Events.AMBUSH_CHANCE:
+			if id == "" or randf() < Events.ambush_chance(combat):
 				_start_ambush()
 			else:
 				_show_event(id)
