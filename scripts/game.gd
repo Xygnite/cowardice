@@ -7,6 +7,8 @@ var combat: Combat
 var map: Array = []  # this run's floor, from Floor.deal()
 var layer := 0
 var path: Array = []  # room picked on each layer so far
+var seen_events: Array = []  # "?" events met this run; each happens once
+var ambush := false  # the fight on now came from a "?" room
 var screen: Control
 var music := AudioStreamPlayer.new()
 var ui_sfx := AudioStreamPlayer.new()
@@ -93,6 +95,7 @@ func _start_run() -> void:
 	map = Floor.deal()
 	layer = 0
 	path.clear()
+	seen_events.clear()
 	_show_map()
 
 
@@ -114,8 +117,11 @@ func _on_room_picked(i: int) -> void:
 			combat.start_group(room.enemies)
 			_show_fight(_on_fight_finished)
 		"unknown":
-			combat.start_group(Floor.group(Floor.EARLY_HP, {}))  # until mystery events exist
-			_show_fight(_on_fight_finished)
+			var id: String = Events.pick(seen_events)
+			if id == "" or randf() < Events.AMBUSH_CHANCE:
+				_start_ambush()
+			else:
+				_show_event(id)
 		"forge":
 			_show_forge(false)
 		"campfire":
@@ -135,12 +141,49 @@ func _show_fight(on_finished: Callable) -> void:
 
 func _on_fight_finished(won: bool) -> void:
 	combat.claim_fight()
+	if ambush and won:
+		combat.shards += Events.AMBUSH_SHARDS
+	ambush = false
 	if not won:
 		_end_run(false)
 	elif layer == map.size() - 1:
 		_end_run(true)
 	else:
 		_next_room()
+
+
+func _show_event(id: String) -> void:
+	seen_events.append(id)
+	var s := EventScreen.new()
+	s.combat = combat
+	s.id = id
+	s.finished.connect(_on_event_finished)
+	_show(s)
+
+
+## Hands out an event's rewards one screen at a time, `forge` free upgrades then a carve, then moves on.
+func _on_event_finished(result: Dictionary) -> void:
+	if result.get("forge", 0) == 0 and not result.get("carve", false):
+		_next_room()
+		return
+	var s := ForgeScreen.new()
+	s.combat = combat
+	s.no_cost = true
+	if result.get("forge", 0) > 0:
+		result.forge -= 1
+	else:
+		s.carve = true
+		result.carve = false
+	s.done.connect(_on_event_finished.bind(result))
+	_show(s)
+
+
+func _start_ambush() -> void:
+	ambush = true
+	combat.start_group(Floor.group(Floor.EARLY_HP, {}))
+	_show_fight(_on_fight_finished)
+	screen._log("Something moves in the dark.")
+	screen._refresh()
 
 
 func _show_forge(no_cost: bool) -> void:
@@ -164,7 +207,7 @@ func _next_room() -> void:
 func _end_run(won: bool) -> void:
 	var rooms_cleared := layer + (1 if won else 0)
 	var boss_pct := combat.boss_damage_pct()
-	var earned := Meta.embers_for(combat.kills, rooms_cleared, boss_pct, won)
+	var earned := Meta.embers_for(combat.kills, rooms_cleared, boss_pct, won) + combat.bonus_embers
 	meta.embers += earned
 	meta.save()
 	var title := "The Bone Warden falls." if won else "You fled."

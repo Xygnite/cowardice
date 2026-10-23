@@ -7,6 +7,7 @@ extends Control
 ## Each side shows one of the die's faces, on the die art from assets/ui/cut/die_<art>.png.
 
 signal die_clicked(i: int)
+signal landed  # once per throw, when its last die is pinned
 
 const PIXEL := 2  # screen pixels per rendered pixel
 const UNIT := 80.0  # screen pixels per cube width, on the tray floor
@@ -56,6 +57,7 @@ var walls: Array[CollisionShape3D] = []  # left, right, top, bottom; moved to th
 ## Per die: body (the RigidBody3D), cube (its mesh), labels, chain, slot (2D badge) with its icon,
 ## faces, value, rolling, and t (seconds since thrown).
 var dice: Array[Dictionary] = []
+var in_flight := false  # a throw has dice still rolling; landed fires when none are
 
 
 func _init() -> void:
@@ -170,7 +172,8 @@ func add_die() -> void:
 	add_child(slot)
 	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "slot": slot, "icon": icon,
 		"faces": [], "value": 0, "rolling": false, "t": 0.0})
-	body.position = _spot(dice.size() - 1)
+	for i in dice.size():  # the row stays centred as it grows
+		dice[i].body.position = _spot(i)
 
 
 ## Shows die i's faces in `art` (bone, locked, placed, cursed) with `value` up, and the icon
@@ -212,6 +215,7 @@ func throw(which: Array) -> void:
 		body.linear_velocity = Vector3(randf_range(THROW_SPEED.x, THROW_SPEED.y), randf_range(0, 2), randf_range(-2, 2))
 		body.angular_velocity = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized() * THROW_SPIN
 		body.sleeping = false
+	in_flight = true
 
 
 func _physics_process(delta: float) -> void:
@@ -257,6 +261,9 @@ func _process(_delta: float) -> void:
 		# A badge in the top-right corner of the top face, put away while the die tumbles.
 		d.slot.position = _screen(top + BADGE) - d.slot.size / 2
 		d.slot.visible = d.icon.texture != null and not d.rolling
+	if in_flight and not dice.any(func(d): return d.rolling):
+		in_flight = false
+		landed.emit()
 
 
 func _gui_input(event: InputEvent) -> void:

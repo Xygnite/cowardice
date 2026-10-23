@@ -25,6 +25,7 @@ func _init() -> void:
 	OS.add_logger(errors)
 	Engine.time_scale = SPEED
 	await _map_moves()
+	await _play_events()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	for keys in Combat.FIGHTS + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
 		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
@@ -81,14 +82,18 @@ func _check_buttons(screen: MapScreen) -> void:
 func _play(keys: Array) -> void:
 	var fight := ", ".join(keys)
 	var errors_before := errors.count
-	var game: Node = load("res://main.tscn").instantiate()
-	game.meta = Meta.load_from(SAVE)
-	game.meta.tutorial_done = true  # start at camp, not in the tutorial
-	root.add_child(game)
-	await process_frame  # the tree only runs the game's _ready once the main loop is going
-	game._start_run()
+	var game: Node = await _new_game()
 	game.combat.start_group(keys)
 	game._show_fight(game._on_fight_finished)
+	await _fight_out(game, fight)
+	await create_timer(0.5).timeout  # let the next screen settle, so its errors count too
+	check(errors.count == errors_before, "fight %s plays through with no errors (got %d)" % [fight, errors.count - errors_before])
+	game.queue_free()
+	await process_frame
+
+
+## Plays the fight on screen to its end: every die into Attack, end turn.
+func _fight_out(game: Node, fight: String) -> void:
 	var turns := 0
 	while game.screen is CombatScreen and turns < TURN_LIMIT:
 		var screen: CombatScreen = game.screen
@@ -100,7 +105,60 @@ func _play(keys: Array) -> void:
 		await process_frame
 	check(not game.screen is CombatScreen, "fight %s ends within %d turns" % [fight, TURN_LIMIT])
 	print("fight %s: %d turns, %s" % [fight, turns, "won" if game.combat.fight_won() else "lost"])
-	await create_timer(0.5).timeout  # let the next screen settle, so its errors count too
-	check(errors.count == errors_before, "fight %s plays through with no errors (got %d)" % [fight, errors.count - errors_before])
+
+
+## A game started straight onto a run's map, skipping the menu and the tutorial.
+func _new_game() -> Node:
+	var game: Node = load("res://main.tscn").instantiate()
+	game.meta = Meta.load_from(SAVE)
+	game.meta.tutorial_done = true
+	root.add_child(game)
+	await process_frame  # the tree only runs the game's _ready once the main loop is going
+	game._start_run()
+	await process_frame
+	return game
+
+
+## Every "?" event on the real screens: the first choice, its dice, then any forge or carve screens it
+## grants (first enabled face), back to the map. Plus one ambush, which pays Shards on a win.
+func _play_events() -> void:
+	for id: String in Events.IDS:
+		var errors_before := errors.count
+		var game: Node = await _new_game()
+		game.combat.shards = Events.GAMBLER_BET  # enough for the gambler's bet
+		game._show_event(id)
+		var steps := 0
+		while not game.screen is MapScreen and steps < 3000:
+			var s: Node = game.screen
+			if s is EventScreen and not s.busy:
+				var go: Array = s.choice_row.get_children().filter(func(b): return b.text == "Go on")
+				if go.is_empty():
+					s.choose(0)
+				else:
+					go[0].pressed.emit()
+			elif s is ForgeScreen:
+				for b: Button in s.face_buttons.reduce(func(a, r): return a + r, []):
+					if not b.disabled:
+						b.pressed.emit()
+						break
+			steps += 1
+			await process_frame
+		check(game.screen is MapScreen, "event %s goes back to the map" % id)
+		check(game.seen_events == [id], "event %s is marked seen" % id)
+		await create_timer(0.3).timeout
+		check(errors.count == errors_before, "event %s plays through with no errors (got %d)" % [id, errors.count - errors_before])
+		game.queue_free()
+		await process_frame
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	var shards: int = game.combat.shards
+	game._start_ambush()
+	check(game.ambush, "an ambush is flagged")
+	await _fight_out(game, "ambush")
+	var won: bool = game.combat.fight_won()
+	check(not won or game.combat.shards >= shards + Events.AMBUSH_SHARDS, "a won ambush pays at least %d Shards" % Events.AMBUSH_SHARDS)
+	check(not game.ambush, "the ambush flag resets after the fight")
+	await create_timer(0.5).timeout
+	check(errors.count == errors_before, "the ambush plays through with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
