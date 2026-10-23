@@ -31,6 +31,7 @@ func _init() -> void:
 	_floors()
 	_lasting_curse()
 	_event_helpers()
+	_events()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -90,6 +91,77 @@ func _event_helpers() -> void:
 	check(c.player_hp == c.max_hp, "HP is capped by the new max")
 	var v: Array = c.roll_dice([0, 2])
 	check(v.size() == 2 and v[0] == c.dice[0].value and v[1] == c.dice[2].value, "roll_dice returns the rolled values")
+
+
+func _events() -> void:
+	var c := CombatScript.new(7)
+	c.player_hp = 3
+	var r: Dictionary = Events.resolve("shrine", 0, c, [])
+	check(c.player_hp == 1 and r.forge == 1, "shrine at 3 HP: 1 HP left, one forge")
+	c = CombatScript.new(7)
+	Events.resolve("pilgrim", 0, c, [])
+	check(c.shards == 6, "pilgrim gives 6 Shards")
+	c.player_hp = 10
+	Events.resolve("pilgrim", 1, c, [])
+	check(c.player_hp == 15, "pilgrim heals 5")
+	r = Events.resolve("altar", 0, c, [])
+	check(c.max_hp == CombatScript.PLAYER_MAX_HP - 5 and r.forge == 2, "altar: -5 max HP, two forges")
+	c = CombatScript.new(7)
+	Events.resolve("niche", 0, c, [])
+	check(c.bonus_embers == 10, "niche: 10 embers")
+	Events.resolve("bone_pile", 0, c, [2])
+	check(c.player_hp == c.max_hp - 4 and c.shards == 0, "bone pile 2 hurts 4")
+	Events.resolve("bone_pile", 0, c, [0])
+	check(c.player_hp == c.max_hp - 8, "bone pile on a cursed face hurts")
+	Events.resolve("bone_pile", 0, c, [5])
+	check(c.shards == 5, "bone pile 5 gives 5 Shards")
+	c = CombatScript.new(7)
+	Events.resolve("corridor", 0, c, [1, 2, 3])
+	check(c.player_hp == c.max_hp - 4, "corridor total 6 loses 4")
+	Events.resolve("corridor", 0, c, [4, 4, 4])
+	check(c.player_hp == c.max_hp - 4, "corridor total 12 loses nothing")
+	Events.resolve("corridor", 1, c, [])
+	check(c.player_hp == c.max_hp - 8, "corridor, going back, loses 4")
+	c.player_hp = 2
+	Events.resolve("corridor", 0, c, [1, 1, 1])
+	check(c.player_hp == 1, "corridor at 2 HP leaves 1")
+	c = CombatScript.new(7)
+	r = Events.resolve("chest", 0, c, [1])
+	check(c.player_hp == c.max_hp - 5 and not r.get("retry", false), "chest 1 hurts 5 and ends")
+	r = Events.resolve("chest", 0, c, [0])
+	check(c.player_hp == c.max_hp - 10 and not r.get("retry", false), "chest on a cursed face hurts 5")
+	r = Events.resolve("chest", 0, c, [3])
+	check(r.get("retry", false), "chest 3 on the first try retries")
+	r = Events.resolve("chest", 0, c, [3], 2)
+	check(not r.get("retry", false) and r.get("forge", 0) == 0, "chest 3 on the second try ends")
+	r = Events.resolve("chest", 0, c, [6])
+	check(r.forge == 1, "chest 6 forges")
+	c = CombatScript.new(7)
+	c.shards = 3
+	check(not Events.can_choose("gambler", 0, c) and Events.can_choose("gambler", 1, c), "the bet needs 4 Shards")
+	c.shards = 4
+	check(Events.can_choose("gambler", 0, c), "4 Shards is enough")
+	Events.resolve("gambler", 0, c, [6, 6, 6, 1, 1, 1])
+	check(c.shards == 8, "gambler win: 4 - 4 + 8")
+	c.shards = 4
+	Events.resolve("gambler", 0, c, [1, 1, 1, 6, 6, 6])
+	check(c.shards == 0, "gambler loss")
+	c.shards = 4
+	Events.resolve("gambler", 0, c, [2, 2, 2, 3, 2, 1])
+	check(c.shards == 4, "gambler tie: 4 - 4 + 4")
+	c = CombatScript.new(7)
+	r = Events.resolve("cursed_cast", 0, c, [])
+	check(r.carve, "cursed cast asks for a carve")
+	check(Events.pick(Events.IDS) == "" and Events.IDS.has(Events.pick([])), "pick skips seen rooms")
+	for id in Events.IDS:
+		if id == "corridor" or id == "niche":
+			continue
+		c = CombatScript.new(7)
+		c.shards = 5
+		var last: int = Events.EVENTS[id].choices.size() - 1
+		var before := [c.player_hp, c.max_hp, c.shards, c.bonus_embers]
+		r = Events.resolve(id, last, c, [3, 3, 3, 3, 3, 3])
+		check(before == [c.player_hp, c.max_hp, c.shards, c.bonus_embers] and r.get("forge", 0) == 0 and not r.get("carve", false), "%s: the way out costs nothing" % id)
 
 
 func _timing_grades() -> void:
