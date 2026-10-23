@@ -146,19 +146,19 @@ const RIGS := {
 	"rubble": {"facing": -1, "body": Vector2(18, 26), "legs_top": 30,
 		"weapon": {"pivot": Vector2(11, 16), "swing": [0.6, -0.3],
 			"outline": [Vector2(1, 11), Vector2(11, 11), Vector2(12, 16), Vector2(11, 21), Vector2(1, 21)]}},
-	# The near arm and its boulder fist from the shoulder: hoisted up in front, then slammed down.
-	"hulk": {"facing": -1, "body": Vector2(31, 44), "legs_top": 46,
-		"weapon": {"pivot": Vector2(18, 23), "swing": [2.2, 0.4], "patch": [Color("2a303a"), 45],
-			"outline": [Vector2(9, 17), Vector2(24, 17), Vector2(24, 30), Vector2(21, 37), Vector2(20, 39), Vector2(20, 55), Vector2(1, 55), Vector2(1, 38), Vector2(8, 30), Vector2(9, 25)]},
-		"head": {"pivot": Vector2(25, 20),
-			"outline": [Vector2(17, 7), Vector2(31, 7), Vector2(32, 14), Vector2(31, 20), Vector2(17, 20)]}},
+	# The near arm and its block fist from the shoulder: hoisted up in front, then slammed down.
+	"hulk": {"facing": -1, "body": Vector2(26, 44), "legs_top": 44,
+		"weapon": {"pivot": Vector2(12, 17), "swing": [1.9, 0.35], "patch": [Color("2a303a"), 43],
+			"outline": [Vector2(4, 12), Vector2(19, 12), Vector2(19, 23), Vector2(15, 25), Vector2(17, 33), Vector2(17, 47), Vector2(2, 47), Vector2(2, 33), Vector2(5, 24), Vector2(4, 20)]},
+		"head": {"pivot": Vector2(24, 17),
+			"outline": [Vector2(17, 5), Vector2(32, 5), Vector2(32, 17), Vector2(17, 17)]}},
 	# The beaked head pecks; the misty tail ends trail behind, and the whole bird floats (no legs).
 	"canary": {"facing": -1, "body": Vector2(20, 28), "legs_top": 44,
 		"weapon": {"pivot": Vector2(16, 17), "swing": [0.5, -0.35],
 			"outline": [Vector2(1, 4), Vector2(19, 4), Vector2(20, 13), Vector2(17, 18), Vector2(10, 20), Vector2(1, 16)]},
 		"skirt": [
-			[Vector2(21, 30), Vector2(27, 30), Vector2(27, 41), Vector2(21, 41)],
-			[Vector2(27, 28), Vector2(36, 28), Vector2(36, 40), Vector2(27, 40)]]},
+			[Vector2(19, 29), Vector2(27, 29), Vector2(27, 37), Vector2(19, 37)],
+			[Vector2(27, 30), Vector2(37, 30), Vector2(37, 42), Vector2(27, 42)]]},
 	# The far arm and its coiled whip from the shoulder: back over his head, then lashed out toward the hero.
 	# The ledger is his shield.
 	"shaft_foreman": {"facing": -1, "body": Vector2(25, 52), "legs_top": 52,

@@ -107,49 +107,67 @@ sprite("_rubble", { w: 30, h: 24, outline: "k" }, (c) => {
   c.px(25, 8, "g"); c.hline(13, 5, 3, "G"); c.px(14, 4, "g")
 })
 
-// Rubble Hulk: loose stone holding itself together, ember-lit seams, moss on the shoulders, a boulder fist.
-sprite("_hulk", { w: 54, h: 58, outline: "k" }, (c) => {
-  // Far arm behind.
-  rock(c, 42, 20, 5, 4, ["2", "3", "5"], 1); rock(c, 45, 28, 4, 4, ["2", "3", "5"], 2)
-  rock(c, 46, 36, 4, 4, ["2", "3", "5"], 3); rock(c, 46, 44, 5, 4, ["2", "4", "5"], 4)
-  // Legs of stacked stones.
-  rock(c, 22, 45, 4, 4, ["3", "5", "7"], 5); rock(c, 23, 52, 6, 4, ["2", "4", "6"], 6)
-  rock(c, 36, 45, 4, 4, ["2", "4", "5"], 7); rock(c, 39, 52, 6, 4, ["2", "3", "5"], 8)
-  // Hips, chest stones, the ember seams between them.
-  rock(c, 27, 38, 10, 4, ["2", "4", "6"], 9)
-  rock(c, 34, 28, 9, 8, ["2", "4", "6"], 10)
-  rock(c, 25, 25, 9, 8, ["3", "5", "7"], 11)
-  rock(c, 32, 17, 7, 5, ["3", "5", "7"], 12)
-  rock(c, 38, 36, 5, 3, ["2", "4", "6"], 13)
-  for (const [x, y] of [[29, 32], [30, 33], [33, 23], [27, 34], [22, 33], [35, 34], [33, 35]]) c.px(x, y, "r")
-  c.px(31, 33, "o"); c.px(28, 33, "o"); c.px(33, 22, "o")
-  // Head: a small stone set low and forward, one ember eye in its crack.
-  rock(c, 22, 12, 6, 5, ["3", "6", "8"], 14)
-  c.line(17, 13, 22, 13, "k"); c.px(18, 13, "o"); c.px(19, 13, "o"); c.px(20, 13, "r")
-  c.hline(20, 7, 4, "G"); c.px(21, 6, "g"); c.hline(30, 12, 5, "G"); c.px(31, 11, "g")
-  // Near arm: shoulder, forearm and the boulder fist it slams with.
-  rock(c, 14, 21, 6, 5, ["3", "5", "7"], 15); rock(c, 12, 30, 5, 5, ["3", "5", "7"], 16)
-  rock(c, 8, 43, 7, 7, ["3", "5", "8"], 17)
-  c.px(13, 17, "G"); c.hline(12, 16, 3, "g"); c.px(6, 45, "k"); c.px(7, 46, "k"); c.px(9, 47, "k")
+// Rubble Hulk: loose stone holding itself together. Flat slabs stacked into broad shoulders, a slab head with a
+// glowing seam for eyes, ember light in the gaps, and a long arm ending in a block of a fist.
+sprite("_hulk", { w: 46, h: 54, outline: "k" }, (c) => {
+  // A slab: a skewed four-sided stone with its own dark rim, dark face, lit top edge and upper-left facet.
+  const slab = (x0, y0, x1, y1, [dark, mid, lit] = ["3", "5", "7"], s = 1) => {
+    const p = [x0 + s, y0, x1, y0 + s, x1 - s, y1, x0, y1 - s]
+    c.poly([p[0], p[1] - 1, p[2] + 1, p[3], p[4], p[5] + 1, p[6] - 1, p[7]], "k")
+    c.poly(p, dark)
+    c.poly([x0 + s, y0, x1 - 1, y0 + s, x1 - 2, Math.round((y0 + y1) / 2), x0 + 1, Math.round((y0 + y1) / 2) - s], mid)
+    c.line(x0 + s, y0, x1 - 1, y0 + s, lit)
+  }
+  // Far arm, hanging behind.
+  slab(32, 11, 42, 20, ["2", "3", "5"]); slab(35, 20, 43, 30, ["2", "3", "4"], 2); slab(35, 30, 44, 38, ["2", "4", "5"])
+  // Legs: two short pillars.
+  slab(12, 40, 21, 47, ["2", "4", "6"]); slab(10, 46, 21, 53, ["2", "4", "6"], 2)
+  slab(25, 40, 33, 47, ["2", "3", "5"]); slab(25, 46, 35, 53, ["2", "3", "5"], 2)
+  // Hips, belly and the wide chest slab, ember light showing in the gaps.
+  slab(12, 33, 34, 41, ["2", "4", "5"], 2)
+  slab(13, 25, 33, 34, ["3", "4", "6"])
+  slab(9, 14, 37, 26, ["3", "5", "7"], 2)
+  c.hline(15, 25, 16, "k"); for (const x of [16, 19, 24, 28]) c.px(x, 25, "r"); c.px(21, 25, "o"); c.px(26, 25, "o")
+  c.hline(15, 33, 16, "k"); c.px(18, 33, "r"); c.px(23, 33, "o"); c.px(29, 33, "r")
+  c.line(22, 15, 20, 24, "k"); c.px(21, 19, "r"); c.px(21, 20, "o")
+  // Far shoulder slab, mossy.
+  slab(29, 10, 41, 17, ["3", "5", "7"], 2); c.hline(31, 10, 6, "G"); c.px(33, 9, "g")
+  // Head: a squat slab sunk between the shoulders, a seam of fire for eyes.
+  slab(15, 4, 28, 14, ["3", "6", "8"], 1)
+  c.hline(15, 9, 12, "k"); c.px(16, 9, "o"); c.px(17, 9, "o"); c.px(21, 9, "o"); c.px(22, 9, "r"); c.px(19, 9, "r")
+  c.hline(17, 4, 6, "G"); c.px(19, 3, "g")
+  // Near arm: shoulder slab, forearm and the block fist it slams with.
+  slab(3, 11, 15, 20, ["3", "5", "7"], 2); c.hline(5, 11, 5, "G"); c.px(6, 10, "g")
+  slab(3, 20, 11, 31, ["3", "5", "6"], 2)
+  slab(0, 31, 13, 43, ["3", "5", "8"], 2)
+  c.line(1, 37, 11, 37, "k"); c.px(5, 37, "r"); c.line(6, 32, 6, 36, "2")
 })
 
-// Canary Wraith: the mine's dead canary, pale and see-through, beak open, tail fraying into mist.
-sprite("_canary", { w: 32, h: 38, outline: "k" }, (c) => {
-  // Tail wisps fading downward.
-  c.line(22, 20, 27, 30, "8", 3); c.line(19, 23, 21, 33, "7", 2); c.line(24, 21, 30, 26, "9", 2)
-  c.dither(18, 28, 13, 9, "6", "8", 0.5); c.rect(18, 34, 13, 3, "_"); c.dither(19, 33, 10, 2, "6", "_", 0.6)
-  c.px(21, 35, "6"); c.px(27, 34, "7"); c.px(29, 31, "8")
-  // Body: pale yellow going cold toward the tail.
-  c.ellipse(17, 18, 8, 7, "9"); c.ellipse(16, 17, 7, 6, "T"); c.ellipse(14, 20, 4, 3, "w")
-  c.dither(19, 20, 6, 5, "9", "8", 0.5)
-  // Wing, half raised.
-  c.poly([14, 14, 27, 9, 26, 15, 22, 21, 15, 20], "8")
-  c.line(17, 15, 26, 10, "9"); c.line(18, 17, 25, 13, "7"); c.line(19, 19, 24, 16, "7"); c.px(26, 10, "w")
-  // Head and open beak, the eye an empty hole with a spark.
-  c.circ(10, 10, 6, "k"); c.circ(10, 10, 5, "T"); c.circ(9, 9, 4, "w"); c.px(13, 13, "9"); c.px(14, 12, "9")
+// Canary Wraith: the mine's dead canary come back as a cold spectral shape, a little canary yellow left on its
+// crest and breast, beak open, tail fraying into mist.
+// Its tail, unoutlined so it frays into the dark: three wisps thinning out to nothing (stamped under the bird).
+sprite("_canary_mist", { w: 32, h: 38 }, (c) => {
+  c.poly([16, 22, 27, 21, 28, 27, 30, 32, 31, 37, 26, 33, 21, 30, 17, 27], "4")
+  c.poly([18, 22, 26, 22, 27, 27, 28, 31, 24, 28, 20, 26], "5")
+  c.line(21, 23, 26, 28, "6"); c.line(26, 28, 28, 32, "5")
+  c.dither(16, 25, 7, 6, "3", ".", 0.5); c.dither(27, 32, 5, 6, "3", ".", 0.6)
+  c.px(31, 37, "3"); c.px(25, 34, "3"); c.px(19, 30, "3")
+})
+sprite("_canary", { w: 32, h: 38, outline: "2" }, (c) => {
+  // Body: spectral teal, a little canary yellow left on the breast.
+  c.ellipse(17, 18, 8, 7, "5"); c.ellipse(16, 17, 7, 6, "6"); c.ellipse(14, 19, 4, 3, "7"); c.ellipse(13, 18, 2, 1, "8")
+  c.px(12, 21, "t"); c.px(13, 22, "t"); c.px(11, 20, "T"); c.px(12, 20, "t")
+  c.dither(20, 19, 6, 6, "4", ".", 0.5)
+  // Wing, half raised, its tips frayed.
+  c.poly([14, 14, 27, 9, 26, 15, 22, 21, 15, 20], "4")
+  c.line(17, 15, 26, 10, "7"); c.line(18, 17, 25, 13, "5"); c.line(19, 19, 24, 16, "5"); c.px(26, 10, "8")
+  c.px(28, 8, "6"); c.px(28, 12, "5")
+  // Head, a yellow crest, the open beak, the eye an empty hole with a spark.
+  c.circ(10, 10, 6, "2"); c.circ(10, 10, 5, "6"); c.circ(9, 9, 4, "7"); c.ellipse(8, 7, 2, 1, "8"); c.px(7, 6, "9")
+  c.px(13, 13, "5"); c.px(14, 12, "5")
   c.poly([1, 9, 5, 8, 5, 10], "o"); c.poly([2, 12, 5, 11, 5, 12], "r"); c.px(1, 10, "k"); c.px(2, 10, "k"); c.px(3, 10, "k")
   c.rect(7, 8, 3, 3, "k"); c.px(8, 9, "o")
-  c.hline(12, 4, 2, "w"); c.px(14, 3, "T")
+  c.hline(10, 4, 4, "T"); c.px(11, 3, "T"); c.px(13, 3, "t"); c.px(12, 2, "t")
 })
 
 // Shaft Foreman: a gaunt overseer in a bowler and frock coat, the ledger in one hand, a coiled whip in the other.
@@ -249,5 +267,5 @@ sprite("_pit_king", { w: 92, h: 92, outline: "k" }, (c) => {
 
 // Each figure above is drawn as a part, then set on its sprite canvas with 2 empty pixels all round
 // (the outline already grew it by 1 on every side).
-for (const [name, w, h] of [["miner", 42, 48], ["crawler", 40, 22], ["rubble", 30, 24], ["hulk", 54, 58], ["canary", 32, 38], ["shaft_foreman", 46, 60], ["pit_king", 92, 92]])
-  sprite(name, { w: w + 6, h: h + 6 }, stamp("_" + name, 2, 2))
+for (const [name, w, h] of [["miner", 42, 48], ["crawler", 40, 22], ["rubble", 30, 24], ["hulk", 46, 54], ["canary", 32, 38], ["shaft_foreman", 46, 60], ["pit_king", 92, 92]])
+  sprite(name, { w: w + 6, h: h + 6 }, ...(name === "canary" ? [stamp("_canary_mist", 3, 3)] : []), stamp("_" + name, 2, 2))
