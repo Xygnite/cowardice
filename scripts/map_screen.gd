@@ -14,6 +14,7 @@ var rooms: Array = []  # columns of room dictionaries, entrance first
 var layer := 0
 var path: Array = []
 var combat: Combat
+var seen_events: Array = []  # for the "?" rooms' odds
 var room_buttons: Array = []  # per column, its rooms' buttons
 var _field: Control  # the parchment area the rooms sit on
 
@@ -80,6 +81,8 @@ func _room_button(c: int, i: int, can_pick: bool) -> TextureButton:
 	b.visible = c >= layer or _taken(c, i)  # branches you passed by vanish
 	if room.kind == "fight":
 		b.tooltip_text = room.label
+	elif room.kind == "unknown" and not _taken(c, i):
+		b.tooltip_text = "\n".join(Events.odds(seen_events).map(func(o): return "%s  %.0f%%" % o))
 	if can_pick:
 		# Past 1.0 so the dark art actually brightens; the gold disc in _draw_links does the rest.
 		var glow := Color(1.8, 1.4, 0.6)
@@ -87,10 +90,19 @@ func _room_button(c: int, i: int, can_pick: bool) -> TextureButton:
 		var t := b.create_tween().set_loops()
 		t.tween_property(b, "modulate", glow * 0.67, 0.7)
 		t.tween_property(b, "modulate", glow, 0.7)
+		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		b.mouse_entered.connect(_grow.bind(b, 1.2))
+		b.mouse_exited.connect(_grow.bind(b, 1.0))
+		b.button_down.connect(_grow.bind(b, 0.9))
 	elif c >= layer:
 		b.modulate.a = 0.6
 	b.pressed.connect(picked.emit.bind(i))
 	return b
+
+
+## Eases a pickable room to `to` times its size: up on hover, down while pressed.
+func _grow(b: TextureButton, to: float) -> void:
+	b.create_tween().tween_property(b, "scale", Vector2.ONE * to, 0.08)
 
 
 ## Centre of room (column, lane) in field coordinates.
@@ -105,6 +117,7 @@ func _place_rooms() -> void:
 		for i in rooms[c].size():
 			var b: TextureButton = room_buttons[c][i]
 			b.position = _spot(c, rooms[c][i].lane) - b.get_combined_minimum_size() / 2
+			b.pivot_offset = b.get_combined_minimum_size() / 2  # hover and press scale from the centre
 	var boss := _spot(rooms.size() - 1, rooms[-1][0].lane)
 	var lair: Label = _field.get_node("Lair")
 	lair.position = boss + Vector2(-lair.get_minimum_size().x / 2, 36)

@@ -105,6 +105,7 @@ func _show_map() -> void:
 	s.layer = layer
 	s.path = path
 	s.combat = combat
+	s.seen_events = seen_events
 	s.picked.connect(_on_room_picked)
 	_show(s)
 

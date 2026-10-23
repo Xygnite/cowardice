@@ -153,6 +153,10 @@ func _events() -> void:
 	r = Events.resolve("cursed_cast", 0, c, [])
 	check(r.carve, "cursed cast asks for a carve")
 	check(Events.pick(Events.IDS) == "" and Events.IDS.has(Events.pick([])), "pick skips seen rooms")
+	var odds: Array = Events.odds(["shrine"])
+	check(odds[0] == ["Ambush", 20.0] and odds.size() == Events.IDS.size(), "odds: ambush first, then each unseen event")
+	check(is_equal_approx(odds.reduce(func(t, o): return t + o[1], 0.0), 100.0), "odds add up to 100%")
+	check(Events.odds(Events.IDS) == [["Ambush", 100.0]], "with every event seen, a ? is an ambush")
 	for id in Events.IDS:
 		if id == "corridor" or id == "niche":
 			continue

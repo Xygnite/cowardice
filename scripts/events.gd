@@ -90,6 +90,15 @@ static func pick(seen: Array) -> String:
 	return "" if left.is_empty() else left.pick_random()
 
 
+## What a "?" room may hold, as [name, percent] pairs with the ambush first; matches game.gd's pick.
+static func odds(seen: Array) -> Array:
+	var left: Array = IDS.filter(func(id): return not seen.has(id))
+	if left.is_empty():
+		return [["Ambush", 100.0]]
+	var each := (1.0 - AMBUSH_CHANCE) * 100.0 / left.size()
+	return [["Ambush", AMBUSH_CHANCE * 100.0]] + left.map(func(id): return [EVENTS[id].title, each])
+
+
 static func can_choose(id: String, choice: int, c: Combat) -> bool:
 	return not (id == "gambler" and choice == 0 and c.shards < GAMBLER_BET)
 
