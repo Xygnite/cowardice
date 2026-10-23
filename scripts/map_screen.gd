@@ -64,17 +64,29 @@ func _taken(c: int, i: int) -> bool:
 func _room_button(c: int, i: int, can_pick: bool) -> TextureButton:
 	var room: Dictionary = rooms[c][i]
 	var b := TextureButton.new()
-	b.texture_normal = load(UI.ART % ("room_" + ("cleared" if _taken(c, i) else _icon(room))))
+	if room.kind == "unknown" and not _taken(c, i):
+		# room_unknown.png is a broken cut, so a pixel-font "?" stands in
+		b.texture_normal = ImageTexture.create_from_image(Image.create_empty(52, 56, false, Image.FORMAT_RGBA8))
+		var q := UI.heading(b, 64, "?")
+		q.set_anchors_preset(Control.PRESET_FULL_RECT)
+		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		q.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		q.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		q.add_theme_color_override("font_color", INK)
+	else:
+		b.texture_normal = load(UI.ART % ("room_" + ("cleared" if _taken(c, i) else _icon(room))))
 	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	b.disabled = not can_pick
 	b.visible = c >= layer or _taken(c, i)  # branches you passed by vanish
 	if room.kind == "fight":
 		b.tooltip_text = room.label
 	if can_pick:
-		b.modulate = UI.GOLD
+		# Past 1.0 so the dark art actually brightens; the gold disc in _draw_links does the rest.
+		var glow := Color(1.8, 1.4, 0.6)
+		b.modulate = glow
 		var t := b.create_tween().set_loops()
-		t.tween_property(b, "modulate", UI.GOLD * 1.2, 0.7)
-		t.tween_property(b, "modulate", UI.GOLD * 0.8, 0.7)
+		t.tween_property(b, "modulate", glow * 0.67, 0.7)
+		t.tween_property(b, "modulate", glow, 0.7)
 	elif c >= layer:
 		b.modulate.a = 0.6
 	b.pressed.connect(picked.emit.bind(i))
@@ -100,6 +112,11 @@ func _place_rooms() -> void:
 
 
 func _draw_links() -> void:
+	if layer < rooms.size():
+		for i in pickable():
+			var at := _spot(layer, rooms[layer][i].lane)
+			_field.draw_circle(at, 36, Color(UI.GOLD, 0.3))
+			_field.draw_arc(at, 36, 0, TAU, 32, Color(UI.GOLD, 0.8), 2)
 	for c in rooms.size() - 1:
 		for i in rooms[c].size():
 			for n in rooms[c][i].next:
