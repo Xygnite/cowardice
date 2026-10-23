@@ -9,11 +9,16 @@ const IMAGE := Vector2(1024, 572)
 ## A flame also has "fps". Its sheet covers the painted flame under it on every frame.
 ## A fog band also has "width" (image px it covers), "period" (pxl px after which the band repeats),
 ## "step_s" (seconds per one-pxl-pixel drift step) and "alpha".
+## A chain (cut out of the painting by tools/cut_chains.gd, in image px) also has "period": seconds for one
+## swing there and back across its 5 sway frames.
 const LIFE := {
 	"menu": {"px": 2, "parts": [
 		{"kind": "flame", "art": "torch", "at": Vector2(290, 314), "fps": 10.0},
 		{"kind": "flame", "art": "torch_r", "at": Vector2(698, 314), "fps": 10.0},
 		{"kind": "fog", "art": "moat", "at": Vector2(0, 516), "width": 1024.0, "period": 96, "step_s": 0.4, "alpha": 0.9},
+		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(210, 209), "period": 3.4},
+		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(242, 207), "period": 3.8},
+		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(771, 199), "period": 3.6},
 	]},
 	"camp": {"px": 4, "parts": [
 		{"kind": "flame", "art": "campfire", "at": Vector2(173, 396), "fps": 8.0},
@@ -31,6 +36,9 @@ const LIFE := {
 		{"kind": "flame", "art": "candle", "at": Vector2(865, 274), "fps": 8.0},
 		# Ends at y 390, above the floor ledge (CombatScreen.FLOOR_LEDGE), so the fighters stand in front of it.
 		{"kind": "fog", "art": "floor", "at": Vector2(0, 366), "width": 1024.0, "period": 96, "step_s": 0.55, "alpha": 0.8},
+		{"kind": "chain", "art": "chain_fight_0", "at": Vector2(104, 106), "period": 3.2},
+		{"kind": "chain", "art": "chain_fight_1", "at": Vector2(596, 62), "period": 3.8},
+		{"kind": "chain", "art": "chain_fight_2", "at": Vector2(889, 68), "period": 3.5},
 	]},
 }
 
@@ -58,7 +66,7 @@ static func attach(backdrop: TextureRect, art: String) -> BackdropLife:
 	for part: Dictionary in LIFE[art].parts:
 		var node := _part(part, LIFE[art].px)
 		node.position = part.at
-		node.scale = Vector2.ONE * LIFE[art].px
+		node.scale = Vector2.ONE * (1 if part.kind == "chain" else LIFE[art].px)  # chain strips are in image px
 		life.stage.add_child(node)
 	backdrop.add_child(life)
 	return life
@@ -88,6 +96,16 @@ static func _part(part: Dictionary, px: int) -> Node2D:
 			tick.autostart = true
 			tick.timeout.connect(func(): s.region_rect.position.x = fmod(s.region_rect.position.x + 1, part.period))
 			s.add_child(tick)
+			return s
+		"chain":
+			var s := AnimatedSprite2D.new()
+			var sf := frames(part.art, 8.0 / part.period)
+			for f in [3, 2, 1]:  # ping-pong: 0..4 and back
+				sf.add_frame("default", sf.get_frame_texture("default", f))
+			s.sprite_frames = sf
+			s.centered = false
+			s.play()
+			s.frame = randi() % 8  # neighbours don't swing in step
 			return s
 	push_error("BackdropLife: unknown part kind %s" % part.kind)
 	return Node2D.new()

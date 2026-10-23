@@ -602,3 +602,46 @@ func _backdrop_life() -> void:
 	for n in ["sheet.png", "sheet.json"]:
 		DirAccess.remove_absolute(dir + n)
 	DirAccess.remove_absolute(dir)
+	_chains()
+
+
+func _chains() -> void:
+	const Cut := preload("res://tools/cut_chains.gd")
+	for name: String in Cut.CHAINS:
+		var chains: Array = BackdropLife.LIFE[name].parts.filter(func(p): return p.kind == "chain")
+		check(chains.size() == Cut.CHAINS[name].size() and chains.size() >= 3, "chains: %s has a part per cut chain (3+)" % name)
+		for i in chains.size():
+			var part: Dictionary = chains[i]
+			var sf: SpriteFrames = BackdropLife.frames(part.art, 1.0)
+			check(part.art == "chain_%s_%d" % [name, i] and sf.get_frame_count("default") == 5, "chains: %s strip has 5 frames" % part.art)
+			# Frame 2 is unswayed, so the strip's top-left sits a swing's width left of the chain's outline box.
+			var box: Rect2i = Cut.box(Cut.CHAINS[name][i].outline)
+			check(part.at == Vector2(box.position.x - Cut.SWING, box.position.y), "chains: %s sits on its painted chain, at %s" % [part.art, part.at])
+			check(part.period >= 3.0 and part.period <= 4.0, "chains: %s swings in 3-4 s" % part.art)
+		var once: Dictionary = Cut.cut(name)
+		var twice: Dictionary = Cut.cut(name)
+		check(once.has("res://assets/ui/bg_%s.webp" % name), "chains: cut writes the %s backdrop" % name)
+		for path: String in once:
+			var a: Image = once[path]
+			var disk := Image.new()
+			var bytes := FileAccess.get_file_as_bytes(path)
+			if path.ends_with(".webp"):
+				disk.load_webp_from_buffer(bytes)
+			else:
+				disk.load_png_from_buffer(bytes)
+			disk.convert(Image.FORMAT_RGBA8)
+			check(a.get_data() == (twice[path] as Image).get_data(), "chains: cutting %s twice gives the same %s" % [name, path])
+			check(a.get_size() == disk.get_size() and a.get_data() == disk.get_data(), "chains: %s on disk is the tool's output" % path)
+	var rect := TextureRect.new()
+	var life: BackdropLife = BackdropLife.attach(rect, "fight")
+	var parts: Array = BackdropLife.LIFE.fight.parts
+	var ci: int = parts.find_custom(func(p): return p.kind == "chain")
+	var s: AnimatedSprite2D = life.stage.get_child(ci)
+	var xs: Array = []
+	for f in s.sprite_frames.get_frame_count("default"):
+		xs.append(int((s.sprite_frames.get_frame_texture("default", f) as AtlasTexture).region.position.x))
+	var w: int = xs[1]
+	check(xs == [0, w, 2 * w, 3 * w, 4 * w, 3 * w, 2 * w, w], "chains: frames play ping-pong, got %s" % [xs])
+	check(is_equal_approx(s.sprite_frames.get_animation_speed("default"), 8.0 / parts[ci].period), "chains: one swing there and back per period")
+	check(s.is_playing() and s.scale == Vector2.ONE, "chains: strips are in image px, unscaled")
+	rect.free()
