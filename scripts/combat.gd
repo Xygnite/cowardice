@@ -213,6 +213,7 @@ func start_group(keys: Array) -> void:
 	ward_spent = false
 	for d in dice:
 		d.faces = d.base.duplicate()  # boss tampering ends with the fight
+		d.buried = 0
 	start_turn()
 
 

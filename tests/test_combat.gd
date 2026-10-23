@@ -541,6 +541,9 @@ func _pit_king() -> void:
 	c.assign(2, CombatScript.Slot.ATTACK)
 	c.resolve_player()
 	check(c.grit == 0, "a buried die gives no Grit")
+	c.dice[0].buried = 2
+	c.start_group(["rat"])
+	check(c.dice.all(func(d): return d.buried == 0), "a new fight starts with no buried dice")
 	# Phase 2: every attack comes with a cave-in.
 	for t in 3:
 		c = _mine_group(["pit_king"], t)

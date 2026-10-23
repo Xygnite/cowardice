@@ -364,11 +364,11 @@ static func _atlas(art: String) -> Texture2D:
 	return _atlases[art]
 
 
-## A heap of grey stones over the whole top face, in dice pixels, with dark rims and a lit upper-left edge. Fixed, so a heap never shifts.
+## Grey stones piled in the corners of the top face, the die's number left clear between them, in dice pixels, with dark rims and a lit upper-left edge. Fixed, so a heap never shifts.
 static func _rubble() -> Texture2D:
 	var img := Image.create_empty(RUBBLE_SIZE, RUBBLE_SIZE, false, Image.FORMAT_RGBA8)
 	# Stones as x, y, radius, painted back to front.
-	for s: Array in [[12, 28, 9], [29, 29, 9], [20, 20, 10], [9, 14, 7], [30, 12, 8], [21, 33, 6], [20, 7, 6]]:
+	for s: Array in [[8, 32, 8], [32, 33, 7], [33, 8, 6], [7, 7, 5], [20, 36, 4]]:
 		for y in RUBBLE_SIZE:
 			for x in RUBBLE_SIZE:
 				var d := Vector2(x + 0.5 - s[0], y + 0.5 - s[1]).length()
