@@ -1,0 +1,349 @@
+{
+ "frames": {
+  "rotwood_treant_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 500
+  },
+  "rotwood_treant_idle_1": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 300
+  },
+  "rotwood_treant_idle_2": {
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 500
+  },
+  "rotwood_treant_idle_3": {
+   "frame": {
+    "x": 324,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 300
+  },
+  "rotwood_treant_attack_0": {
+   "frame": {
+    "x": 432,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 80
+  },
+  "rotwood_treant_attack_1": {
+   "frame": {
+    "x": 540,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 80
+  },
+  "rotwood_treant_attack_2": {
+   "frame": {
+    "x": 648,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 40
+  },
+  "rotwood_treant_attack_3": {
+   "frame": {
+    "x": 756,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "rotwood_treant_attack_4": {
+   "frame": {
+    "x": 864,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "rotwood_treant_attack_5": {
+   "frame": {
+    "x": 972,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "rotwood_treant_attack_6": {
+   "frame": {
+    "x": 1080,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 60
+  },
+  "rotwood_treant_hurt_0": {
+   "frame": {
+    "x": 1188,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 70
+  },
+  "rotwood_treant_hurt_1": {
+   "frame": {
+    "x": 1296,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 130
+  },
+  "rotwood_treant_hurt_2": {
+   "frame": {
+    "x": 1404,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  },
+  "rotwood_treant_hurt_3": {
+   "frame": {
+    "x": 1512,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 112
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 112
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "rotwood_treant_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1620,
+   "h": 112
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "rotwood_treant_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "rotwood_treant_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "rotwood_treant_hurt",
+    "from": 11,
+    "to": 14,
+    "direction": "forward"
+   }
+  ]
+ }
+}

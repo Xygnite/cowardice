@@ -148,7 +148,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.15, 0.25, 0.5),
 "transitions": PackedFloat32Array(0.5, 1, 2, 1),
 "update": 0,
-"values": [0.0, 0.8, -0.4, 0.0]
+"values": [0.0, -1.6, 0.9, 0.0]
 }
 
 [sub_resource type="Animation" id="Animation_block"]
@@ -243,10 +243,10 @@ centered = false
 offset = Vector2(-30, -46)
 
 [node name="Weapon" type="Sprite2D" parent="Rig/Body"]
-position = Vector2(16, -12)
+position = Vector2(14, -29)
 texture = ExtResource("weapon")
 centered = false
-offset = Vector2(-46, -34)
+offset = Vector2(-44, -17)
 
 [node name="Shield" type="Sprite2D" parent="Rig/Body"]
 position = Vector2(-18, -16)

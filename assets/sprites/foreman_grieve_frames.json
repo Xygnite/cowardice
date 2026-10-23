@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "foreman_grieve_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 500
+  },
+  "foreman_grieve_idle_1": {
+   "frame": {
+    "x": 161,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 300
+  },
+  "foreman_grieve_idle_2": {
+   "frame": {
+    "x": 322,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 500
+  },
+  "foreman_grieve_idle_3": {
+   "frame": {
+    "x": 483,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 300
+  },
+  "foreman_grieve_attack_0": {
+   "frame": {
+    "x": 644,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 80
+  },
+  "foreman_grieve_attack_1": {
+   "frame": {
+    "x": 805,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 80
+  },
+  "foreman_grieve_attack_2": {
+   "frame": {
+    "x": 966,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 40
+  },
+  "foreman_grieve_attack_3": {
+   "frame": {
+    "x": 1127,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  },
+  "foreman_grieve_attack_4": {
+   "frame": {
+    "x": 1288,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  },
+  "foreman_grieve_attack_5": {
+   "frame": {
+    "x": 1449,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  },
+  "foreman_grieve_attack_6": {
+   "frame": {
+    "x": 1610,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 60
+  },
+  "foreman_grieve_block_0": {
+   "frame": {
+    "x": 1771,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 60
+  },
+  "foreman_grieve_block_1": {
+   "frame": {
+    "x": 1932,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 240
+  },
+  "foreman_grieve_block_2": {
+   "frame": {
+    "x": 2093,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  },
+  "foreman_grieve_hurt_0": {
+   "frame": {
+    "x": 2254,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 70
+  },
+  "foreman_grieve_hurt_1": {
+   "frame": {
+    "x": 2415,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 130
+  },
+  "foreman_grieve_hurt_2": {
+   "frame": {
+    "x": 2576,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  },
+  "foreman_grieve_hurt_3": {
+   "frame": {
+    "x": 2737,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "foreman_grieve_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2898,
+   "h": 160
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "foreman_grieve_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "foreman_grieve_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "foreman_grieve_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "foreman_grieve_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

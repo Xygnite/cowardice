@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "mother_moss_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 80
+  },
+  "mother_moss_attack_1": {
+   "frame": {
+    "x": 145,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 80
+  },
+  "mother_moss_attack_2": {
+   "frame": {
+    "x": 290,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 40
+  },
+  "mother_moss_attack_3": {
+   "frame": {
+    "x": 435,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 100
+  },
+  "mother_moss_attack_4": {
+   "frame": {
+    "x": 580,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 100
+  },
+  "mother_moss_attack_5": {
+   "frame": {
+    "x": 725,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 100
+  },
+  "mother_moss_attack_6": {
+   "frame": {
+    "x": 870,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "mother_moss_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1015,
+   "h": 143
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "mother_moss_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

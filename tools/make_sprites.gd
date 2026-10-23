@@ -9,6 +9,7 @@ const PALETTE_PATH := "res://assets/palette.png"
 const PALETTE_SIZE := 40  # 32 left no straw yellow or bronze once the dummy and the bell joined
 const BG_TOLERANCE := 0.14  # how close to the background colour a pixel must be to be cut out
 const MAGENTA_TINT := 0.08  # on a magenta background, a pixel whose red and blue beat its green by this is background
+const POCKET_TOLERANCE := 0.04  # --pockets: the flat background itself, not dark parts of the figure near it
 
 ## h: figure height in game pixels (the game runs at 320x180, scaled up).
 ## crop: part of the reference to use, as fractions [x0, y0, x1, y1].
@@ -20,20 +21,30 @@ const MAGENTA_TINT := 0.08  # on a magenta background, a pixel whose red and blu
 ## drawn at finer detail match the others' pixel size. Shrinking blends the outline into the background, and the cut-out then leaks
 ## through the gaps into the figure.
 ## pad: empty pixels kept around the figure, for rig parts that swing past its edge.
+## holes: points in the finished sprite (after flip and pad, read off its zoom) inside pockets of background
+## the edge fill can't reach, like the gap between an arm and the body; each is flood-filled out.
+## Find them with --pockets, which lists patches of the exact background colour (check each against the reference).
 ## body: an edit of the same reference with the moving parts removed and what was behind them drawn in
 ## (see art/character_prompts.md). Saved as <out>_body.png on the same canvas, for tools/rig_sprites.gd.
 ## Cell sources only.
 const SPRITES := [
 	{"src": "deserter.webp", "out": "deserter", "cell": 10.24, "shrink": 1.22, "pad": 2, "body": "deserter_body.webp"},  # 78 px tall at its own grid; the hero stands about 64
-	{"src": "skeleton_and_rotwood", "out": "skeleton", "cell": 10.0, "shrink": 2, "crop": [0.0, 0.0, 0.5, 1.0], "flip": true, "pad": 2},
-	{"src": "skeleton_and_rotwood", "out": "rotwood_treant", "cell": 10.0, "shrink": 2, "crop": [0.5, 0.0, 1.0, 1.0], "pad": 2},
-	{"src": "bone_warden", "out": "bone_warden", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2},
-	{"src": "mother_moss", "out": "mother_moss", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2},
-	{"src": "foreman_grieve", "out": "foreman_grieve", "cell": 20.83, "pad": 2},
+	{"src": "skeleton_and_rotwood", "out": "skeleton", "cell": 10.0, "shrink": 2, "crop": [0.0, 0.0, 0.5, 1.0], "flip": true, "pad": 2,
+		"holes": [Vector2i(29, 24), Vector2i(21, 23)]},  # between the sword arm and the ribs; at the waist
+	{"src": "skeleton_and_rotwood", "out": "rotwood_treant", "cell": 10.0, "shrink": 2, "crop": [0.5, 0.0, 1.0, 1.0], "pad": 2,
+		"holes": [Vector2i(31, 14), Vector2i(34, 27), Vector2i(14, 32), Vector2i(21, 34), Vector2i(11, 37)]},  # between branches
+	{"src": "bone_warden", "out": "bone_warden", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2,
+		"holes": [Vector2i(50, 73), Vector2i(58, 40), Vector2i(63, 44), Vector2i(14, 16), Vector2i(56, 21), Vector2i(3, 30), Vector2i(6, 62),
+			Vector2i(36, 50), Vector2i(43, 53), Vector2i(43, 56)]},  # between the legs; arm and ribs; shield rim; belt
+	{"src": "mother_moss", "out": "mother_moss", "cell": 10.0, "shrink": 2, "flip": true, "pad": 2,
+		"holes": [Vector2i(42, 17), Vector2i(76, 41), Vector2i(60, 65), Vector2i(57, 67), Vector2i(26, 74)]},  # between roots
+	{"src": "foreman_grieve", "out": "foreman_grieve", "cell": 20.83, "pad": 2,
+		"holes": [Vector2i(54, 15), Vector2i(16, 21), Vector2i(46, 57), Vector2i(41, 60)]},  # between spikes and tatters; not the lantern glass
 	{"src": "archivist", "out": "archivist", "cell": 10.0, "shrink": 2, "pad": 2},
 	{"src": "gambler", "out": "gambler", "cell": 20.0, "pad": 2},
 	{"src": "monk", "out": "monk", "cell": 20.0, "pad": 2},
-	{"src": "plague_doctor.webp", "out": "plague_doctor", "cell": 10.24, "flip": true, "pad": 2},
+	{"src": "plague_doctor.webp", "out": "plague_doctor", "cell": 10.24, "flip": true, "pad": 2,
+		"holes": [Vector2i(37, 15), Vector2i(23, 18), Vector2i(13, 27), Vector2i(41, 29), Vector2i(47, 37)]},  # slivers between arms, coat and pauldrons
 	{"src": "dummy.webp", "out": "dummy", "cell": 10.24, "shrink": 2, "pad": 2},
 	{"src": "bone_rat.webp", "out": "bone_rat", "cell": 4.27, "shrink": 4, "pad": 2},
 	{"src": "acolyte.webp", "out": "acolyte", "cell": 5.12, "shrink": 3, "pad": 2},
@@ -53,6 +64,11 @@ func _init() -> void:
 		if s.has("body"):
 			sprites[s.out + "_body"] = _cut(s.merged({"src": s.body}, true), cut[2])[0]
 	var palette := _palette(sprites.values())
+	for i in SPRITES.size():  # after the palette, so cutting a pocket doesn't shift every sprite's colours
+		if SPRITES[i].has("holes"):
+			_cut_background(sprites[SPRITES[i].out], bgs[i], SPRITES[i].holes)
+		if "--pockets" in OS.get_cmdline_user_args():
+			_report_pockets(SPRITES[i].out, sprites[SPRITES[i].out], bgs[i])
 	for name in sprites:
 		_snap(sprites[name], palette)
 		sprites[name].save_png(OUT + name + ".png")
@@ -86,7 +102,8 @@ func _cut(s: Dictionary, canvas := Rect2i()) -> Array:
 		if s.get("flip", false):
 			img.flip_x()
 		var rect := canvas if canvas.has_area() else img.get_used_rect().grow(s.get("pad", 0))
-		return [img.get_region(rect), bg_px, rect]
+		img = img.get_region(rect)
+		return [img, bg_px, rect]
 	var bg := _corner_color(img)
 
 	# Find the figure on a thumbnail, then crop the full image to it plus a band of background.
@@ -108,7 +125,8 @@ func _cut(s: Dictionary, canvas := Rect2i()) -> Array:
 	if s.get("flip", false):
 		img.flip_x()
 	var rect := img.get_used_rect().grow(s.get("pad", 0))
-	return [img.get_region(rect), bg, rect]
+	img = img.get_region(rect)
+	return [img, bg, rect]
 
 
 ## One pixel per cell of an upscaled pixel-art image, averaged over the cell's middle so blur and
@@ -183,23 +201,55 @@ func _figure_box(thumb: Image, bg: Color) -> Rect2i:
 	return Rect2i(lo, hi - lo + Vector2i.ONE)
 
 
+## Prints each patch of 6+ opaque pixels nearly the exact background colour: candidates for "holes".
+## Some are dark parts of the figure that only look like the background, so check each against the reference.
+func _report_pockets(name: String, img: Image, bg: Color) -> void:
+	var seen := {}
+	for y in img.get_height():
+		for x in img.get_width():
+			var p := Vector2i(x, y)
+			if seen.has(p) or img.get_pixelv(p).a == 0.0 or _dist(img.get_pixelv(p), bg) > POCKET_TOLERANCE:
+				continue
+			var patch: Array[Vector2i] = []
+			var stack: Array[Vector2i] = [p]
+			seen[p] = true
+			while not stack.is_empty():
+				var q: Vector2i = stack.pop_back()
+				patch.append(q)
+				for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+					var n: Vector2i = q + d
+					if Rect2i(Vector2i.ZERO, img.get_size()).has_point(n) and not seen.has(n) \
+							and img.get_pixelv(n).a > 0.0 and _dist(img.get_pixelv(n), bg) <= POCKET_TOLERANCE:
+						seen[n] = true
+						stack.append(n)
+			if patch.size() >= 6:
+				var box := Rect2i(patch[0], Vector2i.ONE)
+				for q in patch:
+					box = box.expand(q).expand(q + Vector2i.ONE)
+				print("%s pocket: seed Vector2i(%d, %d), %d px in %s" % [name, patch[0].x, patch[0].y, patch.size(), box])
+
+
 ## Flood-fills the background from the edges, so dark areas inside the outline are kept.
-func _cut_background(img: Image, bg: Color) -> void:
+## Given `seeds`, fills from those points only (pockets the edge fill missed), and only the flat background.
+func _cut_background(img: Image, bg: Color, seeds: Array = []) -> void:
 	var w := img.get_width()
 	var h := img.get_height()
 	var stack: Array[Vector2i] = []
-	for x in w:
-		stack.append(Vector2i(x, 0))
-		stack.append(Vector2i(x, h - 1))
-	for y in h:
-		stack.append(Vector2i(0, y))
-		stack.append(Vector2i(w - 1, y))
+	for p in seeds:
+		stack.append(Vector2i(p))
+	if seeds.is_empty():
+		for x in w:
+			stack.append(Vector2i(x, 0))
+			stack.append(Vector2i(x, h - 1))
+		for y in h:
+			stack.append(Vector2i(0, y))
+			stack.append(Vector2i(w - 1, y))
 	while not stack.is_empty():
 		var p: Vector2i = stack.pop_back()
 		if p.x < 0 or p.y < 0 or p.x >= w or p.y >= h:
 			continue
 		var col := img.get_pixelv(p)
-		if col.a == 0.0 or _dist(col, bg) > BG_TOLERANCE:
+		if col.a == 0.0 or _dist(col, bg) > (POCKET_TOLERANCE if seeds else BG_TOLERANCE):
 			continue
 		img.set_pixelv(p, Color(0, 0, 0, 0))
 		stack.append_array([p + Vector2i.LEFT, p + Vector2i.RIGHT, p + Vector2i.UP, p + Vector2i.DOWN])

@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "bone_warden_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 70
+  },
+  "bone_warden_hurt_1": {
+   "frame": {
+    "x": 184,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 130
+  },
+  "bone_warden_hurt_2": {
+   "frame": {
+    "x": 368,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_hurt_3": {
+   "frame": {
+    "x": 552,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "bone_warden_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 736,
+   "h": 185
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "bone_warden_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

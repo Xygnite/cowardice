@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "archivist_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 500
+  },
+  "archivist_idle_1": {
+   "frame": {
+    "x": 90,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 300
+  },
+  "archivist_idle_2": {
+   "frame": {
+    "x": 180,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 500
+  },
+  "archivist_idle_3": {
+   "frame": {
+    "x": 270,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 300
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "archivist_idle.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 360,
+   "h": 105
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "archivist_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

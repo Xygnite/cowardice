@@ -1,0 +1,85 @@
+{
+ "frames": {
+  "acolyte_block_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 60
+  },
+  "acolyte_block_1": {
+   "frame": {
+    "x": 114,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 240
+  },
+  "acolyte_block_2": {
+   "frame": {
+    "x": 228,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "acolyte_block.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 342,
+   "h": 121
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "acolyte_block",
+    "from": 0,
+    "to": 2,
+    "direction": "forward"
+   }
+  ]
+ }
+}

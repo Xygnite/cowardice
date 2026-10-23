@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "acolyte_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 70
+  },
+  "acolyte_hurt_1": {
+   "frame": {
+    "x": 114,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 130
+  },
+  "acolyte_hurt_2": {
+   "frame": {
+    "x": 228,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  },
+  "acolyte_hurt_3": {
+   "frame": {
+    "x": 342,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "acolyte_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 456,
+   "h": 121
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "acolyte_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

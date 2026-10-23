@@ -1,0 +1,85 @@
+{
+ "frames": {
+  "deserter_block_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 60
+  },
+  "deserter_block_1": {
+   "frame": {
+    "x": 134,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 240
+  },
+  "deserter_block_2": {
+   "frame": {
+    "x": 268,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "deserter_block.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 402,
+   "h": 146
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "deserter_block",
+    "from": 0,
+    "to": 2,
+    "direction": "forward"
+   }
+  ]
+ }
+}

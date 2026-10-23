@@ -91,6 +91,23 @@ Put the source in `art/reference/` (keep its file type; never re-save pixel art 
    that screen, so rig every sprite an enemy type uses.
 6. **Run both tests**. Add the fight to `FIGHTS` in `tests/test_fight_flow.gd` if it uses a new rigged enemy.
 
+## Frame-by-Frame Versions (pxl)
+
+Every rig also has a baked frame version that the game prefers (`scenes/<name>_frames.tscn`, picked up by
+`_add_rig` in `scripts/combat_screen.gd`). It is drawn by the pxl skill (`.claude/skills/pxl-pixel-art`)
+from the rig's own parts, so re-cut the rig first, then:
+
+1. `"$G" --headless --path . -s tools/pxl_parts.gd -- <name>` writes `art/pxl/<name>_parts.px.js` (palette, parts, RIG).
+2. `art/pxl/<name>.px.js` includes it and `lib.px.js`, then calls `standard("<name>", overrides)`: idle, attack
+   (impact exactly 0.2 s in, for `STRIKE_DELAY`), block (with a shield) and hurt, all from RIG. Fix bad cuts there:
+   `claim(to, from, rect)` moves pixels between parts (`to` null deletes them), `RIG.under` paints what the
+   weapon hid, `RIG.anchored` keeps a post or gallows still, `RIG.head.still` stops a head opening its hole.
+3. `node .claude/skills/pxl-pixel-art/bin/pxl.js build art/pxl/<name>.px.js`, read `art/pxl/out/_preview/<name>_*.png`.
+4. Copy `art/pxl/out/<name>_frames.png` and `.json` to `assets/sprites/`, run
+   `"$G" --headless --path . -s tools/frames_scene.gd -- <name>`, then `--import`.
+
+The pose sheet only reads cut-out rigs; check frames in the pxl previews.
+
 ## Common Mistakes
 
 | Symptom | Cause / fix |
@@ -105,6 +122,7 @@ Put the source in `art/reference/` (keep its file type; never re-save pixel art 
 | Background flashes behind a tilting head | Expected: head holes are not patched (patching smears). Keep head tilts small. |
 | Lantern cut off on its outer sway frames | It sits at the canvas edge: add `"pad"` to its `SPRITES` entry and re-read every coordinate (they shift by the pad). |
 | Whole cape slides sideways | Skirt outline covers attached cloth; keep strips to the loose ends. |
+| Flat background colour left between an arm and the body (dark backgrounds only) | The edge fill can't reach enclosed pockets. `make_sprites.gd -- --pockets` lists them; check each against the reference and add real ones to the entry's `"holes"`. |
 | Sprite full of see-through holes | Not a rig problem: `tools/make_sprites.gd` cut pixels close to the background colour. Fix the cutout, regenerate sprites, then re-run the rig tool. |
 | Pose sheet is blank white | Ran it with `--headless`; it needs a renderer. |
 | Rig jitters by sub-pixels | Position and frame tracks must be discrete (`update: 1`); the tool's `_track(..., true)` does that. |

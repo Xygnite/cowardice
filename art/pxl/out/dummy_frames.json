@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "dummy_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 500
+  },
+  "dummy_idle_1": {
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 300
+  },
+  "dummy_idle_2": {
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 500
+  },
+  "dummy_idle_3": {
+   "frame": {
+    "x": 240,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 300
+  },
+  "dummy_attack_0": {
+   "frame": {
+    "x": 320,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 80
+  },
+  "dummy_attack_1": {
+   "frame": {
+    "x": 400,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 80
+  },
+  "dummy_attack_2": {
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 40
+  },
+  "dummy_attack_3": {
+   "frame": {
+    "x": 560,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  },
+  "dummy_attack_4": {
+   "frame": {
+    "x": 640,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  },
+  "dummy_attack_5": {
+   "frame": {
+    "x": 720,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  },
+  "dummy_attack_6": {
+   "frame": {
+    "x": 800,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 60
+  },
+  "dummy_block_0": {
+   "frame": {
+    "x": 880,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 60
+  },
+  "dummy_block_1": {
+   "frame": {
+    "x": 960,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 240
+  },
+  "dummy_block_2": {
+   "frame": {
+    "x": 1040,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  },
+  "dummy_hurt_0": {
+   "frame": {
+    "x": 1120,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 70
+  },
+  "dummy_hurt_1": {
+   "frame": {
+    "x": 1200,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 130
+  },
+  "dummy_hurt_2": {
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  },
+  "dummy_hurt_3": {
+   "frame": {
+    "x": 1360,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "dummy_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1440,
+   "h": 87
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "dummy_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "dummy_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "dummy_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "dummy_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

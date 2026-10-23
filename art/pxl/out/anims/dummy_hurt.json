@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "dummy_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 70
+  },
+  "dummy_hurt_1": {
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 130
+  },
+  "dummy_hurt_2": {
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  },
+  "dummy_hurt_3": {
+   "frame": {
+    "x": 240,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "dummy_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 320,
+   "h": 87
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "dummy_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

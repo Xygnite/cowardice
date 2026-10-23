@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "skeleton_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 80
+  },
+  "skeleton_attack_1": {
+   "frame": {
+    "x": 93,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 80
+  },
+  "skeleton_attack_2": {
+   "frame": {
+    "x": 186,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 40
+  },
+  "skeleton_attack_3": {
+   "frame": {
+    "x": 279,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_attack_4": {
+   "frame": {
+    "x": 372,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_attack_5": {
+   "frame": {
+    "x": 465,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_attack_6": {
+   "frame": {
+    "x": 558,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "skeleton_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 651,
+   "h": 100
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "skeleton_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

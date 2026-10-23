@@ -45,46 +45,57 @@ const RIGS := {
 		"head": {"pivot": Vector2(35, 14),
 			"outline": [Vector2(28, 1), Vector2(42, 1), Vector2(42, 13), Vector2(36, 15), Vector2(30, 15), Vector2(28, 10)]}},
 	"skeleton": {"facing": -1, "body": Vector2(22, 34), "legs_top": 34,
-		"weapon": {"pivot": Vector2(31, 32), "swing": [1.9, -0.5],
-			"outline": [Vector2(36, 26), Vector2(42, 26), Vector2(42, 31), Vector2(33, 36), Vector2(27, 42), Vector2(18, 44), Vector2(17, 40), Vector2(26, 34), Vector2(30, 30)]},
+		# The whole sword arm from the shoulder: back behind it, then over the top to forward-down.
+		"weapon": {"pivot": Vector2(28, 15), "swing": [-3.0, -5.2],
+			"outline": [Vector2(27, 14), Vector2(30, 14), Vector2(32, 17), Vector2(35, 20), Vector2(37, 23), Vector2(37, 26),
+				Vector2(42, 26), Vector2(42, 32), Vector2(37, 36), Vector2(33, 36), Vector2(27, 42), Vector2(18, 44), Vector2(17, 40),
+				Vector2(26, 34), Vector2(30, 30), Vector2(32, 27), Vector2(31, 22), Vector2(29, 19), Vector2(27, 17)]},
 		"shield": {"pivot": Vector2(8, 25),
 			"outline": [Vector2(1, 16), Vector2(15, 16), Vector2(15, 34), Vector2(1, 34)]},
 		"head": {"pivot": Vector2(19, 10),
 			"outline": [Vector2(13, 1), Vector2(25, 1), Vector2(25, 10), Vector2(14, 10)]}},
 	"bone_warden": {"facing": -1, "body": Vector2(47, 76), "legs_top": 76,
-		"weapon": {"pivot": Vector2(66, 53), "swing": [-1.6, 0.4],
-			"outline": [Vector2(94, 60), Vector2(80, 60), Vector2(70, 50), Vector2(63, 48), Vector2(63, 57), Vector2(74, 66), Vector2(74, 85), Vector2(94, 85)]},
+		# The whole mace arm from under the pauldron: back behind it, then over the top to forward-down.
+		"weapon": {"pivot": Vector2(61, 27), "swing": [-2.3, -5.0],
+			"outline": [Vector2(56, 26), Vector2(65, 26), Vector2(69, 33), Vector2(70, 40), Vector2(71, 48), Vector2(80, 60), Vector2(94, 60),
+				Vector2(94, 85), Vector2(72, 85), Vector2(72, 64), Vector2(63, 57), Vector2(59, 52), Vector2(56, 47), Vector2(56, 38)]},
 		"shield": {"pivot": Vector2(26, 45),
 			"outline": [Vector2(36, 14), Vector2(15, 13), Vector2(2, 28), Vector2(2, 78), Vector2(14, 82), Vector2(34, 80), Vector2(36, 40)]},
 		"head": {"pivot": Vector2(47, 19),
 			"outline": [Vector2(54, 2), Vector2(40, 2), Vector2(40, 19), Vector2(54, 19)]}},
 	"rotwood_treant": {"facing": -1, "body": Vector2(25, 45), "legs_top": 45,
-		"weapon": {"pivot": Vector2(9, 30), "swing": [0.8, -0.3],
-			"outline": [Vector2(0, 28), Vector2(11, 28), Vector2(11, 48), Vector2(0, 48)]},
+		# The whole claw arm from the shoulder: raised forward, then raking down.
+		"weapon": {"pivot": Vector2(10, 19), "swing": [1.6, -0.3],
+			"outline": [Vector2(6, 16), Vector2(13, 16), Vector2(14, 30), Vector2(13, 48), Vector2(1, 48), Vector2(1, 28), Vector2(4, 20)]},
 		"head": {"pivot": Vector2(19, 17),
 			"outline": [Vector2(11, 2), Vector2(27, 2), Vector2(27, 17), Vector2(11, 17)]}},
 	"mother_moss": {"facing": -1, "body": Vector2(42, 70), "legs_top": 70,
-		"weapon": {"pivot": Vector2(21, 36), "swing": [0.6, -0.3],
-			"outline": [Vector2(23, 34), Vector2(2, 34), Vector2(2, 58), Vector2(23, 58)]},
+		# The whole stone-fist arm from the shoulder: hoisted up in front, then slammed down.
+		"weapon": {"pivot": Vector2(17, 22), "swing": [2.4, 0.3],
+			"outline": [Vector2(7, 18), Vector2(21, 18), Vector2(21, 28), Vector2(23, 30), Vector2(23, 58), Vector2(2, 58), Vector2(2, 34), Vector2(7, 34)]},
 		"head": {"pivot": Vector2(30, 28),
 			"outline": [Vector2(39, 8), Vector2(21, 8), Vector2(21, 28), Vector2(39, 28)]}},
 	"foreman_grieve": {"facing": -1, "body": Vector2(38, 64), "legs_top": 64,
-		"weapon": {"pivot": Vector2(17, 56), "swing": [-0.8, 0.4],
-			"outline": [Vector2(2, 52), Vector2(33, 52), Vector2(33, 42), Vector2(41, 42), Vector2(41, 71), Vector2(33, 71), Vector2(33, 59), Vector2(2, 59)]},
+		# The whole pick arm from the shoulder: back behind it, then over the top to forward-down.
+		"weapon": {"pivot": Vector2(18, 24), "swing": [-2.3, -4.6],
+			"outline": [Vector2(12, 20), Vector2(21, 20), Vector2(23, 26), Vector2(24, 32), Vector2(24, 52), Vector2(33, 52), Vector2(33, 42), Vector2(41, 42),
+				Vector2(41, 71), Vector2(33, 71), Vector2(33, 59), Vector2(2, 59), Vector2(2, 52), Vector2(5, 52), Vector2(5, 32), Vector2(11, 30)]},
 		"shield": {"pivot": Vector2(68, 30),
 			"outline": [Vector2(61, 26), Vector2(75, 26), Vector2(75, 62), Vector2(61, 62)]},
 		"head": {"pivot": Vector2(38, 31),
 			"outline": [Vector2(29, 7), Vector2(48, 7), Vector2(48, 30), Vector2(29, 30)]}},
 	"archivist": {"facing": -1, "body": Vector2(37, 88), "legs_top": 89,
-		"weapon": {"pivot": Vector2(53, 31), "swing": [-0.4, 0.2],
-			"outline": [Vector2(51, 18), Vector2(67, 18), Vector2(67, 33), Vector2(51, 33)]},
+		# The outstretched sleeve and the burning book above its hand, from the shoulder: raised up over the hood toward the hero.
+		"weapon": {"pivot": Vector2(49, 30), "swing": [-0.5, -2.2],
+			"outline": [Vector2(48, 26), Vector2(51, 22), Vector2(51, 18), Vector2(67, 18), Vector2(67, 34), Vector2(48, 34)]},
 		"shield": {"pivot": Vector2(10, 30),
 			"outline": [Vector2(1, 5), Vector2(18, 5), Vector2(18, 54), Vector2(1, 54)]},
 		"head": {"pivot": Vector2(37, 16),
 			"outline": [Vector2(32, 1), Vector2(43, 1), Vector2(43, 16), Vector2(32, 16)]}},
 	"plague_doctor": {"facing": -1, "body": Vector2(30, 60), "legs_top": 60,
-		"weapon": {"pivot": Vector2(46, 38), "swing": [1.6, -0.4],
-			"outline": [Vector2(40, 33), Vector2(53, 33), Vector2(53, 48), Vector2(42, 49), Vector2(32, 57), Vector2(22, 57), Vector2(22, 50), Vector2(32, 47), Vector2(40, 46)]},
+		# The whole saw arm from the shoulder: drawn back and up, then hacked forward-down.
+		"weapon": {"pivot": Vector2(45, 20), "swing": [-2.4, 0.5],
+			"outline": [Vector2(40, 33), Vector2(42, 28), Vector2(41, 22), Vector2(42, 18), Vector2(45, 17), Vector2(48, 20), Vector2(52, 28), Vector2(53, 33), Vector2(53, 48), Vector2(42, 49), Vector2(32, 57), Vector2(22, 57), Vector2(22, 50), Vector2(32, 47), Vector2(40, 46)]},
 		"head": {"pivot": Vector2(29, 18),
 			"outline": [Vector2(14, 11), Vector2(23, 1), Vector2(37, 1), Vector2(37, 16), Vector2(33, 19), Vector2(14, 19)]},
 		"chest": {"pivot": Vector2(30, 35),
@@ -109,8 +120,9 @@ const RIGS := {
 		"weapon": {"pivot": Vector2(20, 16), "swing": [0.55, -0.3],
 			"outline": [Vector2(1, 7), Vector2(21, 7), Vector2(21, 23), Vector2(1, 23)]}},
 	"acolyte": {"facing": -1, "body": Vector2(30, 46), "legs_top": 50,
-		"weapon": {"pivot": Vector2(46, 34), "swing": [0.8, -0.4],
-			"outline": [Vector2(35, 30), Vector2(51, 30), Vector2(51, 46), Vector2(35, 46)]},
+		# The whole dagger arm from the shoulder: pulled back, then slashed forward.
+		"weapon": {"pivot": Vector2(44, 17), "swing": [-1.6, 0.9],
+			"outline": [Vector2(40, 15), Vector2(48, 14), Vector2(52, 24), Vector2(52, 44), Vector2(46, 46), Vector2(36, 46), Vector2(35, 40), Vector2(41, 36), Vector2(41, 26), Vector2(39, 20)]},
 		"shield": {"pivot": Vector2(12, 30),
 			"outline": [Vector2(1, 9), Vector2(21, 9), Vector2(21, 56), Vector2(1, 56)]},
 		"head": {"pivot": Vector2(28, 17),
@@ -264,6 +276,14 @@ func _fill_holes(body: Image, cut_out: Array, legs_top: int) -> void:
 					v += dy
 				if v >= 0 and v < body.get_height() and absi(v - y) < absi(from.x - x):
 					from = Vector2i(x, v)
+			# Step past the dark outline at the hole's edge, or the whole patch comes out black.
+			var step := (from - Vector2i(x, y)).sign()
+			for i in 3:
+				var next := from + step
+				var c := body.get_pixelv(from)
+				if c.get_luminance() >= 0.1 or not Rect2i(Vector2i.ZERO, body.get_size()).has_point(next) or body.get_pixelv(next).a == 0.0:
+					break
+				from = next
 			filled.set_pixel(x, y, body.get_pixelv(from))
 	body.copy_from(filled)
 
@@ -332,7 +352,8 @@ func _write_scene(name: String, rig: Dictionary, part_names: Array) -> void:
 	]
 	if has.call("weapon"):
 		var swing: Array = rig.weapon.swing
-		attack.append(_track(node.call("weapon") + ":rotation", [0, 0.15, 0.25, 0.5], [0.0, swing[0], swing[1], 0.0], false, [0.5, 1, 2, 1]))
+		# Settle on the nearest full turn, so a swing past half a turn (an arm going over the top) doesn't unwind.
+		attack.append(_track(node.call("weapon") + ":rotation", [0, 0.15, 0.25, 0.5], [0.0, swing[0], swing[1], snappedf(swing[1], TAU)], false, [0.5, 1, 2, 1]))
 	# The lantern and skirt lag behind the lunge, then overshoot as it pulls back.
 	attack += sway.call([0, 0.15, 0.22, 0.3, 0.4, 0.5], [0, -f, -2 * f, 0, f, 0])
 	attack += flicker.call([0, 0.15, 0.35], [Color.WHITE, GLOW_FLARE, Color.WHITE])

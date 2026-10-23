@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "acolyte_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 500
+  },
+  "acolyte_idle_1": {
+   "frame": {
+    "x": 114,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 300
+  },
+  "acolyte_idle_2": {
+   "frame": {
+    "x": 228,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 500
+  },
+  "acolyte_idle_3": {
+   "frame": {
+    "x": 342,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 300
+  },
+  "acolyte_attack_0": {
+   "frame": {
+    "x": 456,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 80
+  },
+  "acolyte_attack_1": {
+   "frame": {
+    "x": 570,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 80
+  },
+  "acolyte_attack_2": {
+   "frame": {
+    "x": 684,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 40
+  },
+  "acolyte_attack_3": {
+   "frame": {
+    "x": 798,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  },
+  "acolyte_attack_4": {
+   "frame": {
+    "x": 912,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  },
+  "acolyte_attack_5": {
+   "frame": {
+    "x": 1026,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  },
+  "acolyte_attack_6": {
+   "frame": {
+    "x": 1140,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 60
+  },
+  "acolyte_block_0": {
+   "frame": {
+    "x": 1254,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 60
+  },
+  "acolyte_block_1": {
+   "frame": {
+    "x": 1368,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 240
+  },
+  "acolyte_block_2": {
+   "frame": {
+    "x": 1482,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  },
+  "acolyte_hurt_0": {
+   "frame": {
+    "x": 1596,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 70
+  },
+  "acolyte_hurt_1": {
+   "frame": {
+    "x": 1710,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 130
+  },
+  "acolyte_hurt_2": {
+   "frame": {
+    "x": 1824,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  },
+  "acolyte_hurt_3": {
+   "frame": {
+    "x": 1938,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 114,
+    "h": 121
+   },
+   "sourceSize": {
+    "w": 114,
+    "h": 121
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "acolyte_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2052,
+   "h": 121
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "acolyte_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "acolyte_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "acolyte_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "acolyte_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

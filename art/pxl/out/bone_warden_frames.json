@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "bone_warden_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 500
+  },
+  "bone_warden_idle_1": {
+   "frame": {
+    "x": 184,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 300
+  },
+  "bone_warden_idle_2": {
+   "frame": {
+    "x": 368,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 500
+  },
+  "bone_warden_idle_3": {
+   "frame": {
+    "x": 552,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 300
+  },
+  "bone_warden_attack_0": {
+   "frame": {
+    "x": 736,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 80
+  },
+  "bone_warden_attack_1": {
+   "frame": {
+    "x": 920,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 80
+  },
+  "bone_warden_attack_2": {
+   "frame": {
+    "x": 1104,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 40
+  },
+  "bone_warden_attack_3": {
+   "frame": {
+    "x": 1288,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_attack_4": {
+   "frame": {
+    "x": 1472,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_attack_5": {
+   "frame": {
+    "x": 1656,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_attack_6": {
+   "frame": {
+    "x": 1840,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 60
+  },
+  "bone_warden_block_0": {
+   "frame": {
+    "x": 2024,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 60
+  },
+  "bone_warden_block_1": {
+   "frame": {
+    "x": 2208,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 240
+  },
+  "bone_warden_block_2": {
+   "frame": {
+    "x": 2392,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_hurt_0": {
+   "frame": {
+    "x": 2576,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 70
+  },
+  "bone_warden_hurt_1": {
+   "frame": {
+    "x": 2760,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 130
+  },
+  "bone_warden_hurt_2": {
+   "frame": {
+    "x": 2944,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_hurt_3": {
+   "frame": {
+    "x": 3128,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "bone_warden_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 3312,
+   "h": 185
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "bone_warden_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "bone_warden_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "bone_warden_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "bone_warden_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

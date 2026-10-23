@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "mother_moss_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 500
+  },
+  "mother_moss_idle_1": {
+   "frame": {
+    "x": 145,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 300
+  },
+  "mother_moss_idle_2": {
+   "frame": {
+    "x": 290,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 500
+  },
+  "mother_moss_idle_3": {
+   "frame": {
+    "x": 435,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 145,
+    "h": 143
+   },
+   "sourceSize": {
+    "w": 145,
+    "h": 143
+   },
+   "duration": 300
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "mother_moss_idle.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 580,
+   "h": 143
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "mother_moss_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

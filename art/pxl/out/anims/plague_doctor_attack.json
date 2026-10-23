@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "plague_doctor_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 80
+  },
+  "plague_doctor_attack_1": {
+   "frame": {
+    "x": 142,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 80
+  },
+  "plague_doctor_attack_2": {
+   "frame": {
+    "x": 284,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 40
+  },
+  "plague_doctor_attack_3": {
+   "frame": {
+    "x": 426,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 100
+  },
+  "plague_doctor_attack_4": {
+   "frame": {
+    "x": 568,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 100
+  },
+  "plague_doctor_attack_5": {
+   "frame": {
+    "x": 710,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 100
+  },
+  "plague_doctor_attack_6": {
+   "frame": {
+    "x": 852,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 142,
+    "h": 166
+   },
+   "sourceSize": {
+    "w": 142,
+    "h": 166
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "plague_doctor_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 994,
+   "h": 166
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "plague_doctor_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

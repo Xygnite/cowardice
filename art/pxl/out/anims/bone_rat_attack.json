@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "bone_rat_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 80
+  },
+  "bone_rat_attack_1": {
+   "frame": {
+    "x": 85,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 80
+  },
+  "bone_rat_attack_2": {
+   "frame": {
+    "x": 170,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 40
+  },
+  "bone_rat_attack_3": {
+   "frame": {
+    "x": 255,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 100
+  },
+  "bone_rat_attack_4": {
+   "frame": {
+    "x": 340,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 100
+  },
+  "bone_rat_attack_5": {
+   "frame": {
+    "x": 425,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 100
+  },
+  "bone_rat_attack_6": {
+   "frame": {
+    "x": 510,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "bone_rat_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 595,
+   "h": 57
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "bone_rat_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

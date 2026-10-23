@@ -1,0 +1,85 @@
+{
+ "frames": {
+  "skeleton_block_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 60
+  },
+  "skeleton_block_1": {
+   "frame": {
+    "x": 93,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 240
+  },
+  "skeleton_block_2": {
+   "frame": {
+    "x": 186,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "skeleton_block.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 279,
+   "h": 100
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "skeleton_block",
+    "from": 0,
+    "to": 2,
+    "direction": "forward"
+   }
+  ]
+ }
+}

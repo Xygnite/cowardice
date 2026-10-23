@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "deserter_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 500
+  },
+  "deserter_idle_1": {
+   "frame": {
+    "x": 134,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 300
+  },
+  "deserter_idle_2": {
+   "frame": {
+    "x": 268,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 500
+  },
+  "deserter_idle_3": {
+   "frame": {
+    "x": 402,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 300
+  },
+  "deserter_attack_0": {
+   "frame": {
+    "x": 536,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 80
+  },
+  "deserter_attack_1": {
+   "frame": {
+    "x": 670,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 120
+  },
+  "deserter_attack_2": {
+   "frame": {
+    "x": 804,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 60
+  },
+  "deserter_attack_3": {
+   "frame": {
+    "x": 938,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 80
+  },
+  "deserter_attack_4": {
+   "frame": {
+    "x": 1072,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 120
+  },
+  "deserter_attack_5": {
+   "frame": {
+    "x": 1206,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 100
+  },
+  "deserter_attack_6": {
+   "frame": {
+    "x": 1340,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 80
+  },
+  "deserter_block_0": {
+   "frame": {
+    "x": 1474,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 60
+  },
+  "deserter_block_1": {
+   "frame": {
+    "x": 1608,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 240
+  },
+  "deserter_block_2": {
+   "frame": {
+    "x": 1742,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 100
+  },
+  "deserter_hurt_0": {
+   "frame": {
+    "x": 1876,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 70
+  },
+  "deserter_hurt_1": {
+   "frame": {
+    "x": 2010,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 130
+  },
+  "deserter_hurt_2": {
+   "frame": {
+    "x": 2144,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 100
+  },
+  "deserter_hurt_3": {
+   "frame": {
+    "x": 2278,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 134,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 134,
+    "h": 146
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "deserter_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2412,
+   "h": 146
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "deserter_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "deserter_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "deserter_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "deserter_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,85 @@
+{
+ "frames": {
+  "foreman_grieve_block_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 60
+  },
+  "foreman_grieve_block_1": {
+   "frame": {
+    "x": 161,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 240
+  },
+  "foreman_grieve_block_2": {
+   "frame": {
+    "x": 322,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "foreman_grieve_block.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 483,
+   "h": 160
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "foreman_grieve_block",
+    "from": 0,
+    "to": 2,
+    "direction": "forward"
+   }
+  ]
+ }
+}

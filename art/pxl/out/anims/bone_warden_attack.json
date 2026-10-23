@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "bone_warden_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 80
+  },
+  "bone_warden_attack_1": {
+   "frame": {
+    "x": 184,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 80
+  },
+  "bone_warden_attack_2": {
+   "frame": {
+    "x": 368,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 40
+  },
+  "bone_warden_attack_3": {
+   "frame": {
+    "x": 552,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_attack_4": {
+   "frame": {
+    "x": 736,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_attack_5": {
+   "frame": {
+    "x": 920,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  },
+  "bone_warden_attack_6": {
+   "frame": {
+    "x": 1104,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "bone_warden_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1288,
+   "h": 185
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "bone_warden_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

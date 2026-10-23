@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "archivist_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 70
+  },
+  "archivist_hurt_1": {
+   "frame": {
+    "x": 90,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 130
+  },
+  "archivist_hurt_2": {
+   "frame": {
+    "x": 180,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  },
+  "archivist_hurt_3": {
+   "frame": {
+    "x": 270,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "archivist_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 360,
+   "h": 105
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "archivist_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "grave_bell_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 400
+  },
+  "grave_bell_idle_1": {
+   "frame": {
+    "x": 116,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 400
+  },
+  "grave_bell_idle_2": {
+   "frame": {
+    "x": 232,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 400
+  },
+  "grave_bell_idle_3": {
+   "frame": {
+    "x": 348,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 400
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "grave_bell_idle.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 464,
+   "h": 129
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "grave_bell_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

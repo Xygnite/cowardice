@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "bone_rat_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 70
+  },
+  "bone_rat_hurt_1": {
+   "frame": {
+    "x": 85,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 130
+  },
+  "bone_rat_hurt_2": {
+   "frame": {
+    "x": 170,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 100
+  },
+  "bone_rat_hurt_3": {
+   "frame": {
+    "x": 255,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 85,
+    "h": 57
+   },
+   "sourceSize": {
+    "w": 85,
+    "h": 57
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "bone_rat_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 340,
+   "h": 57
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "bone_rat_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

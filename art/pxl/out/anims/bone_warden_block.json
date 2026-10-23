@@ -1,0 +1,85 @@
+{
+ "frames": {
+  "bone_warden_block_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 60
+  },
+  "bone_warden_block_1": {
+   "frame": {
+    "x": 184,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 240
+  },
+  "bone_warden_block_2": {
+   "frame": {
+    "x": 368,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 184,
+    "h": 185
+   },
+   "sourceSize": {
+    "w": 184,
+    "h": 185
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "bone_warden_block.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 552,
+   "h": 185
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "bone_warden_block",
+    "from": 0,
+    "to": 2,
+    "direction": "forward"
+   }
+  ]
+ }
+}

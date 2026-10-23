@@ -1,0 +1,439 @@
+{
+ "frames": {
+  "skeleton_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 400
+  },
+  "skeleton_idle_1": {
+   "frame": {
+    "x": 93,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 200
+  },
+  "skeleton_idle_2": {
+   "frame": {
+    "x": 186,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 400
+  },
+  "skeleton_idle_3": {
+   "frame": {
+    "x": 279,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_idle_4": {
+   "frame": {
+    "x": 372,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 300
+  },
+  "skeleton_attack_0": {
+   "frame": {
+    "x": 465,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 80
+  },
+  "skeleton_attack_1": {
+   "frame": {
+    "x": 558,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 80
+  },
+  "skeleton_attack_2": {
+   "frame": {
+    "x": 651,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 40
+  },
+  "skeleton_attack_3": {
+   "frame": {
+    "x": 744,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_attack_4": {
+   "frame": {
+    "x": 837,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_attack_5": {
+   "frame": {
+    "x": 930,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_attack_6": {
+   "frame": {
+    "x": 1023,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 60
+  },
+  "skeleton_block_0": {
+   "frame": {
+    "x": 1116,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 60
+  },
+  "skeleton_block_1": {
+   "frame": {
+    "x": 1209,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 240
+  },
+  "skeleton_block_2": {
+   "frame": {
+    "x": 1302,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_hurt_0": {
+   "frame": {
+    "x": 1395,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 70
+  },
+  "skeleton_hurt_1": {
+   "frame": {
+    "x": 1488,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 130
+  },
+  "skeleton_hurt_2": {
+   "frame": {
+    "x": 1581,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_hurt_3": {
+   "frame": {
+    "x": 1674,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "skeleton_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1767,
+   "h": 100
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "skeleton_idle",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   },
+   {
+    "name": "skeleton_attack",
+    "from": 5,
+    "to": 11,
+    "direction": "forward"
+   },
+   {
+    "name": "skeleton_block",
+    "from": 12,
+    "to": 14,
+    "direction": "forward"
+   },
+   {
+    "name": "skeleton_hurt",
+    "from": 15,
+    "to": 18,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "skeleton_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 70
+  },
+  "skeleton_hurt_1": {
+   "frame": {
+    "x": 93,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 130
+  },
+  "skeleton_hurt_2": {
+   "frame": {
+    "x": 186,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  },
+  "skeleton_hurt_3": {
+   "frame": {
+    "x": 279,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 93,
+    "h": 100
+   },
+   "sourceSize": {
+    "w": 93,
+    "h": 100
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "skeleton_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 372,
+   "h": 100
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "skeleton_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

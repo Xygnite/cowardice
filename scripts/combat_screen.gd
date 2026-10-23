@@ -368,9 +368,11 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 
 
 ## Puts the rigged scene scenes/<sprite>.tscn inside `holder`, sized to the sprite at game scale.
+## A frame-by-frame version (scenes/<sprite>_frames.tscn, tools/frames_scene.gd) wins when there is one.
 func _add_rig(holder: Control, sprite: String) -> Node2D:
 	holder.custom_minimum_size = load("res://assets/sprites/%s.png" % sprite).get_size() * SPRITE_SCALE
-	var rig: Node2D = load("res://scenes/%s.tscn" % sprite).instantiate()
+	var frames := "res://scenes/%s_frames.tscn" % sprite
+	var rig: Node2D = load(frames if ResourceLoader.exists(frames) else "res://scenes/%s.tscn" % sprite).instantiate()
 	rig.scale = Vector2.ONE * SPRITE_SCALE
 	holder.add_child(rig)
 	return rig

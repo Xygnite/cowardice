@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "archivist_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 500
+  },
+  "archivist_idle_1": {
+   "frame": {
+    "x": 90,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 300
+  },
+  "archivist_idle_2": {
+   "frame": {
+    "x": 180,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 500
+  },
+  "archivist_idle_3": {
+   "frame": {
+    "x": 270,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 300
+  },
+  "archivist_attack_0": {
+   "frame": {
+    "x": 360,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 80
+  },
+  "archivist_attack_1": {
+   "frame": {
+    "x": 450,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 80
+  },
+  "archivist_attack_2": {
+   "frame": {
+    "x": 540,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 40
+  },
+  "archivist_attack_3": {
+   "frame": {
+    "x": 630,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  },
+  "archivist_attack_4": {
+   "frame": {
+    "x": 720,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  },
+  "archivist_attack_5": {
+   "frame": {
+    "x": 810,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  },
+  "archivist_attack_6": {
+   "frame": {
+    "x": 900,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 60
+  },
+  "archivist_block_0": {
+   "frame": {
+    "x": 990,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 60
+  },
+  "archivist_block_1": {
+   "frame": {
+    "x": 1080,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 240
+  },
+  "archivist_block_2": {
+   "frame": {
+    "x": 1170,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  },
+  "archivist_hurt_0": {
+   "frame": {
+    "x": 1260,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 70
+  },
+  "archivist_hurt_1": {
+   "frame": {
+    "x": 1350,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 130
+  },
+  "archivist_hurt_2": {
+   "frame": {
+    "x": 1440,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  },
+  "archivist_hurt_3": {
+   "frame": {
+    "x": 1530,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 105
+   },
+   "sourceSize": {
+    "w": 90,
+    "h": 105
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "archivist_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 1620,
+   "h": 105
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "archivist_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "archivist_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "archivist_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "archivist_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

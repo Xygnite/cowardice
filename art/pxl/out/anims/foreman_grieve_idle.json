@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "foreman_grieve_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 500
+  },
+  "foreman_grieve_idle_1": {
+   "frame": {
+    "x": 161,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 300
+  },
+  "foreman_grieve_idle_2": {
+   "frame": {
+    "x": 322,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 500
+  },
+  "foreman_grieve_idle_3": {
+   "frame": {
+    "x": 483,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 161,
+    "h": 160
+   },
+   "sourceSize": {
+    "w": 161,
+    "h": 160
+   },
+   "duration": 300
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "foreman_grieve_idle.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 644,
+   "h": 160
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "foreman_grieve_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

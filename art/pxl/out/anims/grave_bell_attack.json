@@ -1,0 +1,190 @@
+{
+ "frames": {
+  "grave_bell_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 80
+  },
+  "grave_bell_attack_1": {
+   "frame": {
+    "x": 116,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 80
+  },
+  "grave_bell_attack_2": {
+   "frame": {
+    "x": 232,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 40
+  },
+  "grave_bell_attack_3": {
+   "frame": {
+    "x": 348,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 60
+  },
+  "grave_bell_attack_4": {
+   "frame": {
+    "x": 464,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 60
+  },
+  "grave_bell_attack_5": {
+   "frame": {
+    "x": 580,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 60
+  },
+  "grave_bell_attack_6": {
+   "frame": {
+    "x": 696,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 100
+  },
+  "grave_bell_attack_7": {
+   "frame": {
+    "x": 812,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 129
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 129
+   },
+   "duration": 80
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "grave_bell_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 928,
+   "h": 129
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "grave_bell_attack",
+    "from": 0,
+    "to": 7,
+    "direction": "forward"
+   }
+  ]
+ }
+}
