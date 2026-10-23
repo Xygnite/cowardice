@@ -67,9 +67,9 @@ const EVENTS := {
 	},
 	"gambler": {
 		"title": "Gambler's Skull",
-		"text": "A skull on a barrel, with three dice of its own. It wants 4 Shards to play.",
+		"text": "A skull on a barrel, with three dice of its own. It wants %d Shards to play." % GAMBLER_BET,
 		"choices": [
-			{"label": "Bet 4 Shards (throw all dice)", "dice": 3},
+			{"label": "Bet %d Shards (throw all dice)" % GAMBLER_BET, "dice": 3},
 			{"label": "Decline", "dice": 0},
 		],
 	},
@@ -147,11 +147,17 @@ static func resolve(id: String, choice: int, c: Combat, rolled: Array, tries := 
 				skull += rolled[i + 3]
 			var won := 0
 			if mine > skull:
-				won = 8
+				won = 2 * GAMBLER_BET
 			elif mine == skull:
 				won = GAMBLER_BET
 			c.shards += won
-			r.text = "You %d, the skull %d. %s" % [mine, skull, "It pays out. +%d Shards." % won if won else "It keeps your Shards. -4 Shards."]
+			var net := won - GAMBLER_BET  # what the player actually gains or loses
+			var outcome := "It keeps your bet. -%d Shards." % GAMBLER_BET
+			if net > 0:
+				outcome = "It pays out. +%d Shards." % net
+			elif net == 0:
+				outcome = "It hands your bet back. +/-0 Shards."
+			r.text = "You %d, the skull %d. %s" % [mine, skull, outcome]
 		["cursed_cast", 0]:
 			r = {"text": "Pick a face to carve.", "carve": true}
 	return r
