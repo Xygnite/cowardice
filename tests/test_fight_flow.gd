@@ -40,6 +40,29 @@ func check(ok: bool, what: String) -> void:
 		push_error("FAIL: " + what)
 
 
+## Menu, camp and fight each put exactly one BackdropLife on their backdrop, however often shown.
+func _screens_with_life() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.combat.start_group(Combat.FIGHTS[0])
+	var shows := {
+		"menu": game._show_menu, "camp": game._show_camp,
+		"fight": func(): game._show_fight(game._on_fight_finished),
+	}
+	for art: String in shows:
+		for i in 2:
+			shows[art].call()
+			await process_frame
+			var lives := 0
+			for r in game.screen.get_children().filter(func(c): return c is TextureRect):
+				lives += r.get_children().filter(func(c): return c is BackdropLife).size()
+			check(lives == 1, "%s shows exactly one BackdropLife (got %d)" % [art, lives])
+	await create_timer(0.5).timeout
+	check(errors.count == errors_before, "backdrop life screens show with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
 ## The drawn map: only the rooms linked from the last one taken can be entered.
 func _map_moves() -> void:
 	var errors_before := errors.count

@@ -522,3 +522,19 @@ func _meta() -> void:
 	back.apply_sound()
 	DirAccess.remove_absolute(path)
 	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")
+
+
+func _backdrop_life() -> void:
+	var t: Transform2D = BackdropLife.cover(Vector2(1280, 720))
+	check(is_equal_approx(t.get_scale().x, 720.0 / 572), "backdrop life: height decides the scale")
+	var tl: Vector2 = t * Vector2.ZERO
+	var br: Vector2 = t * BackdropLife.IMAGE
+	check(absf(tl.x + 4.45) < 0.05 and absf(tl.y) < 0.01, "backdrop life: image top-left, got %s" % tl)
+	check(absf(br.x - 1284.45) < 0.05 and absf(br.y - 720) < 0.01, "backdrop life: image bottom-right, got %s" % br)
+	var wide: Transform2D = BackdropLife.cover(Vector2(1812, 720))
+	check(is_equal_approx(wide.get_scale().x, 1812.0 / 1024), "backdrop life: width decides on a wide rect")
+	var mid: Vector2 = wide * Vector2(512, 286)
+	check(mid.is_equal_approx(Vector2(906, 360)), "backdrop life: image centre stays centred, got %s" % mid)
+	var keys: Array = BackdropLife.LIFE.keys()
+	keys.sort()
+	check(keys == ["camp", "fight", "menu"], "backdrop life: menu, camp and fight only")

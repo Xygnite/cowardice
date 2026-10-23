@@ -37,6 +37,7 @@ static func backdrop(screen: Control, art: String) -> TextureRect:
 	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	screen.add_child(r)
 	screen.move_child(r, 1)  # over the page's flat colour, under its content
+	BackdropLife.attach(r, art)
 	return r
 
 
