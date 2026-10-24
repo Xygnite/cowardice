@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "art_direction_brief": "art/events/art-direction-brief.md",
+  "shared": {
+    "technical": {"dimensions": "1024x572", "drawn_at": "512x286 x2", "alpha": false, "filtering": "nearest", "format": "webp lossless"},
+    "visual_locks": ["palette", "value-structure", "camera", "pixel-size", "subject-bottom-centre", "dark-top-third"],
+    "source": {"kind": "authored", "url_or_tool": "pxl (art/pxl/bg_events.px.js)", "creator": "Claude (Claude Code) for the owner", "license": "project-owned"}
+  },
+  "assets": [
+    {"id": "shrine", "role": "Cracked Shrine event", "path": "assets/ui/bg_event_shrine.webp", "status": "planned", "subject": "a stone shrine split down the middle, a faint light in the crack", "light": "cold light leaking from the crack"},
+    {"id": "pilgrim", "role": "Drowned Pilgrim event", "path": "assets/ui/bg_event_pilgrim.webp", "status": "planned", "subject": "a flooded passage, a drowned pilgrim face-down in shallow black water, satchel", "light": "one guttering candle stub on a ledge"},
+    {"id": "altar", "role": "Weeping Altar event (hero)", "path": "assets/ui/bg_event_altar.webp", "status": "planned", "subject": "a stone altar in an apse, dark tears/wax running down its face into a pool, offerings", "light": "two tall candles on the altar"},
+    {"id": "niche", "role": "Ember-lit Niche event", "path": "assets/ui/bg_event_niche.webp", "status": "planned", "subject": "a quiet arched alcove holding a bed of glowing embers", "light": "the embers"},
+    {"id": "bone_pile", "role": "Bone Pile event", "path": "assets/ui/bg_event_bone_pile.webp", "status": "planned", "subject": "a heap of bones and skulls in a dead-end ossuary corner", "light": "a single wall torch stub"},
+    {"id": "corridor", "role": "Collapsing Corridor event", "path": "assets/ui/bg_event_corridor.webp", "status": "planned", "subject": "a cracked corridor narrowing into darkness, fallen stones and dust, a sagging beam", "light": "cold light through a broken ceiling"},
+    {"id": "chest", "role": "Rusted Chest event", "path": "assets/ui/bg_event_chest.webp", "status": "planned", "subject": "an iron-banded rusted chest on a stone plinth in a small vault", "light": "a lantern on the floor beside it"},
+    {"id": "gambler", "role": "Gambler's Skull event", "path": "assets/ui/bg_event_gambler.webp", "status": "planned", "subject": "a skull on a rough table with scattered dice and coins, an empty chair", "light": "one candle on the table"},
+    {"id": "cursed_cast", "role": "Cursed Die Cast event", "path": "assets/ui/bg_event_cursed_cast.webp", "status": "planned", "subject": "a ritual table with a carving knife, a single large die and black wax sigils", "light": "a dim red-orange brazier"}
+  ]
+}

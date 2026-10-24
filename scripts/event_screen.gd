@@ -21,7 +21,8 @@ var tries := 0
 
 func _ready() -> void:
 	var root := UI.page(self)
-	UI.backdrop(self, "campfire")
+	var art := "event_" + id  # each event's own still; the campfire if one is missing
+	UI.backdrop(self, art if ResourceLoader.exists("res://assets/ui/bg_%s.webp" % art) else "campfire")
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
 	var event: Dictionary = Events.EVENTS[id]
 	_centered(UI.heading(root, 48, event.title))

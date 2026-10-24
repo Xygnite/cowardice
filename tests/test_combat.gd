@@ -35,6 +35,7 @@ func _init() -> void:
 	_lasting_curse()
 	_event_helpers()
 	_events()
+	_event_backdrops()
 	_backdrop_life()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
@@ -692,6 +693,11 @@ func _meta() -> void:
 	back.apply_sound()
 	DirAccess.remove_absolute(path)
 	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")
+
+
+func _event_backdrops() -> void:
+	for id in Events.IDS:
+		check(ResourceLoader.exists("res://assets/ui/bg_event_%s.webp" % id), "event %s has its backdrop" % id)
 
 
 func _backdrop_life() -> void:
