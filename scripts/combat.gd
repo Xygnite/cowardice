@@ -179,6 +179,7 @@ func lose_max_hp(amount: int) -> void:
 
 
 ## Rolls the dice at the indices in `which`; returns their new values in order.
+## On screen these are provisional: the thrown dice's landed faces replace them (as for every roll here).
 func roll_dice(which: Array) -> Array:
 	var out: Array = []
 	for i in which:
@@ -243,8 +244,13 @@ func start_turn() -> void:
 		d.locked = false
 		d.slot = Slot.NONE
 		_roll(d)
-	if enemies[0].type.get("rig_pair_turn", -1) == turn:
+	if rigged_turn():
 		dice[1].value = dice[0].value
+
+
+## This turn's opening roll is fixed to hold a pair (the tutorial's Cleave lesson); the screen steers the dice onto it.
+func rigged_turn() -> bool:
+	return enemies[0].type.get("rig_pair_turn", -1) == turn
 
 
 func alive(i: int) -> bool:

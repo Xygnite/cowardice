@@ -2,12 +2,14 @@ class_name DiceTray
 extends Control
 ## The dice as 3D cubes in a walled tray, seen from above, rendered at low resolution and scaled up so
 ## they stay pixel art. A roll throws them in from the left as rigid bodies: they bounce off the walls
-## and knock into each other (and into locked dice, which stay put). Once a die slows down, a hidden
-## torque tips it onto the face the game rolled and squares it to the screen, then it is pinned there.
+## and knock into each other (and into locked dice, which stay put), clacking on every bump. Whatever
+## face ends up on top is the roll: once a die stops, it is squared to the screen on that face and
+## pinned there (a die left leaning on a wall settles onto the face pointing most upward).
+## A steered throw (the tutorial's pair turn) instead tips each die onto its given value with a hidden torque.
 ## Each side shows one of the die's faces, on the die art from assets/ui/cut/die_<art>.png.
 
 signal die_clicked(i: int)
-signal landed  # once per throw, when its last die is pinned
+signal landed  # once per throw, when its last die is pinned; each die's value is then the face it shows
 
 const PIXEL := 2  # screen pixels per rendered pixel
 const UNIT := 80.0  # screen pixels per cube width, on the tray floor
@@ -38,6 +40,11 @@ const NUDGE_TIME := 0.1
 const SETTLED_SPEED := 0.4
 const GIVE_UP := 3.0  # seconds; a die still not settled (wedged on a wall, say) is eased into place
 const EASE_TIME := 0.25
+const SLOW_TIME := 0.25  # seconds a die must stay stopped before a crooked one is settled onto its top face
+const CLACK := preload("res://assets/audio/dice_clack.wav")  # cut from dice.wav
+const CLACK_MIN := 1.5  # cube widths per second of speed lost or gained in one step; gentler touches are silent
+const CLACK_LOUD := 12.0  # a jolt this hard plays at full volume
+const CLACK_GAP := 0.08  # seconds; one die clacks no more often, so a die chattering on the floor doesn't buzz
 
 ## Turns that bring each side to face +Z; faces[k] is drawn on side k.
 const SIDES := [
@@ -56,9 +63,11 @@ static var _atlases := {}  # art name -> the die art tiled 3x2, the layout BoxMe
 var camera: Camera3D
 var walls: Array[CollisionShape3D] = []  # left, right, top, bottom; moved to the tray's edges on resize
 ## Per die: body (the RigidBody3D), cube (its mesh), labels, chain, slot (2D badge) with its icon,
-## faces, value, rolling, and t (seconds since thrown).
+## clack (its AudioStreamPlayer), faces, value, rolling, steer, t (seconds since thrown),
+## slow (seconds it has been stopped), last_v (velocity a step ago) and quiet (seconds until it may clack).
 var dice: Array[Dictionary] = []
 var in_flight := false  # a throw has dice still rolling; landed fires when none are
+var torques := 0  # steering pushes so far; tests check a fair throw makes none
 
 
 func _init() -> void:
@@ -180,8 +189,13 @@ func add_die() -> void:
 	slot.add_child(icon)
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(slot)
+	var clack := AudioStreamPlayer.new()  # one per die, so each clack keeps its own volume and pitch
+	clack.stream = CLACK
+	clack.bus = "SFX"
+	add_child(clack)
 	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "rubble": rubble, "slot": slot, "icon": icon,
-		"faces": [], "value": 0, "rolling": false, "t": 0.0})
+		"clack": clack, "faces": [], "value": 0, "rolling": false, "steer": false, "t": 0.0, "slow": 0.0,
+		"last_v": Vector3.ZERO, "quiet": 0.0})
 	for i in dice.size():  # the row stays centred as it grows
 		dice[i].body.position = _spot(i)
 
@@ -189,7 +203,7 @@ func add_die() -> void:
 ## Shows die i's faces in `art` (bone, locked, placed, cursed) with `value` up, and the icon
 ## assets/ui/cut/slot_<slot_icon>.png in its top-right corner, or none if `slot_icon` is empty;
 ## a locked die is wrapped in chains, a buried one heaped with rubble.
-## Mid-throw it only repaints; the throw lands on its own value.
+## Mid-throw it only repaints; the throw lands on whatever face comes up.
 func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false) -> void:
 	var d := dice[i]
 	d.faces = faces
@@ -202,11 +216,12 @@ func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, 
 	d.chain.visible = locked
 	d.rubble.visible = buried
 	if not d.rolling:
-		d.body.quaternion = _rest(d)
+		d.body.quaternion = _rest(d, d.body.quaternion)
 
 
-## Throws the dice at `which` (indices) in from the left; each lands on its current value.
-func throw(which: Array) -> void:
+## Throws the dice at `which` (indices) in from the left. Each lands on whatever face comes up, its
+## value once `landed` fires; with `steer`, each is tipped onto its current value instead.
+func throw(which: Array, steer := false) -> void:
 	if size.x == 0:
 		# The walls need the tray's size, and a new screen resizes it more than once while it lays out:
 		# throwing after the first would spawn dice where the walls then close in and shove them out.
@@ -217,7 +232,9 @@ func throw(which: Array) -> void:
 		var d := dice[which[n]]
 		var body: RigidBody3D = d.body
 		d.rolling = true
+		d.steer = steer
 		d.t = 0.0
+		d.slow = 0.0
 		# Out of the hand in a loose line, so no two start inside each other.
 		var lane := 0.0 if which.size() == 1 else lerpf(-depth, depth, float(n) / (which.size() - 1))
 		body.position = Vector3(-_half_width() + 0.7 + n * 1.1, 1.5, lane)
@@ -226,6 +243,7 @@ func throw(which: Array) -> void:
 		body.linear_velocity = Vector3(randf_range(THROW_SPEED.x, THROW_SPEED.y), randf_range(0, 2), randf_range(-2, 2))
 		body.angular_velocity = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized() * THROW_SPIN
 		body.sleeping = false
+		d.last_v = body.linear_velocity  # the throw itself is no bump
 	in_flight = true
 
 
@@ -235,17 +253,52 @@ func _physics_process(delta: float) -> void:
 			continue
 		var body: RigidBody3D = d.body
 		d.t += delta
+		_clack(d, delta)
+		if not d.steer:
+			d.value = d.faces[_top(d)]  # the roll is whatever is up; _rest then squares the die on it
 		var rest := _rest(d, body.quaternion)
 		var off := _turn_between(body.quaternion, rest)
 		var angle := off.get_angle()
-		if angle < NEARLY_SQUARE and body.linear_velocity.length() < SETTLED_SPEED and body.angular_velocity.length() < SETTLED_SPEED:
-			# Friction can hold a die a few degrees off, where the steering is too weak to finish; nudge it.
+		var stopped := body.linear_velocity.length() < SETTLED_SPEED and body.angular_velocity.length() < SETTLED_SPEED
+		d.slow = d.slow + delta if stopped else 0.0
+		if angle < NEARLY_SQUARE and stopped:
+			# Friction can hold a die a few degrees off, where it would rest crooked; nudge it.
 			_pin(d, 0.0 if angle < SETTLED_ANGLE else NUDGE_TIME)
-		elif d.t > GIVE_UP:
+		elif d.t > GIVE_UP or (not d.steer and d.slow > SLOW_TIME):
 			_pin(d, EASE_TIME)
-		elif body.linear_velocity.length() < STEER_BELOW and angle > 0.001:
+		elif d.steer and body.linear_velocity.length() < STEER_BELOW and angle > 0.001:
 			# Torque toward the rest pose, damped so it does not wobble.
 			body.apply_torque(off.get_axis() * angle * STEER - body.angular_velocity * DAMP)
+			torques += 1
+
+
+## Plays a die's clack when its velocity jumps (it hit the floor, a wall or another die), louder the harder.
+func _clack(d: Dictionary, delta: float) -> void:
+	var v: Vector3 = d.body.linear_velocity
+	var jolt: float = (v - d.last_v).length()
+	d.last_v = v
+	d.quiet -= delta
+	if jolt < CLACK_MIN or d.quiet > 0:
+		return
+	d.quiet = CLACK_GAP
+	d.clack.volume_db = linear_to_db(clampf(jolt / CLACK_LOUD, 0.1, 1.0))
+	d.clack.pitch_scale = randf_range(0.9, 1.12)
+	d.clack.play()
+
+
+## The side of die i facing most upward, as an index into its faces.
+func top_face(i: int) -> int:
+	return _top(dice[i])
+
+
+func _top(d: Dictionary) -> int:
+	var best := 0
+	var basis: Basis = d.body.global_basis
+	for k in SIDES.size():
+		# Side k's outward normal, as the labels are placed: the turn that faces it to +Z, undone.
+		if (basis * (Basis.from_euler(SIDES[k]).inverse() * Vector3.BACK)).y > (basis * (Basis.from_euler(SIDES[best]).inverse() * Vector3.BACK)).y:
+			best = k
+	return best
 
 
 ## Stops a die and sets it exactly in its rest pose where it lies, easing there over `time` seconds.

@@ -74,8 +74,6 @@ func choose(choice: int, die := 0) -> void:
 			which = range(combat.dice.size())
 	var rolled: Array = combat.roll_dice(which)
 	if which:
-		for i in which:
-			_show_die(i)
 		var thrown := which.duplicate()
 		if id == "gambler":
 			for k in 3:
@@ -87,6 +85,10 @@ func choose(choice: int, die := 0) -> void:
 		tray.throw(thrown)
 		await tray.landed
 		busy = false
+		rolled = thrown.map(func(i): return tray.dice[i].value)  # the faces that came up are the roll
+		for i in which:
+			combat.dice[i].value = tray.dice[i].value
+			_show_die(i)
 	tries += 1
 	var result: Dictionary = Events.resolve(id, choice, combat, rolled, tries)
 	text.text = result.text

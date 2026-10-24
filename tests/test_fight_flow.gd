@@ -25,6 +25,7 @@ func _init() -> void:
 	OS.add_logger(errors)
 	Engine.time_scale = SPEED
 	await _map_moves()
+	await _fair_throws()
 	await _play_events()
 	await _hulk_swap()
 	await _two_floors()
@@ -134,6 +135,38 @@ func _fight_out(game: Node, fight: String) -> void:
 	print("fight %s: %d turns, %s" % [fight, turns, "won" if game.combat.fight_won() else "lost"])
 
 
+## Every throw on the real screen is fair: each die's value is the face its body shows on top, and no
+## steering torque touches the dice, except on the tutorial's pair turn, which still lands its pair.
+func _fair_throws() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	for throw in 3:  # the opening throw, then two rerolls
+		if throw > 0:
+			screen._on_reroll()
+		check(screen.busy and screen.summary_label.text == "Rolling...", "throw %d: the screen waits for the dice" % throw)
+		while screen.busy:
+			await process_frame
+		var ok := true
+		for i in screen.combat.dice.size():
+			ok = ok and screen.combat.dice[i].value == screen.combat.dice[i].faces[screen.tray.top_face(i)]
+		check(ok, "throw %d: every die's value is the face it shows" % throw)
+	check(screen.tray.torques == 0, "fair throws are never steered (got %d pushes)" % screen.tray.torques)
+	screen.combat.start_group(["dummy"])
+	screen.combat.turn = screen.combat.enemies[0].type.rig_pair_turn
+	screen.combat.start_turn()
+	screen._roll_anim(range(screen.combat.dice.size()), screen.combat.rigged_turn())
+	while screen.busy:
+		await process_frame
+	check(screen.combat.dice[0].value == screen.combat.dice[1].value, "the tutorial's pair turn still lands a pair")
+	check(screen.combat.dice[1].value == screen.combat.dice[1].faces[screen.tray.top_face(1)], "and the pair is what the dice show")
+	check(errors.count == errors_before, "fair throws run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
 ## A Hulk dies on screen: its slot shows Rubble's name and HP, the log says so, no engine errors.
 func _hulk_swap() -> void:
 	var errors_before := errors.count
@@ -141,6 +174,8 @@ func _hulk_swap() -> void:
 	game.combat.start_group(["hulk"])
 	game._show_fight(game._on_fight_finished)
 	var screen: CombatScreen = game.screen
+	while screen.busy:  # the opening throw lands first
+		await process_frame
 	screen.combat.enemies[0].hp = 3
 	screen.combat.turn = 1  # the Hulk attacks instead of guarding, so any hit kills
 	screen.combat.start_turn()

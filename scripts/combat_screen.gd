@@ -24,7 +24,6 @@ const TRAY_INSET := 6  # screen pixels from the box's edge to the felt, which tu
 const LOG_LINES := 4
 const STRIKE_DELAY := 0.2  # seconds into an enemy's attack animation when the blow lands
 const MENU_LOCK := 100  # die menu id for lock/unlock; the other ids are Combat.Slot values
-const DICE_SFX := preload("res://assets/audio/dice.wav")
 const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
 
@@ -54,7 +53,8 @@ const MURMURS := {"fight": [
 
 var combat: Combat  # set by game.gd before the screen enters the tree
 var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
-var busy := false  # true while the enemies act, and after the fight ends
+var busy := false  # true while the dice are in the air or the enemies act, and after the fight ends
+var rolling: Array = []  # indices of the dice in the air; their values aren't known until they land
 var acting := -1  # enemy currently acting, highlighted
 
 var hp_label: Label
@@ -99,7 +99,7 @@ func _ready() -> void:
 	if combat.is_boss_fight():
 		_log("Something large stirs below.")
 	_refresh()
-	_roll_anim(range(combat.dice.size()))
+	_roll_anim(range(combat.dice.size()), combat.rigged_turn())
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -207,9 +207,7 @@ func _on_end_turn() -> void:
 		_end(true)
 	else:
 		combat.start_turn()
-		busy = false
-		_refresh()
-		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0))
+		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), combat.rigged_turn())
 
 
 ## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
@@ -265,10 +263,10 @@ func _refresh() -> void:
 	murmur_label.text = lines[mini(combat.dungeon_turns, lines.size() - 1)] if murmurs else ""
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
-		var art := "cursed" if d.value == Combat.CURSE else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
+		var art := "cursed" if d.value == Combat.CURSE and i not in rolling else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
 		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0)
 	var pair := "   Pair of %ds" % combat.rolled_pair() if combat.rolled_pair() else ""
-	summary_label.text = "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
+	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() else Color.WHITE)
 	reroll_button.text = "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = busy or combat.rerolls == 0
@@ -484,10 +482,19 @@ func _show_faces() -> void:
 	faces_popup.popup(Rect2i(Vector2i(faces_button.get_global_rect().end), faces_popup.size))
 
 
-## Tumbles the dice at `which` (indices) onto the values they just rolled.
-func _roll_anim(which: Array) -> void:
-	tray.throw(which)
-	_sfx(DICE_SFX)
+## Throws the dice at `which` (indices); the faces they land on become their values. Until then the
+## screen is busy, so nothing acts on Combat's provisional roll. `steer` lands them on that roll instead.
+func _roll_anim(which: Array, steer := false) -> void:
+	busy = true
+	rolling = which
+	_refresh()
+	tray.throw(which, steer)
+	await tray.landed
+	for i in which:
+		combat.dice[i].value = tray.dice[i].value
+	rolling = []
+	busy = false
+	_refresh()
 
 
 func _sfx(stream: AudioStream) -> void:
