@@ -79,7 +79,7 @@ strip, the subject pasted in front. Every scene now builds at least three planes
 - Alpha/background: opaque.
 - Grid: 2x2 image px per art pixel.
 - Filtering/mipmaps/compression: lossless WebP, nearest filter via the project's 2D default.
-- Naming and folders: shared perspective kit `art/pxl/kit.px.js`; events from `art/pxl/bg_events.px.js` to `assets/ui/bg_event_<id>.webp`; menu, camp, campfire, forge, victory and defeat from `art/pxl/bg_screens.px.js` to `assets/ui/bg_<name>.webp`; brief and manifest in `art/events/`.
+- Naming and folders: shared perspective kit `art/pxl/kit.px.js`; events from `art/pxl/bg_events.px.js` to `assets/ui/bg_event_<id>.webp`; menu, camp, campfire, forge, victory and defeat from `art/pxl/bg_screens.px.js` and the fight and Mine from `art/pxl/bg_fights.px.js` to `assets/ui/bg_<name>.webp`; brief and manifest in `art/events/`.
 
 ## Visual target
 

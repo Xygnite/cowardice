@@ -4,104 +4,104 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "sourceSize": {
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "duration": 125
   },
   "chain_mine_0_1": {
    "frame": {
-    "x": 16,
+    "x": 18,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "sourceSize": {
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "duration": 125
   },
   "chain_mine_0_2": {
    "frame": {
-    "x": 32,
+    "x": 36,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "sourceSize": {
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "duration": 125
   },
   "chain_mine_0_3": {
    "frame": {
-    "x": 48,
+    "x": 54,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "sourceSize": {
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "duration": 125
   },
   "chain_mine_0_4": {
    "frame": {
-    "x": 64,
+    "x": 72,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "sourceSize": {
-    "w": 16,
-    "h": 80
+    "w": 18,
+    "h": 102
    },
    "duration": 125
   }
@@ -111,8 +111,8 @@
   "image": "chain_mine_0.png",
   "format": "RGBA8888",
   "size": {
-   "w": 80,
-   "h": 80
+   "w": 90,
+   "h": 102
   },
   "scale": "1",
   "frameTags": [

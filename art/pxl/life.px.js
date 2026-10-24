@@ -1,5 +1,5 @@
 // Flames and fog laid over the backdrops (scripts/backdrop_life.gd). One pxl pixel is the backdrop's own pixel:
-// 2 image px each. The Mine draws its own, in bg_mine.px.js; the menu's chains are in bg_screens.px.js.
+// 2 image px each. The fight and Mine chains and the Mine's lantern and dust are in bg_fights.px.js; the menu's chains in bg_screens.px.js.
 // Build: node .claude/skills/pxl-pixel-art/bin/pxl.js build art/pxl/life.px.js
 // then copy out/anims/<name>.png + .json (flames) and out/sprites/<name>.png (fog) to assets/ui/life/.
 include("screen_flames.px.js")  // the menu's and camp's flame masks, painted into their backdrops by bg_screens.px.js
@@ -73,7 +73,7 @@ flame("torch", { top: 4, tongue: 3, fps: 10, mask: TORCH_MASK })
 flame("campfire", { top: 6, tongue: 4, fps: 8, sparks: [{ x: 10, y: 6, off: 0 }, { x: 5, y: 9, off: 3 }, { x: 15, y: 8, off: 5 }], mask: CAMPFIRE_MASK })
 
 // Fight: one small candle flame for every candle on the ledges (2 image px a pixel).
-pal({ R: "#8a5a30", o: "#d49a5c", y: "#efbe7c", w: "#fbe0a8" })
+pal({ R: "#a76236", o: "#e0782a", y: "#ffb24a", w: "#ffe08a" })  // kit.px.js's fire, as painted on bg_fight's candles
 // Too small for flame(): the body (rows 2-6) stays put and covers any painted candle flame up to 6x10
 // image px; the tip flickers and leans above it.
 anim("candle", { w: 3, h: 7, fps: 8 }, grid(0, 2, `
