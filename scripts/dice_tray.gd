@@ -306,6 +306,18 @@ func _pin(d: Dictionary, time: float) -> void:
 	var body: RigidBody3D = d.body
 	body.freeze = true
 	var to := Vector3(body.position.x, 0.5, body.position.z)
+	# A die that came to rest on or against another goes down beside it, not into it.
+	# ponytail: one pass, so a push can still end up in a third die or back in via the walls; loop if that shows up.
+	for e in dice:
+		var at: Vector3 = e.body.position
+		# Squared dice are axis-aligned cubes: they overlap while both offsets are under a cube width.
+		if is_same(e, d) or absf(to.x - at.x) >= 1.0 or absf(to.z - at.z) >= 1.0:
+			continue
+		if absf(to.x - at.x) >= absf(to.z - at.z):  # out along whichever axis is the shorter push
+			to.x = at.x + (1.0 if to.x >= at.x else -1.0)
+		else:
+			to.z = at.z + (1.0 if to.z >= at.z else -1.0)
+	to = Vector3(clampf(to.x, -_half_width() + 0.5, _half_width() - 0.5), 0.5, clampf(to.z, -_half_depth() + 0.5, _half_depth() - 0.5))
 	var rest := _rest(d, body.quaternion)
 	if time == 0.0:
 		body.quaternion = rest

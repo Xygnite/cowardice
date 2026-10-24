@@ -116,7 +116,6 @@ func _on_reroll() -> void:
 		return
 	if not combat.reroll():
 		return
-	_refresh()
 	_roll_anim(range(combat.dice.size()).filter(func(i): return not combat.dice[i].locked and combat.dice[i].buried == 0))
 
 
@@ -267,7 +266,7 @@ func _refresh() -> void:
 		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0)
 	var pair := "   Pair of %ds" % combat.rolled_pair() if combat.rolled_pair() else ""
 	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
-	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() else Color.WHITE)
+	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() and not rolling else Color.WHITE)
 	reroll_button.text = "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = busy or combat.rerolls == 0
 	end_button.disabled = busy
@@ -487,8 +486,8 @@ func _show_faces() -> void:
 func _roll_anim(which: Array, steer := false) -> void:
 	busy = true
 	rolling = which
+	tray.throw(which, steer)  # first, so the refresh doesn't square resting dice onto the provisional roll
 	_refresh()
-	tray.throw(which, steer)
 	await tray.landed
 	for i in which:
 		combat.dice[i].value = tray.dice[i].value

@@ -26,6 +26,7 @@ func _init() -> void:
 	Engine.time_scale = SPEED
 	await _map_moves()
 	await _fair_throws()
+	await _gambler_throw()
 	await _play_events()
 	await _hulk_swap()
 	await _two_floors()
@@ -135,11 +136,26 @@ func _fight_out(game: Node, fight: String) -> void:
 	print("fight %s: %d turns, %s" % [fight, turns, "won" if game.combat.fight_won() else "lost"])
 
 
-## Every throw on the real screen is fair: each die's value is the face its body shows on top, and no
-## steering torque touches the dice, except on the tutorial's pair turn, which still lands its pair.
+## The value drawn on die i's highest side, as the camera sees it: the label sitting highest in the world.
+func _drawn(tray: DiceTray, i: int) -> int:
+	var top: Label3D = tray.dice[i].labels[0]
+	for l: Label3D in tray.dice[i].labels:
+		if l.global_position.y > top.global_position.y:
+			top = l
+	return Combat.CURSE if top.text == "X" else int(top.text)
+
+
+func _all_drawn(screen: CombatScreen) -> bool:
+	return range(screen.combat.dice.size()).all(func(i): return screen.combat.dice[i].value == _drawn(screen.tray, i))
+
+
+## Every throw on the real screen is fair: each die's value is the face drawn on its top, a forged and
+## cursed die included, and no steering torque touches the dice, except on the tutorial's pair turn,
+## which still lands its pair.
 func _fair_throws() -> void:
 	var errors_before := errors.count
 	var game: Node = await _new_game()
+	game.combat.dice[0].base = [1, 1, 2, Combat.CURSE, 5, 6]
 	game.combat.start_group(["skeleton"])
 	game._show_fight(game._on_fight_finished)
 	var screen: CombatScreen = game.screen
@@ -149,10 +165,7 @@ func _fair_throws() -> void:
 		check(screen.busy and screen.summary_label.text == "Rolling...", "throw %d: the screen waits for the dice" % throw)
 		while screen.busy:
 			await process_frame
-		var ok := true
-		for i in screen.combat.dice.size():
-			ok = ok and screen.combat.dice[i].value == screen.combat.dice[i].faces[screen.tray.top_face(i)]
-		check(ok, "throw %d: every die's value is the face it shows" % throw)
+		check(_all_drawn(screen), "throw %d: every die's value is the face drawn on its top" % throw)
 	check(screen.tray.torques == 0, "fair throws are never steered (got %d pushes)" % screen.tray.torques)
 	screen.combat.start_group(["dummy"])
 	screen.combat.turn = screen.combat.enemies[0].type.rig_pair_turn
@@ -161,8 +174,31 @@ func _fair_throws() -> void:
 	while screen.busy:
 		await process_frame
 	check(screen.combat.dice[0].value == screen.combat.dice[1].value, "the tutorial's pair turn still lands a pair")
-	check(screen.combat.dice[1].value == screen.combat.dice[1].faces[screen.tray.top_face(1)], "and the pair is what the dice show")
+	check(_all_drawn(screen), "and the pair is what the dice show")
 	check(errors.count == errors_before, "fair throws run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The gambler's throw: the totals it pays on are the faces drawn on top, the skull's three dice included.
+func _gambler_throw() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.combat.shards = Events.GAMBLER_BET
+	game.combat.dice[0].faces = [1, 1, 2, Combat.CURSE, 5, 6]
+	game._show_event("gambler")
+	await process_frame
+	var s: EventScreen = game.screen
+	s.choose(0)
+	while s.busy:
+		await process_frame
+	var mine := 0
+	var skull := 0
+	for i in 3:
+		mine += _drawn(s.tray, i)
+		skull += _drawn(s.tray, i + 3)
+	check(s.text.text.begins_with("You %d, the skull %d." % [mine, skull]), "the gambler pays on the drawn faces (%d vs %d): %s" % [mine, skull, s.text.text])
+	check(errors.count == errors_before, "the gambler's throw runs with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
 
