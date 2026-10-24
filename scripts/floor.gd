@@ -114,21 +114,29 @@ static func _roll_kinds(rooms: Array, links: Array) -> void:
 
 
 ## One to three random `enemies` whose total HP is within `hp`, a group not yet in `used`.
-## After 200 failed tries a repeat is accepted, so a crowded floor can't loop forever.
+## Picks from every group that fits, so a repeat only happens once all of them are used.
 static func group(hp: Array, used: Dictionary, enemies: Array = FLOORS.chapel.enemies) -> Array:
-	var tries := 0
-	while true:
-		tries += 1
-		var keys := []
-		for i in randi_range(1, 3):
-			keys.append(enemies.pick_random())
-		keys.sort()
-		var total: int = keys.reduce(func(t, k): return t + Combat.TYPES[k].hp, 0)
-		var id := ",".join(keys)
-		if total >= hp[0] and total <= hp[1] and (not used.has(id) or tries > 200):
-			used[id] = true
-			return keys
-	return []
+	var fits: Array = []
+	var pool: Array = enemies.duplicate()
+	pool.sort()
+	for a in pool.size():  # every multiset of 1-3 enemies; index pool.size() means "no enemy here"
+		for b in range(a, pool.size() + 1):
+			for c in range(b, pool.size() + 1):
+				var keys: Array = [pool[a]]
+				if b < pool.size():
+					keys.append(pool[b])
+					if c < pool.size():
+						keys.append(pool[c])
+				var total: int = keys.reduce(func(t, k): return t + Combat.TYPES[k].hp, 0)
+				if total >= hp[0] and total <= hp[1] and not fits.has(keys):
+					fits.append(keys)
+	if fits.is_empty():
+		push_error("No group of %s fits %s HP" % [enemies, hp])
+		return [enemies[0]]
+	var fresh := fits.filter(func(k): return not used.has(",".join(k)))
+	var keys: Array = (fresh if fresh else fits).pick_random()
+	used[",".join(keys)] = true
+	return keys
 
 
 ## "Fight: Archivist, Bone Rats" from the fight's enemies.
