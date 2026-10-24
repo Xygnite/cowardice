@@ -4,167 +4,167 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_1": {
    "frame": {
-    "x": 14,
+    "x": 20,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_2": {
    "frame": {
-    "x": 28,
+    "x": 40,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_3": {
    "frame": {
-    "x": 42,
+    "x": 60,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_4": {
    "frame": {
-    "x": 56,
+    "x": 80,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_5": {
    "frame": {
-    "x": 70,
+    "x": 100,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_6": {
    "frame": {
-    "x": 84,
+    "x": 120,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   },
   "campfire_7": {
    "frame": {
-    "x": 98,
+    "x": 140,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "sourceSize": {
-    "w": 14,
-    "h": 19
+    "w": 20,
+    "h": 28
    },
    "duration": 125
   }
@@ -174,8 +174,8 @@
   "image": "campfire.png",
   "format": "RGBA8888",
   "size": {
-   "w": 112,
-   "h": 19
+   "w": 160,
+   "h": 28
   },
   "scale": "1",
   "frameTags": [

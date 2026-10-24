@@ -15,18 +15,19 @@ const LIFE := {
 	# Drawn as one with its parts in art/pxl/bg_screens.px.js: flames on its braziers (M.brazier), chains under its
 	# MENU_CHAINS, fog over the moat.
 	"menu": {"px": 2, "parts": [
-		{"kind": "flame", "art": "torch", "at": Vector2(330, 316), "fps": 10.0},
-		{"kind": "flame", "art": "torch", "at": Vector2(670, 316), "fps": 10.0},
+		{"kind": "flame", "art": "torch", "at": Vector2(272, 322), "fps": 10.0},
+		{"kind": "flame", "art": "torch", "at": Vector2(728, 322), "fps": 10.0},
 		{"kind": "fog", "art": "moat", "at": Vector2(0, 516), "width": 1024.0, "period": 96, "step_s": 0.4, "alpha": 0.9},
-		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(130, 104), "period": 3.4},
-		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(166, 104), "period": 3.8},
-		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(874, 104), "period": 3.6},
+		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(74, 0), "period": 3.4},
+		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(132, 0), "period": 3.8},
+		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(876, 0), "period": 3.6},
+		{"kind": "chain", "art": "chain_menu_3", "at": Vector2(930, 0), "period": 3.3},
 	]},
 	# Also from bg_screens.px.js: the flame on its fire (CAMP.fire), fog in the strip between the perk board and the
-	# buttons, the one stretch of ground left in view, starting right of the fire.
+	# buttons, the one stretch of ground left in view, starting past the fire and the log, thin over the tent.
 	"camp": {"px": 2, "parts": [
-		{"kind": "flame", "art": "campfire", "at": Vector2(198, 464), "fps": 8.0},
-		{"kind": "fog", "art": "ground", "at": Vector2(240, 472), "width": 784.0, "period": 128, "step_s": 0.5, "alpha": 0.9},
+		{"kind": "flame", "art": "campfire", "at": Vector2(196, 450), "fps": 8.0},
+		{"kind": "fog", "art": "ground", "at": Vector2(380, 472), "width": 644.0, "period": 128, "step_s": 0.5, "alpha": 0.55},
 	]},
 	"fight": {"px": 2, "parts": [
 		{"kind": "flame", "art": "candle", "at": Vector2(157, 265), "fps": 8.0},

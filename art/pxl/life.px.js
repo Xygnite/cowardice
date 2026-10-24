@@ -70,7 +70,7 @@ function flame(name, { mask, top, tongue, fps, frames = 8, sparks = [] }) {
 // kit.px.js's fire colours.
 pal({ R: "#a76236", o: "#e0782a", y: "#ffb24a", w: "#ffe08a" })
 flame("torch", { top: 4, tongue: 3, fps: 10, mask: TORCH_MASK })
-flame("campfire", { top: 6, tongue: 3, fps: 8, sparks: [{ x: 7, y: 6, off: 0 }, { x: 4, y: 8, off: 3 }, { x: 10, y: 7, off: 5 }], mask: CAMPFIRE_MASK })
+flame("campfire", { top: 6, tongue: 4, fps: 8, sparks: [{ x: 10, y: 6, off: 0 }, { x: 5, y: 9, off: 3 }, { x: 15, y: 8, off: 5 }], mask: CAMPFIRE_MASK })
 
 // Fight: one small candle flame for every candle on the ledges (2 image px a pixel).
 pal({ R: "#8a5a30", o: "#d49a5c", y: "#efbe7c", w: "#fbe0a8" })
