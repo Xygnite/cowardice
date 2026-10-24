@@ -100,6 +100,26 @@ func _init(seed_value := -1) -> void:
 	start_fight(0)
 
 
+## What a run save keeps (RunSave): only what lasts between fights, as it is at a campfire.
+const SAVED := ["max_hp", "player_hp", "shards", "kills", "perks", "bonus_perk", "bonus_embers", "dungeon_turns"]
+
+
+func to_dict() -> Dictionary:
+	var d := {"dice": dice.map(func(x): return {"base": x.base, "faces": x.faces, "uncursed": x.uncursed})}
+	for k in SAVED:
+		d[k] = get(k)
+	return d.duplicate(true)
+
+
+static func from_dict(d: Dictionary) -> Combat:
+	var c := Combat.new()
+	for k in SAVED:
+		c.set(k, d[k])
+	for i in c.dice.size():
+		c.dice[i].merge(d.dice[i].duplicate(true), true)
+	return c
+
+
 func apply_perks(ids: Array) -> void:
 	perks = ids.duplicate()
 	max_hp = PLAYER_MAX_HP + (10 if "thick_skin" in perks else 0)

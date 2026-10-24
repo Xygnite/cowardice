@@ -4,7 +4,9 @@ extends Control
 
 signal play
 signal tutorial
+signal resume  # Continue: back to the run saved at a campfire
 
+var can_continue := false
 var tutorial_done := false
 var meta: Meta  # for the sound controls
 
@@ -20,6 +22,8 @@ func _ready() -> void:
 	choices.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	choices.add_theme_constant_override("separation", 12)
 	root.add_child(choices)
+	if can_continue:
+		UI.button(choices, "Continue", resume.emit).custom_minimum_size = Vector2(280, 48)
 	UI.button(choices, "Play", play.emit).custom_minimum_size = Vector2(280, 48)
 	if tutorial_done:  # the first Play is the tutorial anyway
 		UI.button(choices, "Tutorial", tutorial.emit).custom_minimum_size = Vector2(280, 48)

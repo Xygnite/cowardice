@@ -7,6 +7,7 @@ extends SceneTree
 const SPEED := 10.0  # runs animations, waits and the timing bar this many times faster
 const TURN_LIMIT := 40
 const SAVE := "user://test_fight_flow.json"  # never the player's real save
+const RUN := "user://test_fight_flow_run.json"  # nor the player's saved run
 
 var failures := 0
 var errors := ErrorCounter.new()
@@ -31,11 +32,16 @@ func _init() -> void:
 	await _hulk_swap()
 	await _two_floors()
 	await _mine_start()
+	await _fight_menu()
+	await _campfire_save()
+	await _new_run_asks()
+	await _death_clears_save()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"], ["pit_king"]]
 	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
 		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
+	RunSave.erase(RUN)
 	print("FAILED: %d" % failures if failures else "All fight-flow checks passed.")
 	quit(1 if failures else 0)
 
@@ -75,6 +81,7 @@ func _map_moves() -> void:
 	var game: Node = load("res://main.tscn").instantiate()
 	game.meta = Meta.load_from(SAVE)
 	game.meta.tutorial_done = true
+	game.run_path = RUN
 	root.add_child(game)
 	await process_frame
 	game._start_run()
@@ -317,6 +324,7 @@ func _new_game() -> Node:
 	var game: Node = load("res://main.tscn").instantiate()
 	game.meta = Meta.load_from(SAVE)
 	game.meta.tutorial_done = true
+	game.run_path = RUN
 	root.add_child(game)
 	await process_frame  # the tree only runs the game's _ready once the main loop is going
 	game._start_run()
@@ -365,5 +373,209 @@ func _play_events() -> void:
 	check(not game.ambush, "the ambush flag resets after the fight")
 	await create_timer(0.5).timeout
 	check(errors.count == errors_before, "the ambush plays through with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+func _press(key: Key) -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = key
+	ev.pressed = true
+	root.push_input(ev)
+	await process_frame
+
+
+func _button(under: Node, text: String) -> Button:
+	var found: Array = under.find_children("*", "Button", true, false).filter(func(b): return b.text == text)
+	return found[0] if found.size() == 1 else null
+
+
+func _overlays(game: Node, type: String) -> Array:
+	return game.screen.find_children("*", type, true, false)
+
+
+## Esc or the Menu button pauses a fight on the player's turn: no keys or clicks reach the fight behind it.
+## Quitting from it (after a confirm) goes to the main menu with no Embers and no saved run.
+func _fight_menu() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	var embers: int = game.meta.embers
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	await process_frame
+	check(screen.busy, "the opening throw is still rolling")
+	await _press(KEY_ESCAPE)
+	check(_overlays(game, "FightMenu").is_empty(), "the menu doesn't open while the dice roll")
+	while screen.busy:
+		await process_frame
+	await _press(KEY_ESCAPE)
+	check(_overlays(game, "FightMenu").size() == 1, "Esc opens the fight menu on the player's turn")
+	var rerolls: int = screen.combat.rerolls
+	var dice: Array = screen.combat.dice.map(func(d): return d.value)
+	await _press(KEY_R)
+	await _press(KEY_ENTER)
+	screen._on_die_clicked(0)
+	await process_frame
+	check(screen.combat.rerolls == rerolls and screen.combat.dice.map(func(d): return d.value) == dice, "R doesn't reroll behind the menu")
+	check(screen.combat.turn == 0 and screen.acting == -1 and not screen.timing.running, "Enter doesn't end the turn behind the menu")
+	check(not screen.die_menu.visible, "a die click opens nothing behind the menu")
+	check(screen.menu_button.disabled and screen.end_button.disabled, "the fight's buttons are off while it is open")
+	await _press(KEY_ESCAPE)
+	await process_frame
+	check(_overlays(game, "FightMenu").is_empty() and not screen.busy, "Esc again closes it and hands the turn back")
+	screen.menu_button.pressed.emit()
+	await process_frame
+	var menu: FightMenu = _overlays(game, "FightMenu")[0]
+	_button(menu, "Settings").pressed.emit()
+	await process_frame
+	check(_overlays(game, "SettingsPanel").size() == 1, "Settings opens from the fight menu")
+	await _press(KEY_ESCAPE)
+	await process_frame
+	check(_overlays(game, "SettingsPanel").is_empty() and _overlays(game, "FightMenu").size() == 1, "Esc closes Settings, back to the fight menu")
+	_button(menu, "Quit to main menu").pressed.emit()
+	await process_frame
+	var ask: Array = _overlays(game, "ConfirmPanel")
+	check(ask.size() == 1 and game.screen == screen, "Quit asks first")
+	_button(ask[0], "Back  [Esc]").pressed.emit()
+	await process_frame
+	check(_overlays(game, "ConfirmPanel").is_empty() and game.screen == screen, "Back stays in the fight")
+	_button(menu, "Quit to main menu").pressed.emit()
+	await process_frame
+	_button(_overlays(game, "ConfirmPanel")[0], "Quit to main menu").pressed.emit()
+	await process_frame
+	check(game.screen is MenuScreen, "quitting goes to the main menu")
+	check(not RunSave.exists(RUN) and _button(game.screen, "Continue") == null, "quitting leaves no saved run")
+	check(game.meta.embers == embers and Meta.load_from(SAVE).embers == embers, "quitting pays no Embers")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "the fight menu runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## A run part way along the Chapel map, standing at a campfire on column 3.
+func _at_campfire(game: Node) -> void:
+	game.path = [0]
+	for c in range(1, 4):
+		game.path.append(game.map[c - 1][game.path[-1]].next[0])
+	game.layer = 3
+	game.combat.player_hp = 17
+	game.combat.shards = 9
+	game.combat.forge(0, 0, true)
+	game.combat.curse_face(1, 5)
+	game.seen_events.append(Events.IDS[0])
+	game._show_campfire("room")
+	await process_frame
+
+
+func _snapshot(game: Node) -> Dictionary:
+	return {"combat": game.combat.to_dict(), "map": game.map.duplicate(true), "layer": game.layer, "path": game.path.duplicate(),
+		"floor_id": game.floor_id, "seen_events": game.seen_events.duplicate(), "rooms_before": game.rooms_before}
+
+
+func _continue(game: Node) -> void:
+	game._show_menu()
+	await process_frame
+	var go := _button(game.screen, "Continue")
+	check(go != null, "the main menu offers Continue while a run is saved")
+	if go:
+		go.pressed.emit()
+	await process_frame
+
+
+## Save and quit at a campfire, then Continue: the same campfire, the same run, and both its choices still work.
+func _campfire_save() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	await _at_campfire(game)
+	check(game.screen is NoticeScreen and game.screen.choices.size() == 3 and game.screen.choices[2][0] == "Save and quit", "the campfire offers Save and quit")
+	var was := _snapshot(game)
+	_button(game.screen, "Save and quit").pressed.emit()
+	await process_frame
+	check(game.screen is MenuScreen and RunSave.exists(RUN), "Save and quit saves and goes to the main menu")
+	game.combat = Combat.new()  # forget the run, so only the save can bring it back
+	game.map = []
+	game.layer = 0
+	game.path = []
+	game.floor_id = "mine"
+	await _continue(game)
+	check(game.screen is NoticeScreen and game.screen.title == "Campfire" and game.screen.choices.size() == 3, "Continue comes back to the campfire")
+	check(_snapshot(game) == was, "HP, Shards, dice, perks, map, layer, path and floor come back as saved")
+	var heal: int = game.combat.campfire_heal_amount()
+	game.screen.choices[0][1].call()  # Rest
+	await process_frame
+	check(game.screen is MapScreen and game.layer == 4 and game.combat.player_hp == 17 + heal, "Rest still heals and moves on")
+	await _continue(game)
+	check(game.combat.player_hp == 17, "the save is from before the rest")
+	game.screen.choices[1][1].call()  # Tend the dice
+	await process_frame
+	check(game.screen is ForgeScreen and game.screen.no_cost, "Tend the dice still gives a free upgrade")
+	if game.screen is ForgeScreen:
+		game.screen.face_buttons[2][0].pressed.emit()
+		await process_frame
+	check(game.screen is MapScreen and game.layer == 4 and game.combat.dice[2].base[0] == 1 + Combat.FORGE_STEP, "and moves on, forged")
+	game.layer = game.map.size() - 1  # the stop between the Warden and the Mine
+	game._show_campfire("mine")
+	await process_frame
+	_button(game.screen, "Save and quit").pressed.emit()
+	await process_frame
+	await _continue(game)
+	game.screen.choices[0][1].call()
+	await process_frame
+	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "a save on the way down continues into the Mine")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "saving and continuing run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## With a run saved, starting another asks first; backing out keeps the save, going ahead deletes it.
+func _new_run_asks() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	await _at_campfire(game)
+	game.screen.choices[2][1].call()
+	await process_frame
+	_button(game.screen, "Tutorial").pressed.emit()
+	await process_frame
+	check(_overlays(game, "ConfirmPanel").size() == 1 and game.screen is MenuScreen, "the tutorial asks before replacing a saved run")
+	_button(_overlays(game, "ConfirmPanel")[0], "Back  [Esc]").pressed.emit()
+	game.meta.mine_unlocked = false  # straight into the Chapel, no floor window
+	game._show_camp()
+	await process_frame
+	_button(game.screen, "Start run").pressed.emit()
+	await process_frame
+	var ask: Array = _overlays(game, "ConfirmPanel")
+	check(ask.size() == 1 and game.screen is CampScreen, "Start run asks before replacing a saved run")
+	_button(ask[0], "Back  [Esc]").pressed.emit()
+	await process_frame
+	check(game.screen is CampScreen and RunSave.exists(RUN), "backing out keeps the save")
+	_button(game.screen, "Start run").pressed.emit()
+	await process_frame
+	_button(_overlays(game, "ConfirmPanel")[0], "Start a new run").pressed.emit()
+	await process_frame
+	check(game.screen is MapScreen and game.layer == 0 and not RunSave.exists(RUN), "going ahead starts a new run and deletes the save")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "the overwrite confirm runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## Dying after continuing deletes the save, so reloading can't undo the loss.
+func _death_clears_save() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	await _at_campfire(game)
+	game.screen.choices[2][1].call()
+	await process_frame
+	await _continue(game)
+	game.combat.player_hp = 1
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	await _fight_out(game, "skeleton at 1 HP")
+	check(game.screen is NoticeScreen and game.screen.title == "You fled.", "the run is lost")
+	check(not RunSave.exists(RUN), "the saved run is gone after a death")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "a death after continuing runs with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame

@@ -3,10 +3,11 @@ extends Control
 ## One fight on screen, built in code. The hero and enemies with a sprite are rigs from scenes/
 ## (made by tools/rig_sprites.gd); enemies without one are placeholder boxes.
 ## Rules are taught only in the tutorial fight; a floor's boss is hinted at only by murmurs in the fights before him.
-## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up. Click an enemy to target it,
+## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up, Esc the fight menu. Click an enemy to target it,
 ## a die for its actions (lock, place).
 
 signal finished(won: bool)
+signal abandoned  # quit from the fight menu
 
 const SLOT_NAMES := ["-", "Attack", "Guard", "Cleave"]
 const SLOT_ICONS := ["", "attack", "guard", "cleave"]  # assets/ui/cut/slot_*.png, by Combat.Slot
@@ -53,10 +54,12 @@ const MURMURS := {"fight": [
 
 var combat: Combat  # set by game.gd before the screen enters the tree
 var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
+var meta: Meta  # for the fight menu's settings; set by game.gd
 var busy := false  # true while the dice are in the air or the enemies act, and after the fight ends
 var rolling: Array = []  # indices of the dice in the air; their values aren't known until they land
 var acting := -1  # enemy currently acting, highlighted
 
+var menu_button: Button
 var hp_label: Label
 var hp_bar: ProgressBar
 var crypt: TextureRect  # the fight backdrop
@@ -109,6 +112,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_reroll()
 	elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 		_on_end_turn()
+	elif event.keycode == KEY_ESCAPE:
+		get_viewport().set_input_as_handled()
+		_open_menu()
+
+
+## Only on the player's turn, with the dice at rest, so no roll, bar or blow resolves behind it.
+## The screen stays busy while it is open, which shuts out every key and click; Esc closes it (Overlay).
+func _open_menu() -> void:
+	if busy:
+		return
+	busy = true
+	var m := FightMenu.new()
+	m.meta = meta
+	m.quit.connect(abandoned.emit)
+	m.tree_exited.connect(func() -> void:
+		busy = false
+		_refresh())
+	add_child(m)
+	_refresh()
 
 
 func _on_reroll() -> void:
@@ -270,6 +292,7 @@ func _refresh() -> void:
 	reroll_button.text = "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = busy or combat.rerolls == 0
 	end_button.disabled = busy
+	menu_button.disabled = busy
 	log_label.text = "\n".join(log_lines)
 
 
@@ -295,6 +318,7 @@ func _build() -> void:
 	hp_label = UI.label(top, 22)
 	UI.spacer(top)
 	fight_label = UI.heading(top, 32)
+	menu_button = UI.button(top, "Menu  [Esc]", _open_menu)
 
 	var field := UI.row(root)
 	field.size_flags_vertical = Control.SIZE_EXPAND_FILL

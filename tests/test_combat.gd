@@ -37,6 +37,7 @@ func _init() -> void:
 	_events()
 	_event_backdrops()
 	_backdrop_life()
+	_run_save()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -806,3 +807,43 @@ func _chains() -> void:
 			check(part.art == "chain_%s_%d" % [art, i], "%s: chain %d is chain_%s_%d" % [art, i, art, i])
 			check(BackdropLife.frames(part.art, 1.0).get_frame_count("default") == 5 and part.period >= 3.0 and part.period <= 4.0, "%s: %s is a 5-frame strip swinging in 3-4 s" % [art, part.art])
 	check(CombatScreen.LEDGES.keys() == ["fight", "mine"], "mine: a floor ledge per fight backdrop")
+
+
+## A run saved at a campfire comes back as it was; a broken or old save is no save at all.
+func _run_save() -> void:
+	const PATH := "user://test_run_save.json"  # never the player's real save
+	var c := CombatScript.new(7)
+	c.apply_perks(["steady_hand", "thick_skin"])
+	c.add_perk("bonfire_keeper")
+	c.player_hp = 23
+	c.shards = 11
+	c.kills = 5
+	c.bonus_embers = 30
+	c.dungeon_turns = 4
+	c.forge(0, 2, true)
+	c.curse_face(1, 5)
+	c.dice[2].faces[3] = CombatScript.CURSE  # a fight's curse, not lasting
+	check(RunSave.write({"combat": c.to_dict(), "layer": 3}, PATH), "the run saves")
+	check(RunSave.write({"combat": c.to_dict(), "layer": 3}, PATH), "and saves again over the old file")
+	var data := RunSave.read(PATH)
+	check(data.get("layer") is int and data.get("layer") == 3, "ints come back as ints")
+	var back := CombatScript.from_dict(data.combat)
+	check(back.player_hp == 23 and back.max_hp == 50 and back.shards == 11 and back.kills == 5, "HP, max HP, Shards and kills come back")
+	check(back.perks == ["steady_hand", "thick_skin", "bonfire_keeper"] and back.bonus_perk == "bonfire_keeper", "perks and the bonus perk come back")
+	check(back.bonus_embers == 30 and back.dungeon_turns == 4, "promised Embers and the murmur count come back")
+	check(back.dice[0].base == [1, 2, 5, 4, 5, 6], "a forged face comes back")
+	check(back.dice[1].base[5] == CombatScript.CURSE and back.dice[1].uncursed == {5: 6}, "a lasting curse comes back, still liftable")
+	back.forge(1, 5, true)
+	check(back.dice[1].base[5] == 6, "and forging lifts it")
+	check(back.dice[2].faces[3] == CombatScript.CURSE and back.dice[2].base[3] == 4, "a fight's curse comes back on the faces only")
+	check(back.dice[0].slot == CombatScript.Slot.NONE and back.dice[0].buried == 0, "the dice keep their other fields")
+	var f := FileAccess.open(PATH, FileAccess.WRITE)
+	f.store_string("{not json")
+	f.close()
+	check(RunSave.read(PATH).is_empty() and not RunSave.exists(PATH), "a corrupt save loads as no save")
+	f = FileAccess.open(PATH, FileAccess.WRITE)
+	f.store_string(JSON.stringify(JSON.from_native({"version": RunSave.VERSION + 1, "layer": 3})))
+	f.close()
+	check(RunSave.read(PATH).is_empty(), "a save from another version loads as no save")
+	RunSave.erase(PATH)
+	check(not FileAccess.file_exists(PATH) and RunSave.read(PATH).is_empty(), "an erased save is gone")
