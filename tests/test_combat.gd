@@ -820,11 +820,17 @@ func _chains() -> void:
 	check(is_equal_approx(s.sprite_frames.get_animation_speed("default"), 8.0 / parts[ci].period), "chains: one swing there and back per period")
 	check(s.is_playing() and s.scale == Vector2.ONE, "chains: strips are in image px, unscaled")
 	rect.free()
-	# The mine draws its chains as strips from the start (art/pxl/bg_mine.px.js), so nothing is cut for it.
-	var mine: Texture2D = load("res://assets/ui/bg_mine.webp")
-	check(mine != null and mine.get_size() == BackdropLife.IMAGE, "mine: backdrop is 1024x572")
-	var mchains: Array = BackdropLife.LIFE.mine.parts.filter(func(p): return p.kind == "chain")
-	check(mchains.size() >= 1, "mine: has a swaying chain")
-	for part: Dictionary in mchains:
-		check(BackdropLife.frames(part.art, 1.0).get_frame_count("default") == 5 and part.period >= 3.0 and part.period <= 4.0, "mine: %s is a 5-frame strip swinging in 3-4 s" % part.art)
+	# The mine and the menu draw their chains as strips from the start (art/pxl/bg_mine.px.js, bg_screens.px.js), so
+	# nothing is cut for them.
+	for want: Array in [["mine", 1], ["menu", 3]]:
+		var art: String = want[0]
+		check(not Cut.CHAINS.has(art), "%s: no chains cut from a painting" % art)
+		var bg: Texture2D = load("res://assets/ui/bg_%s.webp" % art)
+		check(bg != null and bg.get_size() == BackdropLife.IMAGE, "%s: backdrop is 1024x572" % art)
+		var drawn: Array = BackdropLife.LIFE[art].parts.filter(func(p): return p.kind == "chain")
+		check(drawn.size() >= want[1], "%s: has %d+ swaying chains" % want)
+		for i in drawn.size():
+			var part: Dictionary = drawn[i]
+			check(part.art == "chain_%s_%d" % [art, i], "%s: chain %d is chain_%s_%d" % [art, i, art, i])
+			check(BackdropLife.frames(part.art, 1.0).get_frame_count("default") == 5 and part.period >= 3.0 and part.period <= 4.0, "%s: %s is a 5-frame strip swinging in 3-4 s" % [art, part.art])
 	check(CombatScreen.LEDGES.keys() == ["fight", "mine"], "mine: a floor ledge per fight backdrop")

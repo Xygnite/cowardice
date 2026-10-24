@@ -1,1 +1,127 @@
-{"frames":{"chain_menu_2_0":{"frame":{"x":0,"y":0,"w":22,"h":142},"duration":100},"chain_menu_2_1":{"frame":{"x":22,"y":0,"w":22,"h":142},"duration":100},"chain_menu_2_2":{"frame":{"x":44,"y":0,"w":22,"h":142},"duration":100},"chain_menu_2_3":{"frame":{"x":66,"y":0,"w":22,"h":142},"duration":100},"chain_menu_2_4":{"frame":{"x":88,"y":0,"w":22,"h":142},"duration":100}}}
+{
+ "frames": {
+  "chain_menu_2_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 202
+   },
+   "duration": 125
+  },
+  "chain_menu_2_1": {
+   "frame": {
+    "x": 18,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 202
+   },
+   "duration": 125
+  },
+  "chain_menu_2_2": {
+   "frame": {
+    "x": 36,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 202
+   },
+   "duration": 125
+  },
+  "chain_menu_2_3": {
+   "frame": {
+    "x": 54,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 202
+   },
+   "duration": 125
+  },
+  "chain_menu_2_4": {
+   "frame": {
+    "x": 72,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 202
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 202
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "chain_menu_2.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 90,
+   "h": 202
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "chain_menu_2",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   }
+  ]
+ }
+}

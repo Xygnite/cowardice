@@ -9,22 +9,24 @@ const IMAGE := Vector2(1024, 572)
 ## A flame also has "fps". Its sheet covers the painted flame under it on every frame.
 ## A fog band also has "width" (image px it covers), "period" (pxl px after which the band repeats),
 ## "step_s" (seconds per one-pxl-pixel drift step) and "alpha".
-## A chain (a strip in image px: cut out of the painting by tools/cut_chains.gd, or drawn so) also has "period": seconds for one
+## A chain (a strip in image px: cut out of the painting by tools/cut_chains.gd, or drawn so in pxl) also has "period": seconds for one
 ## swing there and back across its 5 sway frames.
 const LIFE := {
+	# Drawn as one with its parts in art/pxl/bg_screens.px.js: flames on its braziers (M.brazier), chains under its
+	# MENU_CHAINS, fog over the moat.
 	"menu": {"px": 2, "parts": [
-		{"kind": "flame", "art": "torch", "at": Vector2(290, 314), "fps": 10.0},
-		{"kind": "flame", "art": "torch_r", "at": Vector2(698, 314), "fps": 10.0},
+		{"kind": "flame", "art": "torch", "at": Vector2(330, 316), "fps": 10.0},
+		{"kind": "flame", "art": "torch", "at": Vector2(670, 316), "fps": 10.0},
 		{"kind": "fog", "art": "moat", "at": Vector2(0, 516), "width": 1024.0, "period": 96, "step_s": 0.4, "alpha": 0.9},
-		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(210, 209), "period": 3.4},
-		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(242, 207), "period": 3.8},
-		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(771, 199), "period": 3.6},
+		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(130, 104), "period": 3.4},
+		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(166, 104), "period": 3.8},
+		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(874, 104), "period": 3.6},
 	]},
-	"camp": {"px": 4, "parts": [
-		{"kind": "flame", "art": "campfire", "at": Vector2(173, 396), "fps": 8.0},
-		# In the strip between the perk board and the buttons, the one stretch of ground left in view;
-		# it starts right of the campfire, which greyed out under it.
-		{"kind": "fog", "art": "ground", "at": Vector2(248, 464), "width": 776.0, "period": 64, "step_s": 0.5, "alpha": 0.9},
+	# Also from bg_screens.px.js: the flame on its fire (CAMP.fire), fog in the strip between the perk board and the
+	# buttons, the one stretch of ground left in view, starting right of the fire.
+	"camp": {"px": 2, "parts": [
+		{"kind": "flame", "art": "campfire", "at": Vector2(198, 464), "fps": 8.0},
+		{"kind": "fog", "art": "ground", "at": Vector2(240, 472), "width": 784.0, "period": 128, "step_s": 0.5, "alpha": 0.9},
 	]},
 	"fight": {"px": 2, "parts": [
 		{"kind": "flame", "art": "candle", "at": Vector2(157, 265), "fps": 8.0},

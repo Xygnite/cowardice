@@ -1,24 +1,14 @@
 extends SceneTree
-## Cuts the swaying chains out of the menu and fight paintings: each chain becomes a 5-frame sway strip in
+## Cuts the swaying chains out of the fight painting: each chain becomes a 5-frame sway strip in
 ## assets/ui/life/ (chain_<name>_<i>.png + .json, played by BackdropLife), and the backdrop is saved with the
 ## wall filled in behind it. Always reads the untouched art/reference/bg_<name>_still.webp, so reruns match.
 ## Run: godot --headless --path . -s tools/cut_chains.gd
 
-const PX := 2  # image px per pxl pixel on these paintings
+const PX := 2  # image px per pxl pixel on the painting
 const SWING := 2 * PX  # how far the bottom row moves either way, in image px
 ## Per backdrop: the outline (image px, traced off zooms) of each free-hanging chain, and the point it hangs
 ## from; only rows below it sway. Outlines are plain Arrays: a PackedVector2Array can't be a constant.
 const CHAINS := {
-	"menu": [
-		# The pair on the left wall, hanging from the bar under the dead tree.
-		{"outline": [Vector2(219, 209), Vector2(232, 209), Vector2(232, 358), Vector2(235, 362),
-			Vector2(235, 381), Vector2(214, 381), Vector2(214, 365), Vector2(219, 362)], "top": Vector2(226, 209)},
-		{"outline": [Vector2(246, 207), Vector2(258, 207), Vector2(258, 388), Vector2(246, 388)],
-			"top": Vector2(252, 207)},
-		# Under the pillar cap right of the right torch.
-		{"outline": [Vector2(775, 199), Vector2(789, 199), Vector2(789, 341), Vector2(775, 341)],
-			"top": Vector2(782, 199)},
-	],
 	"fight": [
 		# Left: below where the swag of chain meets it.
 		{"outline": [Vector2(111, 106), Vector2(126, 106), Vector2(126, 181), Vector2(130, 183),
