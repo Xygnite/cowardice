@@ -4,3 +4,6 @@
 # Local Godot editor binaries
 Godot_*.exe
 .superpowers/
+
+# Exported builds
+build/
