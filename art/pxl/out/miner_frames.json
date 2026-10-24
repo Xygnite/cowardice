@@ -4,314 +4,314 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 500
   },
   "miner_idle_1": {
    "frame": {
-    "x": 96,
+    "x": 103,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 300
   },
   "miner_idle_2": {
    "frame": {
-    "x": 192,
+    "x": 206,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 500
   },
   "miner_idle_3": {
    "frame": {
-    "x": 288,
+    "x": 309,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 300
   },
   "miner_attack_0": {
    "frame": {
-    "x": 384,
+    "x": 412,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 80
   },
   "miner_attack_1": {
    "frame": {
-    "x": 480,
+    "x": 515,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 80
   },
   "miner_attack_2": {
    "frame": {
-    "x": 576,
+    "x": 618,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 40
   },
   "miner_attack_3": {
    "frame": {
-    "x": 672,
+    "x": 721,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 100
   },
   "miner_attack_4": {
    "frame": {
-    "x": 768,
+    "x": 824,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 100
   },
   "miner_attack_5": {
    "frame": {
-    "x": 864,
+    "x": 927,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 100
   },
   "miner_attack_6": {
    "frame": {
-    "x": 960,
+    "x": 1030,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 60
   },
   "miner_hurt_0": {
    "frame": {
-    "x": 1056,
+    "x": 1133,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 70
   },
   "miner_hurt_1": {
    "frame": {
-    "x": 1152,
+    "x": 1236,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 130
   },
   "miner_hurt_2": {
    "frame": {
-    "x": 1248,
+    "x": 1339,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 100
   },
   "miner_hurt_3": {
    "frame": {
-    "x": 1344,
+    "x": 1442,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 100
   }
@@ -321,8 +321,8 @@
   "image": "miner_frames.png",
   "format": "RGBA8888",
   "size": {
-   "w": 1440,
-   "h": 102
+   "w": 1545,
+   "h": 117
   },
   "scale": "1",
   "frameTags": [

@@ -4,83 +4,83 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 70
   },
   "pit_king_hurt_1": {
    "frame": {
-    "x": 178,
+    "x": 136,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 130
   },
   "pit_king_hurt_2": {
    "frame": {
-    "x": 356,
+    "x": 272,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   },
   "pit_king_hurt_3": {
    "frame": {
-    "x": 534,
+    "x": 408,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   }
@@ -90,8 +90,8 @@
   "image": "pit_king_hurt.png",
   "format": "RGBA8888",
   "size": {
-   "w": 712,
-   "h": 178
+   "w": 544,
+   "h": 130
   },
   "scale": "1",
   "frameTags": [

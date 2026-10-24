@@ -4,83 +4,83 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 70
   },
   "crawler_hurt_1": {
    "frame": {
-    "x": 72,
+    "x": 68,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 130
   },
   "crawler_hurt_2": {
    "frame": {
-    "x": 144,
+    "x": 136,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 100
   },
   "crawler_hurt_3": {
    "frame": {
-    "x": 216,
+    "x": 204,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 100
   }
@@ -90,8 +90,8 @@
   "image": "crawler_hurt.png",
   "format": "RGBA8888",
   "size": {
-   "w": 288,
-   "h": 54
+   "w": 272,
+   "h": 45
   },
   "scale": "1",
   "frameTags": [

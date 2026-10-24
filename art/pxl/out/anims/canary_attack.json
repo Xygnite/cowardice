@@ -4,146 +4,146 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 80
   },
   "canary_attack_1": {
    "frame": {
-    "x": 54,
+    "x": 61,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 80
   },
   "canary_attack_2": {
    "frame": {
-    "x": 108,
+    "x": 122,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 40
   },
   "canary_attack_3": {
    "frame": {
-    "x": 162,
+    "x": 183,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 100
   },
   "canary_attack_4": {
    "frame": {
-    "x": 216,
+    "x": 244,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 100
   },
   "canary_attack_5": {
    "frame": {
-    "x": 270,
+    "x": 305,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 100
   },
   "canary_attack_6": {
    "frame": {
-    "x": 324,
+    "x": 366,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "sourceSize": {
-    "w": 54,
-    "h": 60
+    "w": 61,
+    "h": 61
    },
    "duration": 60
   }
@@ -153,8 +153,8 @@
   "image": "canary_attack.png",
   "format": "RGBA8888",
   "size": {
-   "w": 378,
-   "h": 60
+   "w": 427,
+   "h": 61
   },
   "scale": "1",
   "frameTags": [

@@ -4,83 +4,83 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 500
   },
   "miner_idle_1": {
    "frame": {
-    "x": 96,
+    "x": 103,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 300
   },
   "miner_idle_2": {
    "frame": {
-    "x": 192,
+    "x": 206,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 500
   },
   "miner_idle_3": {
    "frame": {
-    "x": 288,
+    "x": 309,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "sourceSize": {
-    "w": 96,
-    "h": 102
+    "w": 103,
+    "h": 117
    },
    "duration": 300
   }
@@ -90,8 +90,8 @@
   "image": "miner_idle.png",
   "format": "RGBA8888",
   "size": {
-   "w": 384,
-   "h": 102
+   "w": 412,
+   "h": 117
   },
   "scale": "1",
   "frameTags": [

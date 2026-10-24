@@ -5,9 +5,9 @@ include("lib.px.js")
 
 // The coat at the waist, painted under the saw, so the cut took it.
 RIG.under = [27, 46, `
-..........a9275
-...kpq99a9275aaa
-k55kpq99a9a2275aa6`]
+..........bfh76
+...ntpffbfh76bbb
+n66ntpffbfbhh76bb7`]
 standard("plague_doctor", {
   // Breathing with the chest or trailing the skirt opens 1 px gaps where they were cut out; bob and swing instead.
   idle: [[500, {}], [300, { t: [0, 1], l: 1 }], [500, { t: [0, 1], g: "dim" }], [300, { l: -1 }]],

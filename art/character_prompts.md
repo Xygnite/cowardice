@@ -140,6 +140,66 @@ Draw a new sprite in the agreed style: a cracked bronze funeral bell hanging by 
 Pose for animation: facing LEFT (the gallows arm reaches out to the left); the bell hangs straight down below the crossbeam with clear empty space around it so it can swing; the skeletal-hand clapper hangs just out of the bell mouth; the chain is short and straight.
 ```
 
+### The Hollow Mine (redraws of the code-drawn cast)
+
+The Mine cast was drawn in code (`art/pxl/mine_cast.px.js`) and looks flat beside the Chapel. Redraw
+each one in the Chapel style: attach `art/reference/plague_doctor.webp` (style anchor), then the
+current sprite `assets/sprites/<name>.png` (design anchor; it is tiny, so scale it up 8x nearest-neighbour
+before attaching). Paste the style block, then the prompt. Save as `art/reference/<name>.png`, then add a
+cell entry to `SPRITES` in `tools/make_sprites.gd` and re-rig (see the rigging-pixel-sprites skill).
+
+Floor mood for all of them: a dead, flooded mine. Cold wet slate, rusted iron, rotten timber, pale ore
+crystal; the only warm light is lamp fire (orange eyes, lanterns, glowing seams).
+
+#### Lantern-Eye Miner
+
+```
+Redraw the character in the SECOND attached image as a new sprite in the agreed style: a dead miner, gaunt grey-blue skin pulled tight over a skull face, two glowing orange lamp-fire eyes, a cracked rust-brown hard hat with a dead brass headlamp, a torn work shirt with leather suspenders and ribs showing through the rip, a rope belt, heavy muddy boots. He drags a rusty pickaxe. About 48 art-pixels tall.
+Pose for animation: facing LEFT; the pickaxe arm on the back (right) side, hanging down and away from the body, the pick head near his back foot, the haft not crossing the torso; the near arm hanging forward with a bony claw hand, clear of the chest; the helmeted skull clearly on the shoulders with a visible neck; feet apart; the shirt hem ending in 2-3 loose torn strips.
+```
+
+#### Tunnel Crawler
+
+```
+Redraw the creature in the SECOND attached image as a new sprite in the agreed style: a pale blind cave grub the size of a dog, five fat segments of dirty bone-white skin with dark wet creases between them, a few short stubby legs underneath, its tail curling up at the back. The head is eyeless and smooth, the mouth a dark round hole ringed with four hooked mandibles, a faint orange glow deep in its throat. About 22 art-pixels tall and 40 long.
+Pose for animation: facing LEFT, side view, low to the ground; the head at the front (left), clearly separate from the first segment by a dark crease, mandibles open; all the stubby legs on one baseline; the tail curl clear of the body.
+```
+
+#### Rubble Hulk
+
+```
+Redraw the creature in the SECOND attached image as a new sprite in the agreed style: a golem of loose mine stone and slag holding itself together, flat slabs of dark wet slate stacked into broad shoulders, damp moss on the top edges, rusted mine-cart iron and a snapped rail bolted through its chest, orange ember light glowing in every gap between the stones. A squat slab head sunk between the shoulders with a single glowing seam for eyes. About 54 art-pixels tall.
+Pose for animation: facing LEFT; the near arm on the front (left) side is long and ends in a huge block fist, hanging down clear of the chest; the far arm hangs behind; the slab head clearly separate on the shoulders; two short pillar legs apart, both flat on one baseline.
+```
+
+#### Rubble (the Hulk's collapse)
+
+```
+Draw a new sprite in the agreed style, the same stone, moss and ember light as the Rubble Hulk you just drew: what is left after it collapses, a low heap of five or six slate slabs still trying to stand, two orange ember eyes peering out of a crack near the top, orange light leaking from the gaps, a few rusty iron bolts sticking out. One loose stone at the front (left) is raised like a fist. About 24 art-pixels tall and 30 wide.
+Pose for animation: facing LEFT; the loose fist-stone at the front edge, clearly separate from the heap with its own outline; the heap flat on one baseline, no legs.
+```
+
+#### Canary Wraith
+
+```
+Redraw the creature in the SECOND attached image as a new sprite in the agreed style: the mine's dead canary come back as a cold spectral bird the size of a cat, translucent-looking slate-teal feathers with a little faded canary yellow left on its crest and breast, the eye an empty black hole with an orange spark, beak open in a silent scream, a tiny rusted leg ring. Its tail frays into three thin wisps of grey mist. About 38 art-pixels tall.
+Pose for animation: facing LEFT, hovering with no ground contact; the near wing half raised on the back side, clearly separate from the body with its own outline; the head clearly separate above the body; the three mist wisps hanging behind and below as loose strips.
+```
+
+#### Shaft Foreman
+
+```
+Redraw the character in the SECOND attached image as a new sprite in the agreed style: a gaunt dead overseer, long grey-blue face with sunken cheeks and pale pinpoint eyes, grey side-whiskers, a dented black bowler hat, a long black frock coat gone green at the seams over a rust-brown waistcoat with a brass watch chain, a stiff yellowed collar. He holds an open leather ledger in the near hand and a coiled leather whip in the far hand. About 60 art-pixels tall.
+Pose for animation: facing LEFT; the ledger held out in front on the near (left) side, clear of the coat; the whip arm on the back (right) side, hanging down and away from the body with the coiled lash below the hand, the lash tail on the ground; the head clearly on the shoulders with a visible collar; feet apart; the coat tails ending in 2 loose strips.
+```
+
+#### The Pit King (boss)
+
+```
+Redraw the creature in the SECOND attached image as a new sprite in the agreed style: a towering mound of dead miners fused with ore and stone. A hunched body of grey stone and grey-blue flesh rises from a heap of earth and rubble; buried miners break out of it, hard hats, skulls with orange ember eyes, reaching hands; pale ore crystals and rusty iron seams run through it. A great skull of many skulls for a head, lantern-orange eyes, the jaw hanging open, crowned with a rusted band of pick heads. One thick arm made of many arms knotted together reaches down to a claw on the ground; the other drags a huge rusted pickaxe. About 92 art-pixels tall; he is the boss and the biggest figure.
+Pose for animation: facing LEFT; the claw arm on the front (left) side, reaching down clear of the mound; the great pickaxe arm on the back (right) side, hanging down and away from the body, the pick head on the ground; the crowned skull clearly on the shoulders; the mound flat on one baseline. No ground shadow.
+```
+
 ### Plague Doctor
 
 The Plague Doctor already matches the style, so it only needs the layer edits. Use

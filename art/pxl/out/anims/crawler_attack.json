@@ -4,146 +4,146 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 80
   },
   "crawler_attack_1": {
    "frame": {
-    "x": 72,
+    "x": 68,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 80
   },
   "crawler_attack_2": {
    "frame": {
-    "x": 144,
+    "x": 136,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 40
   },
   "crawler_attack_3": {
    "frame": {
-    "x": 216,
+    "x": 204,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 100
   },
   "crawler_attack_4": {
    "frame": {
-    "x": 288,
+    "x": 272,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 100
   },
   "crawler_attack_5": {
    "frame": {
-    "x": 360,
+    "x": 340,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 100
   },
   "crawler_attack_6": {
    "frame": {
-    "x": 432,
+    "x": 408,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "sourceSize": {
-    "w": 72,
-    "h": 54
+    "w": 68,
+    "h": 45
    },
    "duration": 60
   }
@@ -153,8 +153,8 @@
   "image": "crawler_attack.png",
   "format": "RGBA8888",
   "size": {
-   "w": 504,
-   "h": 54
+   "w": 476,
+   "h": 45
   },
   "scale": "1",
   "frameTags": [

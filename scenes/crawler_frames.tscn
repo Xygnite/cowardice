@@ -80,7 +80,7 @@ _data = {
 [node name="Frames" type="Sprite2D" parent="."]
 texture = ExtResource("frames")
 centered = false
-offset = Vector2(-13, -13)
+offset = Vector2(-9, -9)
 hframes = 15
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]

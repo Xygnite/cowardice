@@ -131,50 +131,51 @@ const RIGS := {
 	"grave_bell": {"facing": -1, "body": Vector2(34, 55), "legs_top": 59,
 		"weapon": {"pivot": Vector2(14, 8), "swing": [-0.5, 0.45],
 			"outline": [Vector2(10, 9), Vector2(18, 9), Vector2(18, 17), Vector2(26, 17), Vector2(26, 42), Vector2(1, 42), Vector2(1, 17), Vector2(10, 17)]}},
-	# The Hollow Mine (drawn in art/pxl/mine_cast.px.js).
+	# The Hollow Mine (art/reference/<name>.webp; Rubble is drawn in art/pxl/mine_cast.px.js).
 	# The far arm and its pick from the shoulder: back behind him, then over the top toward the hero.
-	"miner": {"facing": -1, "body": Vector2(23, 38), "legs_top": 38,
-		"weapon": {"pivot": Vector2(31, 20), "swing": [-2.6, -4.9],
-			"outline": [Vector2(30, 19), Vector2(34, 19), Vector2(37, 27), Vector2(37, 31), Vector2(40, 40), Vector2(46, 41), Vector2(46, 51), Vector2(31, 51), Vector2(32, 46), Vector2(36, 43), Vector2(35, 36), Vector2(33, 32), Vector2(32, 26), Vector2(31, 22)]},
-		"head": {"pivot": Vector2(22, 17),
-			"outline": [Vector2(11, 3), Vector2(32, 3), Vector2(32, 16), Vector2(27, 18), Vector2(17, 18), Vector2(11, 13)]}},
+	"miner": {"facing": -1, "body": Vector2(14, 34), "legs_top": 35,
+		"weapon": {"pivot": Vector2(19, 14), "swing": [-2.6, -4.9],
+			"outline": [Vector2(17, 12), Vector2(22, 12), Vector2(25, 20), Vector2(25, 33), Vector2(30, 35), Vector2(38, 34), Vector2(38, 50), Vector2(26, 50), Vector2(23, 45), Vector2(26, 42), Vector2(22, 37), Vector2(19, 34), Vector2(18, 25)]},
+		"head": {"pivot": Vector2(9, 15),
+			"outline": [Vector2(1, 1), Vector2(16, 1), Vector2(16, 10), Vector2(13, 16), Vector2(4, 16), Vector2(1, 10)]}},
 	# The eyeless head bites: snout tipped up, then snapped down.
-	"crawler": {"facing": -1, "body": Vector2(25, 21), "legs_top": 22,
-		"weapon": {"pivot": Vector2(16, 17), "swing": [0.5, -0.3],
-			"outline": [Vector2(1, 9), Vector2(17, 9), Vector2(17, 25), Vector2(1, 25)]}},
+	"crawler": {"facing": -1, "body": Vector2(28, 20), "legs_top": 22,
+		"weapon": {"pivot": Vector2(13, 13), "swing": [0.5, -0.3],
+			"outline": [Vector2(1, 3), Vector2(13, 3), Vector2(13, 22), Vector2(1, 22)]}},
 	# The loose front stone is shoved up and brought down like a fist; the heap has no legs.
 	"rubble": {"facing": -1, "body": Vector2(18, 26), "legs_top": 30,
 		"weapon": {"pivot": Vector2(11, 16), "swing": [0.6, -0.3],
 			"outline": [Vector2(1, 11), Vector2(11, 11), Vector2(12, 16), Vector2(11, 21), Vector2(1, 21)]}},
-	# The near arm and its block fist from the shoulder: hoisted up in front, then slammed down.
-	"hulk": {"facing": -1, "body": Vector2(26, 44), "legs_top": 44,
-		"weapon": {"pivot": Vector2(12, 17), "swing": [1.9, 0.35], "patch": [Color("2a303a"), 43],
-			"outline": [Vector2(4, 12), Vector2(19, 12), Vector2(19, 23), Vector2(15, 25), Vector2(17, 33), Vector2(17, 47), Vector2(2, 47), Vector2(2, 33), Vector2(5, 24), Vector2(4, 20)]},
-		"head": {"pivot": Vector2(24, 17),
-			"outline": [Vector2(17, 5), Vector2(32, 5), Vector2(32, 17), Vector2(17, 17)]}},
-	# The beaked head pecks; the misty tail ends trail behind, and the whole bird floats (no legs).
-	"canary": {"facing": -1, "body": Vector2(20, 28), "legs_top": 44,
-		"weapon": {"pivot": Vector2(16, 17), "swing": [0.5, -0.35],
-			"outline": [Vector2(1, 4), Vector2(19, 4), Vector2(20, 13), Vector2(17, 18), Vector2(10, 20), Vector2(1, 16)]},
+	# The far arm and its block fist from the shoulder: back behind it, then over the top and slammed down in front.
+	"hulk": {"facing": -1, "body": Vector2(29, 36), "legs_top": 37,
+		"weapon": {"pivot": Vector2(53, 20), "swing": [-2.6, -4.9], "patch": [Color("242933"), 40],
+			"outline": [Vector2(61, 18), Vector2(48, 18), Vector2(48, 40), Vector2(44, 42), Vector2(44, 54), Vector2(61, 54)]},
+		"head": {"pivot": Vector2(25, 15),
+			"outline": [Vector2(32, 1), Vector2(17, 1), Vector2(17, 15), Vector2(32, 15)]}},
+	# The beaked head pecks; the misty tail ends trail behind. It perches, so its feet stay put.
+	"canary": {"facing": -1, "body": Vector2(20, 26), "legs_top": 31,
+		"weapon": {"pivot": Vector2(13, 14), "swing": [0.5, -0.35],
+			"outline": [Vector2(1, 1), Vector2(18, 1), Vector2(18, 12), Vector2(14, 15), Vector2(5, 15), Vector2(1, 13)]},
 		"skirt": [
-			[Vector2(19, 29), Vector2(27, 29), Vector2(27, 37), Vector2(19, 37)],
-			[Vector2(27, 30), Vector2(37, 30), Vector2(37, 42), Vector2(27, 42)]]},
+			[Vector2(29, 30), Vector2(35, 30), Vector2(35, 40), Vector2(29, 40)],
+			[Vector2(35, 30), Vector2(42, 30), Vector2(42, 42), Vector2(35, 42)]]},
 	# The far arm and its coiled whip from the shoulder: back over his head, then lashed out toward the hero.
-	# The ledger is his shield.
-	"shaft_foreman": {"facing": -1, "body": Vector2(25, 52), "legs_top": 52,
-		"weapon": {"pivot": Vector2(36, 24), "swing": [-2.6, -4.9],
-			"outline": [Vector2(36, 21), Vector2(40, 21), Vector2(43, 30), Vector2(42, 37), Vector2(49, 40), Vector2(50, 50), Vector2(50, 63), Vector2(38, 63), Vector2(38, 52), Vector2(37, 40), Vector2(37, 30)]},
-		"shield": {"pivot": Vector2(12, 35),
-			"outline": [Vector2(3, 26), Vector2(18, 26), Vector2(18, 41), Vector2(3, 41)]},
-		"head": {"pivot": Vector2(24, 21),
-			"outline": [Vector2(14, 3), Vector2(33, 3), Vector2(33, 14), Vector2(29, 21), Vector2(17, 21), Vector2(14, 14)]}},
-	# The far arm and the great pick from the shoulder: back behind him, then over the top toward the hero.
-	# The mound of buried miners stays put; the hunched body above it moves.
-	"pit_king": {"facing": -1, "body": Vector2(44, 64), "legs_top": 64,
-		"weapon": {"pivot": Vector2(66, 33), "swing": [-2.3, -5.0],
-			"outline": [Vector2(60, 26), Vector2(76, 26), Vector2(80, 36), Vector2(88, 52), Vector2(92, 70), Vector2(98, 70), Vector2(98, 94), Vector2(77, 94), Vector2(77, 86), Vector2(84, 82), Vector2(80, 62), Vector2(76, 60), Vector2(76, 52), Vector2(70, 48), Vector2(63, 42), Vector2(59, 34)]},
-		"head": {"pivot": Vector2(43, 34),
-			"outline": [Vector2(29, 2), Vector2(56, 2), Vector2(56, 26), Vector2(52, 35), Vector2(32, 35), Vector2(29, 26)]}},
+	# The ledger is his shield; the torn ribbons at his side trail.
+	"shaft_foreman": {"facing": -1, "body": Vector2(27, 44), "legs_top": 50,
+		"weapon": {"pivot": Vector2(35, 16), "swing": [-2.6, -4.9],
+			"outline": [Vector2(33, 14), Vector2(40, 14), Vector2(41, 30), Vector2(45, 31), Vector2(46, 45), Vector2(52, 55), Vector2(52, 62), Vector2(41, 62), Vector2(43, 50), Vector2(38, 44), Vector2(34, 38), Vector2(33, 28)]},
+		"shield": {"pivot": Vector2(11, 21),
+			"outline": [Vector2(1, 12), Vector2(15, 12), Vector2(15, 21), Vector2(21, 21), Vector2(21, 27), Vector2(1, 27)]},
+		"head": {"pivot": Vector2(26, 14),
+			"outline": [Vector2(19, 0), Vector2(33, 0), Vector2(33, 13), Vector2(29, 15), Vector2(22, 15), Vector2(19, 13)]},
+		"skirt": [[Vector2(10, 33), Vector2(19, 33), Vector2(19, 51), Vector2(10, 51)]]},
+	# The claw arm from the shoulder: hoisted up in front, then raked down. The great pick lies across the
+	# mound, so it stays with the body; the mound of buried miners stays put and the hunched body moves.
+	"pit_king": {"facing": -1, "body": Vector2(50, 64), "legs_top": 64,
+		"weapon": {"pivot": Vector2(27, 42), "swing": [1.0, -0.2],
+			"outline": [Vector2(1, 38), Vector2(30, 38), Vector2(30, 48), Vector2(22, 56), Vector2(22, 72), Vector2(1, 72)]},
+		"head": {"pivot": Vector2(30, 38),
+			"outline": [Vector2(12, 1), Vector2(46, 1), Vector2(46, 22), Vector2(36, 38), Vector2(20, 38), Vector2(12, 30)]}},
 }
 
 

@@ -4,83 +4,83 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "sourceSize": {
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "duration": 70
   },
   "shaft_foreman_hurt_1": {
    "frame": {
-    "x": 118,
+    "x": 135,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "sourceSize": {
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "duration": 130
   },
   "shaft_foreman_hurt_2": {
    "frame": {
-    "x": 236,
+    "x": 270,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "sourceSize": {
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "duration": 100
   },
   "shaft_foreman_hurt_3": {
    "frame": {
-    "x": 354,
+    "x": 405,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "sourceSize": {
-    "w": 118,
-    "h": 132
+    "w": 135,
+    "h": 145
    },
    "duration": 100
   }
@@ -90,8 +90,8 @@
   "image": "shaft_foreman_hurt.png",
   "format": "RGBA8888",
   "size": {
-   "w": 472,
-   "h": 132
+   "w": 540,
+   "h": 145
   },
   "scale": "1",
   "frameTags": [

@@ -6,7 +6,7 @@
 const REF := "res://art/reference/"
 const OUT := "res://assets/sprites/"
 const PALETTE_PATH := "res://assets/palette.png"
-const PALETTE_SIZE := 40  # 32 left no straw yellow or bronze once the dummy and the bell joined
+const PALETTE_SIZE := 48  # 40 lost the Canary Wraith's yellow once the Hollow Mine cast joined
 const BG_TOLERANCE := 0.14  # how close to the background colour a pixel must be to be cut out
 const MAGENTA_TINT := 0.08  # on a magenta background, a pixel whose red and blue beat its green by this is background
 const POCKET_TOLERANCE := 0.04  # --pockets: the flat background itself, not dark parts of the figure near it
@@ -50,6 +50,13 @@ const SPRITES := [
 	{"src": "acolyte.webp", "out": "acolyte", "cell": 5.12, "shrink": 3, "pad": 2},
 	# Drawn without a real pixel grid (measure_cells finds none), so it is shrunk like a painting.
 	{"src": "grave_bell.png", "out": "grave_bell", "h": 56, "pad": 2},
+	# The Hollow Mine, redrawn in the Chapel's style (art/character_prompts.md). Rubble is drawn in pxl (art/pxl/mine_cast.px.js).
+	{"src": "miner.webp", "out": "miner", "cell": 10.24, "shrink": 1.75, "flip": true, "pad": 2},  # he stands 85 px at his own grid
+	{"src": "crawler.webp", "out": "crawler", "h": 24, "pad": 2},  # its grid is too loose to read back cell by cell
+	{"src": "hulk.webp", "out": "hulk", "cell": 10.24, "shrink": 1.5, "crop": [0.0, 0.0, 1.0, 0.91], "flip": true, "pad": 2},  # cut off the ground line under its feet
+	{"src": "canary.webp", "out": "canary", "cell": 10.24, "shrink": 2, "pad": 2},
+	{"src": "shaft_foreman.webp", "out": "shaft_foreman", "h": 60, "pad": 2},  # painted, no pixel grid
+	{"src": "pit_king.webp", "out": "pit_king", "cell": 5.12, "shrink": 2, "pad": 2},
 ]
 
 

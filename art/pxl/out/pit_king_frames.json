@@ -4,314 +4,314 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 500
   },
   "pit_king_idle_1": {
    "frame": {
-    "x": 178,
+    "x": 136,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 300
   },
   "pit_king_idle_2": {
    "frame": {
-    "x": 356,
+    "x": 272,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 500
   },
   "pit_king_idle_3": {
    "frame": {
-    "x": 534,
+    "x": 408,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 300
   },
   "pit_king_attack_0": {
    "frame": {
-    "x": 712,
+    "x": 544,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 80
   },
   "pit_king_attack_1": {
    "frame": {
-    "x": 890,
+    "x": 680,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 80
   },
   "pit_king_attack_2": {
    "frame": {
-    "x": 1068,
+    "x": 816,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 40
   },
   "pit_king_attack_3": {
    "frame": {
-    "x": 1246,
+    "x": 952,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   },
   "pit_king_attack_4": {
    "frame": {
-    "x": 1424,
+    "x": 1088,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   },
   "pit_king_attack_5": {
    "frame": {
-    "x": 1602,
+    "x": 1224,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   },
   "pit_king_attack_6": {
    "frame": {
-    "x": 1780,
+    "x": 1360,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 60
   },
   "pit_king_hurt_0": {
    "frame": {
-    "x": 1958,
+    "x": 1496,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 70
   },
   "pit_king_hurt_1": {
    "frame": {
-    "x": 2136,
+    "x": 1632,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 130
   },
   "pit_king_hurt_2": {
    "frame": {
-    "x": 2314,
+    "x": 1768,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   },
   "pit_king_hurt_3": {
    "frame": {
-    "x": 2492,
+    "x": 1904,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "sourceSize": {
-    "w": 178,
-    "h": 178
+    "w": 136,
+    "h": 130
    },
    "duration": 100
   }
@@ -321,8 +321,8 @@
   "image": "pit_king_frames.png",
   "format": "RGBA8888",
   "size": {
-   "w": 2670,
-   "h": 178
+   "w": 2040,
+   "h": 130
   },
   "scale": "1",
   "frameTags": [

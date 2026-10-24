@@ -42,7 +42,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 1,
-"values": [Vector2(26, 44)]
+"values": [Vector2(29, 36)]
 }
 tracks/3/type = "value"
 tracks/3/imported = false
@@ -83,7 +83,7 @@ tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.8),
 "transitions": PackedFloat32Array(1, 1),
 "update": 1,
-"values": [Vector2(26, 44), Vector2(26, 45)]
+"values": [Vector2(29, 36), Vector2(29, 37)]
 }
 
 [sub_resource type="Animation" id="Animation_attack"]
@@ -111,7 +111,7 @@ tracks/1/keys = {
 "times": PackedFloat32Array(0, 0.15, 0.25, 0.5),
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
-"values": [Vector2(26, 44), Vector2(27, 44), Vector2(25, 45), Vector2(26, 44)]
+"values": [Vector2(29, 36), Vector2(30, 36), Vector2(28, 37), Vector2(29, 36)]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -123,7 +123,7 @@ tracks/2/keys = {
 "times": PackedFloat32Array(0, 0.15, 0.25, 0.5),
 "transitions": PackedFloat32Array(0.5, 1, 2, 1),
 "update": 0,
-"values": [0.0, 1.9, 0.35, 0.0]
+"values": [0.0, -2.6, -4.9, -6.283185307179586]
 }
 
 [sub_resource type="Animation" id="Animation_hurt"]
@@ -183,22 +183,22 @@ texture = ExtResource("legs")
 centered = false
 
 [node name="Body" type="Sprite2D" parent="Rig"]
-position = Vector2(26, 44)
+position = Vector2(29, 36)
 texture = ExtResource("body")
 centered = false
-offset = Vector2(-26, -44)
+offset = Vector2(-29, -36)
 
 [node name="Weapon" type="Sprite2D" parent="Rig/Body"]
-position = Vector2(-14, -27)
+position = Vector2(24, -16)
 texture = ExtResource("weapon")
 centered = false
-offset = Vector2(-12, -17)
+offset = Vector2(-53, -20)
 
 [node name="Head" type="Sprite2D" parent="Rig/Body"]
-position = Vector2(-2, -27)
+position = Vector2(-4, -21)
 texture = ExtResource("head")
 centered = false
-offset = Vector2(-24, -17)
+offset = Vector2(-25, -15)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

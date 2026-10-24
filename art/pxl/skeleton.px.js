@@ -7,12 +7,12 @@ include("lib.px.js")
 
 // The back thigh, hip (26, 32) to knee (31, 38): the blade was painted over it, so the cut took it.
 RIG.under = [26, 32, `
-0670
-.0670
-.067a0
-..0670
-..037a0
-...0670`]
+0450
+.0450
+.04590
+..0450
+..02590
+...0450`]
 // The shield's bottom rim fell just outside the rig outline (the body keeps a copy of the top leg rows).
 claim("shield", "legs", [7, 34, 12, 35])
 claim("shield", "body", [7, 34, 12, 35])
