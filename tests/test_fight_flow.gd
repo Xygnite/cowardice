@@ -217,8 +217,12 @@ func _mine_start() -> void:
 	game._show_camp()
 	await process_frame
 	var buttons: Array = game.screen.find_children("*", "Button", true, false)
-	buttons.filter(func(b): return b.text == "Hollow Mine")[0].pressed.emit()
 	buttons.filter(func(b): return b.text == "Start run")[0].pressed.emit()
+	await process_frame
+	var pick: Array = game.screen.find_children("*", "FloorPanel", true, false)
+	check(pick.size() == 1, "Start run opens the floor window once the Mine is unlocked")
+	var floors: Array = pick[0].find_children("*", "Button", true, false)
+	floors.filter(func(b): return b.text == "The Hollow Mine")[0].pressed.emit()
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
 	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")

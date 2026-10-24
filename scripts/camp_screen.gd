@@ -9,7 +9,6 @@ var meta: Meta
 var embers_label: Label
 var loadout_label: Label
 var cards := {}  # perk id -> {state: Label, button: Button}
-var floor_id := "chapel"  # where Start run begins
 
 
 func _ready() -> void:
@@ -52,18 +51,20 @@ func _ready() -> void:
 	var bottom := UI.row(root)
 	UI.button(bottom, "Main menu", main_menu.emit).custom_minimum_size = Vector2(200, 48)
 	UI.button(bottom, "Settings", SettingsPanel.open.bind(self, meta)).custom_minimum_size = Vector2(200, 48)
-	if meta.mine_unlocked:
-		var floors := ButtonGroup.new()
-		for f in [["chapel", "Sunken Chapel"], ["mine", "Hollow Mine"]]:
-			var b := UI.button(bottom, f[1], func() -> void: floor_id = f[0])
-			b.custom_minimum_size = Vector2(200, 48)
-			b.toggle_mode = true
-			b.button_group = floors
-			b.button_pressed = f[0] == floor_id
-	var start := UI.button(bottom, "Start run", func() -> void: start_run.emit(floor_id))
+	var start := UI.button(bottom, "Start run", _on_start)
 	start.custom_minimum_size = Vector2(240, 48)
 	start.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_refresh()
+
+
+## Straight into the Chapel until the Mine is unlocked; after that, a window to choose the floor.
+func _on_start() -> void:
+	if not meta.mine_unlocked:
+		start_run.emit("chapel")
+		return
+	var pick := FloorPanel.new()
+	pick.chosen.connect(start_run.emit)
+	add_child(pick)
 
 
 func _on_card(id: String) -> void:
