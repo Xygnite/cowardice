@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "crawler_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "sourceSize": {
+    "w": 72,
+    "h": 54
+   },
+   "duration": 70
+  },
+  "crawler_hurt_1": {
+   "frame": {
+    "x": 72,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "sourceSize": {
+    "w": 72,
+    "h": 54
+   },
+   "duration": 130
+  },
+  "crawler_hurt_2": {
+   "frame": {
+    "x": 144,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "sourceSize": {
+    "w": 72,
+    "h": 54
+   },
+   "duration": 100
+  },
+  "crawler_hurt_3": {
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 72,
+    "h": 54
+   },
+   "sourceSize": {
+    "w": 72,
+    "h": 54
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "crawler_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 288,
+   "h": 54
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "crawler_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

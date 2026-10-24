@@ -1,0 +1,349 @@
+{
+ "frames": {
+  "pit_king_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 500
+  },
+  "pit_king_idle_1": {
+   "frame": {
+    "x": 178,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 300
+  },
+  "pit_king_idle_2": {
+   "frame": {
+    "x": 356,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 500
+  },
+  "pit_king_idle_3": {
+   "frame": {
+    "x": 534,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 300
+  },
+  "pit_king_attack_0": {
+   "frame": {
+    "x": 712,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 80
+  },
+  "pit_king_attack_1": {
+   "frame": {
+    "x": 890,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 80
+  },
+  "pit_king_attack_2": {
+   "frame": {
+    "x": 1068,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 40
+  },
+  "pit_king_attack_3": {
+   "frame": {
+    "x": 1246,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_attack_4": {
+   "frame": {
+    "x": 1424,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_attack_5": {
+   "frame": {
+    "x": 1602,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_attack_6": {
+   "frame": {
+    "x": 1780,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 60
+  },
+  "pit_king_hurt_0": {
+   "frame": {
+    "x": 1958,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 70
+  },
+  "pit_king_hurt_1": {
+   "frame": {
+    "x": 2136,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 130
+  },
+  "pit_king_hurt_2": {
+   "frame": {
+    "x": 2314,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  },
+  "pit_king_hurt_3": {
+   "frame": {
+    "x": 2492,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 178,
+    "h": 178
+   },
+   "sourceSize": {
+    "w": 178,
+    "h": 178
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "pit_king_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2670,
+   "h": 178
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "pit_king_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "pit_king_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "pit_king_hurt",
+    "from": 11,
+    "to": 14,
+    "direction": "forward"
+   }
+  ]
+ }
+}

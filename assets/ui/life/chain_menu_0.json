@@ -1,1 +1,127 @@
-{"frames":{"chain_menu_0_0":{"frame":{"x":0,"y":0,"w":29,"h":172},"duration":100},"chain_menu_0_1":{"frame":{"x":29,"y":0,"w":29,"h":172},"duration":100},"chain_menu_0_2":{"frame":{"x":58,"y":0,"w":29,"h":172},"duration":100},"chain_menu_0_3":{"frame":{"x":87,"y":0,"w":29,"h":172},"duration":100},"chain_menu_0_4":{"frame":{"x":116,"y":0,"w":29,"h":172},"duration":100}}}
+{
+ "frames": {
+  "chain_menu_0_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 244
+   },
+   "duration": 125
+  },
+  "chain_menu_0_1": {
+   "frame": {
+    "x": 20,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 244
+   },
+   "duration": 125
+  },
+  "chain_menu_0_2": {
+   "frame": {
+    "x": 40,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 244
+   },
+   "duration": 125
+  },
+  "chain_menu_0_3": {
+   "frame": {
+    "x": 60,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 244
+   },
+   "duration": 125
+  },
+  "chain_menu_0_4": {
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 244
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 244
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "chain_menu_0.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 100,
+   "h": 244
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "chain_menu_0",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   }
+  ]
+ }
+}

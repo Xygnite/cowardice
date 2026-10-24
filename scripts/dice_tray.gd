@@ -2,12 +2,14 @@ class_name DiceTray
 extends Control
 ## The dice as 3D cubes in a walled tray, seen from above, rendered at low resolution and scaled up so
 ## they stay pixel art. A roll throws them in from the left as rigid bodies: they bounce off the walls
-## and knock into each other (and into locked dice, which stay put). Once a die slows down, a hidden
-## torque tips it onto the face the game rolled and squares it to the screen, then it is pinned there.
+## and knock into each other (and into locked dice, which stay put), clacking on every bump. Whatever
+## face ends up on top is the roll: once a die stops, it is squared to the screen on that face and
+## pinned there (a die left leaning on a wall settles onto the face pointing most upward).
+## A steered throw (the tutorial's pair turn) instead tips each die onto its given value with a hidden torque.
 ## Each side shows one of the die's faces, on the die art from assets/ui/cut/die_<art>.png.
 
 signal die_clicked(i: int)
-signal landed  # once per throw, when its last die is pinned
+signal landed  # once per throw, when its last die is pinned; each die's value is then the face it shows
 
 const PIXEL := 2  # screen pixels per rendered pixel
 const UNIT := 80.0  # screen pixels per cube width, on the tray floor
@@ -19,6 +21,7 @@ const BADGE := Vector3(0.5, 0.5, -0.5)  # where the slot badge is centred on a r
 const BADGE_SIZE := 16  # pixels across the badge disc, at the dice's pixel size
 const CHAIN_WIDTH := 1.0  # cube widths: as wide as the die
 const CHAIN_DROP := 0.2  # cube widths toward the camera's bottom, so the padlock just overlaps the number's foot
+const RUBBLE_SIZE := 40  # pixels across the rubble sprite at the dice's pixel size: one cube width
 const FELT := preload("res://assets/ui/cut/tray_felt.png")  # the tray floor's repeating tile, made by tools/make_ui.gd
 
 const GRAVITY_SCALE := 3.0  # a cube width is a metre to the physics; small dice fall faster than that
@@ -37,6 +40,11 @@ const NUDGE_TIME := 0.1
 const SETTLED_SPEED := 0.4
 const GIVE_UP := 3.0  # seconds; a die still not settled (wedged on a wall, say) is eased into place
 const EASE_TIME := 0.25
+const SLOW_TIME := 0.25  # seconds a die must stay stopped before a crooked one is settled onto its top face
+const CLACK := preload("res://assets/audio/dice_clack.wav")  # cut from dice.wav
+const CLACK_MIN := 1.5  # cube widths per second of speed lost or gained in one step; gentler touches are silent
+const CLACK_LOUD := 12.0  # a jolt this hard plays at full volume
+const CLACK_GAP := 0.08  # seconds; one die clacks no more often, so a die chattering on the floor doesn't buzz
 
 ## Turns that bring each side to face +Z; faces[k] is drawn on side k.
 const SIDES := [
@@ -55,9 +63,11 @@ static var _atlases := {}  # art name -> the die art tiled 3x2, the layout BoxMe
 var camera: Camera3D
 var walls: Array[CollisionShape3D] = []  # left, right, top, bottom; moved to the tray's edges on resize
 ## Per die: body (the RigidBody3D), cube (its mesh), labels, chain, slot (2D badge) with its icon,
-## faces, value, rolling, and t (seconds since thrown).
+## clack (its AudioStreamPlayer), faces, value, rolling, steer, t (seconds since thrown),
+## slow (seconds it has been stopped), last_v (velocity a step ago) and quiet (seconds until it may clack).
 var dice: Array[Dictionary] = []
 var in_flight := false  # a throw has dice still rolling; landed fires when none are
+var torques := 0  # steering pushes so far; tests check a fair throw makes none
 
 
 func _init() -> void:
@@ -161,6 +171,15 @@ func add_die() -> void:
 	chain.rotation = FACE_UP  # lies flat on the top face, reading upright from the camera
 	chain.hide()
 	camera.get_parent().add_child(chain)
+	var rubble := Sprite3D.new()  # heaped on a buried die like the chain
+	rubble.texture = _rubble()
+	rubble.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	rubble.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	rubble.shaded = true
+	rubble.pixel_size = 1.0 / RUBBLE_SIZE
+	rubble.rotation = FACE_UP
+	rubble.hide()
+	camera.get_parent().add_child(rubble)
 	var slot := TextureRect.new()  # the badge disc; its icon sits in the middle
 	slot.texture = _disc()
 	var icon := TextureRect.new()
@@ -170,17 +189,22 @@ func add_die() -> void:
 	slot.add_child(icon)
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(slot)
-	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "slot": slot, "icon": icon,
-		"faces": [], "value": 0, "rolling": false, "t": 0.0})
+	var clack := AudioStreamPlayer.new()  # one per die, so each clack keeps its own volume and pitch
+	clack.stream = CLACK
+	clack.bus = "SFX"
+	add_child(clack)
+	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "rubble": rubble, "slot": slot, "icon": icon,
+		"clack": clack, "faces": [], "value": 0, "rolling": false, "steer": false, "t": 0.0, "slow": 0.0,
+		"last_v": Vector3.ZERO, "quiet": 0.0})
 	for i in dice.size():  # the row stays centred as it grows
 		dice[i].body.position = _spot(i)
 
 
 ## Shows die i's faces in `art` (bone, locked, placed, cursed) with `value` up, and the icon
 ## assets/ui/cut/slot_<slot_icon>.png in its top-right corner, or none if `slot_icon` is empty;
-## a locked die is wrapped in chains.
-## Mid-throw it only repaints; the throw lands on its own value.
-func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool) -> void:
+## a locked die is wrapped in chains, a buried one heaped with rubble.
+## Mid-throw it only repaints; the throw lands on whatever face comes up.
+func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false) -> void:
 	var d := dice[i]
 	d.faces = faces
 	d.value = value
@@ -190,12 +214,14 @@ func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, 
 		d.labels[k].modulate = Color(0.16, 0.13, 0.1) if art == "bone" else Color.WHITE
 	d.icon.texture = load(UI.ART % ("slot_" + slot_icon)) if slot_icon else null
 	d.chain.visible = locked
+	d.rubble.visible = buried
 	if not d.rolling:
-		d.body.quaternion = _rest(d)
+		d.body.quaternion = _rest(d, d.body.quaternion)
 
 
-## Throws the dice at `which` (indices) in from the left; each lands on its current value.
-func throw(which: Array) -> void:
+## Throws the dice at `which` (indices) in from the left. Each lands on whatever face comes up, its
+## value once `landed` fires; with `steer`, each is tipped onto its current value instead.
+func throw(which: Array, steer := false) -> void:
 	if size.x == 0:
 		# The walls need the tray's size, and a new screen resizes it more than once while it lays out:
 		# throwing after the first would spawn dice where the walls then close in and shove them out.
@@ -206,7 +232,9 @@ func throw(which: Array) -> void:
 		var d := dice[which[n]]
 		var body: RigidBody3D = d.body
 		d.rolling = true
+		d.steer = steer
 		d.t = 0.0
+		d.slow = 0.0
 		# Out of the hand in a loose line, so no two start inside each other.
 		var lane := 0.0 if which.size() == 1 else lerpf(-depth, depth, float(n) / (which.size() - 1))
 		body.position = Vector3(-_half_width() + 0.7 + n * 1.1, 1.5, lane)
@@ -215,6 +243,7 @@ func throw(which: Array) -> void:
 		body.linear_velocity = Vector3(randf_range(THROW_SPEED.x, THROW_SPEED.y), randf_range(0, 2), randf_range(-2, 2))
 		body.angular_velocity = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized() * THROW_SPIN
 		body.sleeping = false
+		d.last_v = body.linear_velocity  # the throw itself is no bump
 	in_flight = true
 
 
@@ -224,17 +253,52 @@ func _physics_process(delta: float) -> void:
 			continue
 		var body: RigidBody3D = d.body
 		d.t += delta
+		_clack(d, delta)
+		if not d.steer:
+			d.value = d.faces[_top(d)]  # the roll is whatever is up; _rest then squares the die on it
 		var rest := _rest(d, body.quaternion)
 		var off := _turn_between(body.quaternion, rest)
 		var angle := off.get_angle()
-		if angle < NEARLY_SQUARE and body.linear_velocity.length() < SETTLED_SPEED and body.angular_velocity.length() < SETTLED_SPEED:
-			# Friction can hold a die a few degrees off, where the steering is too weak to finish; nudge it.
+		var stopped := body.linear_velocity.length() < SETTLED_SPEED and body.angular_velocity.length() < SETTLED_SPEED
+		d.slow = d.slow + delta if stopped else 0.0
+		if angle < NEARLY_SQUARE and stopped:
+			# Friction can hold a die a few degrees off, where it would rest crooked; nudge it.
 			_pin(d, 0.0 if angle < SETTLED_ANGLE else NUDGE_TIME)
-		elif d.t > GIVE_UP:
+		elif d.t > GIVE_UP or (not d.steer and d.slow > SLOW_TIME):
 			_pin(d, EASE_TIME)
-		elif body.linear_velocity.length() < STEER_BELOW and angle > 0.001:
+		elif d.steer and body.linear_velocity.length() < STEER_BELOW and angle > 0.001:
 			# Torque toward the rest pose, damped so it does not wobble.
 			body.apply_torque(off.get_axis() * angle * STEER - body.angular_velocity * DAMP)
+			torques += 1
+
+
+## Plays a die's clack when its velocity jumps (it hit the floor, a wall or another die), louder the harder.
+func _clack(d: Dictionary, delta: float) -> void:
+	var v: Vector3 = d.body.linear_velocity
+	var jolt: float = (v - d.last_v).length()
+	d.last_v = v
+	d.quiet -= delta
+	if jolt < CLACK_MIN or d.quiet > 0:
+		return
+	d.quiet = CLACK_GAP
+	d.clack.volume_db = linear_to_db(clampf(jolt / CLACK_LOUD, 0.1, 1.0))
+	d.clack.pitch_scale = randf_range(0.9, 1.12)
+	d.clack.play()
+
+
+## The side of die i facing most upward, as an index into its faces.
+func top_face(i: int) -> int:
+	return _top(dice[i])
+
+
+func _top(d: Dictionary) -> int:
+	var best := 0
+	var basis: Basis = d.body.global_basis
+	for k in SIDES.size():
+		# Side k's outward normal, as the labels are placed: the turn that faces it to +Z, undone.
+		if (basis * (Basis.from_euler(SIDES[k]).inverse() * Vector3.BACK)).y > (basis * (Basis.from_euler(SIDES[best]).inverse() * Vector3.BACK)).y:
+			best = k
+	return best
 
 
 ## Stops a die and sets it exactly in its rest pose where it lies, easing there over `time` seconds.
@@ -242,6 +306,18 @@ func _pin(d: Dictionary, time: float) -> void:
 	var body: RigidBody3D = d.body
 	body.freeze = true
 	var to := Vector3(body.position.x, 0.5, body.position.z)
+	# A die that came to rest on or against another goes down beside it, not into it.
+	# ponytail: one pass, so a push can still end up in a third die or back in via the walls; loop if that shows up.
+	for e in dice:
+		var at: Vector3 = e.body.position
+		# Squared dice are axis-aligned cubes: they overlap while both offsets are under a cube width.
+		if is_same(e, d) or absf(to.x - at.x) >= 1.0 or absf(to.z - at.z) >= 1.0:
+			continue
+		if absf(to.x - at.x) >= absf(to.z - at.z):  # out along whichever axis is the shorter push
+			to.x = at.x + (1.0 if to.x >= at.x else -1.0)
+		else:
+			to.z = at.z + (1.0 if to.z >= at.z else -1.0)
+	to = Vector3(clampf(to.x, -_half_width() + 0.5, _half_width() - 0.5), 0.5, clampf(to.z, -_half_depth() + 0.5, _half_depth() - 0.5))
 	var rest := _rest(d, body.quaternion)
 	if time == 0.0:
 		body.quaternion = rest
@@ -259,6 +335,7 @@ func _process(_delta: float) -> void:
 		var top: Vector3 = d.body.position
 		d.chain.position = top + Vector3(0, 0.53, CHAIN_DROP)  # above the number (at 0.51), so it covers it
 		# A badge in the top-right corner of the top face, put away while the die tumbles.
+		d.rubble.position = top + Vector3(0, 0.54, 0)
 		d.slot.position = _screen(top + BADGE) - d.slot.size / 2
 		d.slot.visible = d.icon.texture != null and not d.rolling
 	if in_flight and not dice.any(func(d): return d.rolling):
@@ -350,6 +427,20 @@ static func _atlas(art: String) -> Texture2D:
 				img.blit_rect(tile, Rect2i(0, 0, w, h), Vector2i(x * w, y * h))
 		_atlases[art] = ImageTexture.create_from_image(img)
 	return _atlases[art]
+
+
+## Grey stones piled in the corners of the top face, the die's number left clear between them, in dice pixels, with dark rims and a lit upper-left edge. Fixed, so a heap never shifts.
+static func _rubble() -> Texture2D:
+	var img := Image.create_empty(RUBBLE_SIZE, RUBBLE_SIZE, false, Image.FORMAT_RGBA8)
+	# Stones as x, y, radius, painted back to front.
+	for s: Array in [[8, 32, 8], [32, 33, 7], [33, 8, 6], [7, 7, 5], [20, 36, 4]]:
+		for y in RUBBLE_SIZE:
+			for x in RUBBLE_SIZE:
+				var d := Vector2(x + 0.5 - s[0], y + 0.5 - s[1]).length()
+				if d <= s[2]:
+					var lit: bool = x + y < s[0] + s[1] - s[2] * 0.4
+					img.set_pixel(x, y, Color("070e10") if d > s[2] - 1.5 else (Color("8c8a82") if lit else (Color("6a6862") if d < s[2] - 4 else Color("4d4b47"))))
+	return ImageTexture.create_from_image(img)
 
 
 ## The badge disc: a bone coin (like a bone die, so the dark iron icons stand out) with a near-black rim, in game pixels blown up to the dice's 2x.

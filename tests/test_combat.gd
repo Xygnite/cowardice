@@ -29,10 +29,15 @@ func _init() -> void:
 	_fight_rewards()
 	_meta()
 	_floors()
+	_mine_enemies()
+	_mine_sprites()
+	_pit_king()
 	_lasting_curse()
 	_event_helpers()
 	_events()
+	_event_backdrops()
 	_backdrop_life()
+	_run_save()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -344,6 +349,24 @@ func _perks() -> void:
 	c.apply_perks(["gamblers_heart"])
 	check(c.cleave_damage() == 18, "Gambler's Heart: a pair of 1s counts as 12, so 18")
 	_new_perks()
+	_bonus_perk()
+
+
+## The perk picked after the Warden: added for this run, Thick Skin's HP given once, never one already equipped.
+func _bonus_perk() -> void:
+	var c := fresh()
+	c.apply_perks(["steady_hand"])
+	c.player_hp = 30
+	c.add_perk("thick_skin")
+	c.add_perk("thick_skin")
+	check(c.perks == ["steady_hand", "thick_skin"] and c.bonus_perk == "thick_skin", "add_perk adds the perk once")
+	check(c.max_hp == 50 and c.player_hp == 40, "a bonus Thick Skin gives +10 max HP and +10 HP, once")
+	var ok := true
+	for i in 50:
+		var offer: Array = PerkPickScreen.offer(["thick_skin", "scavenger"])
+		ok = ok and offer.size() == 3 and offer.all(func(id): return Meta.PERKS.has(id) and id not in ["thick_skin", "scavenger"])
+		ok = ok and offer[0] != offer[1] and offer[0] != offer[2] and offer[1] != offer[2]
+	check(ok, "the bonus pick offers 3 different perks, never an equipped one")
 
 
 ## The perks past the first three, each against its own rule with and without it.
@@ -430,11 +453,160 @@ func _fight_rewards() -> void:
 
 
 ## Many dealt floors, each checked against the branching map's rules in Floor.deal().
+func _mine_group(keys: Array, at_turn := 0) -> CombatScript:
+	var c := fresh()
+	c.start_group(keys)
+	c.turn = at_turn
+	c.start_turn()
+	return c
+
+
+## Every Hollow Mine type is drawn: a sprite with its baked frames scene, so no placeholder box shows.
+func _mine_sprites() -> void:
+	for key in ["miner", "crawler", "hulk", "rubble", "canary", "shaft_foreman", "pit_king"]:
+		var sprite: String = CombatScript.TYPES[key].get("sprite", "")
+		check(sprite != "" and FileAccess.file_exists("res://assets/sprites/%s.png" % sprite)
+			and FileAccess.file_exists("res://scenes/%s_frames.tscn" % sprite), "%s has a sprite and its frames scene" % key)
+
+func _mine_enemies() -> void:
+	var c := _mine_group(["miner"], 2)
+	check(c.enemies[0].intent.kind == "unblockable", "the Miner's third intent is unblockable")
+	c = _mine_group(["crawler", "crawler"])
+	check(c.enemies.all(func(e): return e.intent.value == 4), "two Crawlers attack for base + 1")
+	c = _mine_group(["crawler", "crawler", "crawler"])
+	check(c.enemies.all(func(e): return e.intent.value == 5), "three Crawlers attack for base + 2")
+	c.enemies[0].hp = 0
+	c.start_turn()
+	check(c.enemies[1].intent.value == 4 and c.enemies[2].intent.value == 4, "after a Crawler dies the others drop")
+	c = _mine_group(["skeleton", "shaft_foreman"])
+	check(c.enemies[0].intent.value == 7 and c.enemies[1].intent.value == 5, "the Foreman adds 2 to others, not himself")
+	c = _mine_group(["skeleton", "shaft_foreman"], 1)
+	check(c.enemies[0].intent.kind == "guard" and c.enemies[0].intent.value == 4, "a guard intent is unchanged")
+	c = _mine_group(["crawler", "crawler", "shaft_foreman"])
+	check(c.enemies[0].intent.value == 3 + 1 + 2, "Crawler bonus and Foreman bonus add")
+	c = _mine_group(["hulk"], 1)
+	c.enemies[0].hp = 3
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble" and c.enemies[0].hp == 8 and c.enemies[0].intent.is_empty(), "a dead Hulk leaves Rubble in its place")
+	check(c.enemies[0].from == "Rubble Hulk", "the Rubble is marked as coming from the Hulk")
+	check(not c.fight_won() and c.replaced == 1, "the Hulk's kill is counted and the fight goes on")
+	c.start_turn()
+	check(c.enemies[0].intent.kind == "attack", "Rubble acts from next turn")
+	c.enemies[0].hp = 0
+	var before := c.kills
+	c.claim_fight()
+	check(c.fight_won() and c.kills - before == 2, "Hulk and Rubble are two kills")
+	c = _mine_group(["hulk", "hulk"], 1)
+	c.enemies[0].hp = 3
+	c.enemies[1].hp = 3
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	c.target = 1
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble A" and c.enemies[1].name == "Rubble B", "two Hulks leave Rubble A and B, got %s and %s" % [c.enemies[0].name, c.enemies[1].name])
+	c = _mine_group(["hulk", "crawler"], 1)
+	c.enemies[0].hp = 3
+	c.enemies[1].hp = 2
+	place(c, 0, 3, CombatScript.Slot.CLEAVE)
+	place(c, 1, 3, CombatScript.Slot.CLEAVE)
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble" and c.enemies[1].hp == 0 and not c.fight_won(), "a Cleave kills the Hulk and a Crawler: Rubble stands")
+	c = _mine_group(["canary", "miner"])
+	check(c.enemies[1].intent.kind == "unblockable" and c.enemies[1].intent.value == 5, "a Canary's ring makes another's attack unblockable")
+
+
+func _pit_king() -> void:
+	var c := _mine_group(["pit_king"], 1)  # turn 1 is the cave-in
+	check(c.is_boss_fight() and c.enemies[0].type.hp == 110, "the Pit King is a 110 HP boss")
+	check(c.enemies[0].intent.kind == "cave_in" and c.intent_text(0) == "Cave-in", "the Pit King's second move is a cave-in")
+	place(c, 0, 4, CombatScript.Slot.GUARD)
+	place(c, 1, 2, CombatScript.Slot.CLEAVE)
+	place(c, 2, 2, CombatScript.Slot.CLEAVE)
+	c.resolve_player()
+	var buried := 0
+	c.resolve_enemy(0, CombatScript.Grade.MISS)
+	check(c.dice.filter(func(d): return d.buried > 0).size() == 1, "a cave-in buries exactly one die")
+	for i in 3:
+		if c.dice[i].buried > 0:
+			buried = i
+	var value: int = c.dice[buried].value
+	var slot: int = c.dice[buried].slot
+	c.end_enemy_phase()
+	c.start_turn()
+	check(c.dice[buried].value == value and c.dice[buried].slot == slot, "a buried die keeps its value and slot")
+	c.assign(buried, CombatScript.Slot.ATTACK)
+	c.toggle_lock(buried)
+	check(c.dice[buried].slot == slot and not c.dice[buried].locked, "a buried die can't be placed or locked")
+	c.rerolls = 5
+	for n in 20:
+		c.reroll()
+		check(c.dice[buried].value == value, "reroll leaves a buried die alone")
+	c.resolve_player()
+	c.end_enemy_phase()
+	c.start_turn()
+	check(c.dice[buried].buried == 0 and c.dice[buried].slot == CombatScript.Slot.NONE, "a buried die is free the turn after")
+	# Two buried: nothing more to bury, the last free die stays free.
+	c = fresh()
+	c.dice[0].buried = 2
+	c.dice[1].buried = 1
+	check(c.bury_one() == -1, "the last unburied die is never buried")
+	c.dice[1].buried = 0
+	check(c.bury_one() in [1, 2], "with two free dice one can be buried")
+	# A buried Guard die guards again; a buried Cleave pair cleaves again.
+	c = _mine_group(["pit_king"], 1)
+	place(c, 0, 5, CombatScript.Slot.GUARD)
+	c.dice[0].buried = 2
+	c.start_turn()
+	place(c, 1, 1, CombatScript.Slot.NONE)
+	c.resolve_player()
+	check(c.guard_pool == 5, "a buried die in Guard guards again with the same value")
+	c = _mine_group(["pit_king"], 1)
+	place(c, 0, 3, CombatScript.Slot.CLEAVE)
+	place(c, 1, 3, CombatScript.Slot.CLEAVE)
+	c.dice[1].buried = 2
+	c.start_turn()
+	check(c.dice[1].slot == CombatScript.Slot.CLEAVE and c.dice[1].value == 3, "a buried die keeps its Cleave slot and value")
+	place(c, 0, 3, CombatScript.Slot.CLEAVE)
+	check(c.cleave_ready(), "a buried die in Cleave keeps its pair")
+	# Unplaced buried dice give no Grit.
+	c = _mine_group(["pit_king"], 1)
+	c.dice[0].buried = 2
+	c.start_turn()
+	c.assign(1, CombatScript.Slot.ATTACK)
+	c.assign(2, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	check(c.grit == 0, "a buried die gives no Grit")
+	c.dice[0].buried = 2
+	c.start_group(["rat"])
+	check(c.dice.all(func(d): return d.buried == 0), "a new fight starts with no buried dice")
+	# Phase 2: every attack comes with a cave-in.
+	for t in 3:
+		c = _mine_group(["pit_king"], t)
+		c.enemies[0].hp = 55
+		c.start_turn()
+		check(c.enemies[0].intent.kind == "attack" and c.enemies[0].intent.get("cave_in", false), "phase 2 attack %d carries a cave-in" % t)
+	c.resolve_enemy(0, CombatScript.Grade.MISS)
+	check(c.dice.any(func(d): return d.buried > 0), "a phase 2 attack buries a die")
+
+
 func _floors() -> void:
+	for id in Floor.FLOORS:
+		_floor(id)
+	var used := {}
+	for i in 100:  # more groups than fit, so repeats must be accepted instead of looping forever
+		Floor.group(Floor.FLOORS.chapel.hp[0], used)
+	var c := CombatScript.new(7)
+	c.start_group(["rat", "rat", "rat"])
+	check(c.enemies.map(func(e): return e.name) == ["Bone Rat A", "Bone Rat B", "Bone Rat C"], "a dealt group starts like a set fight")
+
+
+func _floor(id: String) -> void:
+	var data: Dictionary = Floor.FLOORS[id]
 	var kinds_mid := {}
 	var shapes := {}
 	for n in 200:
-		var f: Array = Floor.deal()
+		var f: Array = Floor.deal(id)
 		var groups := []
 		check(f.size() == 10, "a floor is ten columns")
 		for c in f.size():
@@ -445,7 +617,7 @@ func _floors() -> void:
 			sorted_lanes.sort()
 			check(lanes == sorted_lanes and sorted_lanes.all(func(l): return l >= 0 and l < 5), "column %d lanes are sorted and in 0..4" % c)
 			check(lanes.size() == sorted_lanes.reduce(func(u, l): return u if l in u else u + [l], []).size(), "column %d lanes are distinct" % c)
-			var hp: Array = Floor.ENTRANCE_HP if c == 0 else (Floor.EARLY_HP if c <= 4 else Floor.LATE_HP)
+			var hp: Array = data.hp[0] if c == 0 else (data.hp[1] if c <= 4 else data.hp[2])
 			var linked := {}
 			for r in col:
 				check(r.next.size() > 0 or c == 9, "column %d room has a way on" % c)
@@ -466,27 +638,21 @@ func _floors() -> void:
 				if r.kind == "fight" and c < 9:
 					var total: int = r.enemies.reduce(func(t, k): return t + CombatScript.TYPES[k].hp, 0)
 					check(total >= hp[0] and total <= hp[1], "column %d fight has %d HP, wants %s" % [c, total, hp])
-					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in Floor.ENEMIES), "a fight is 1-3 dungeon enemies")
+					check(r.enemies.size() in [1, 2, 3] and r.enemies.all(func(k): return k in data.enemies), "a fight is 1-3 %s enemies" % id)
 					groups.append(r.enemies)
 			if c < 9:
 				check(linked.size() == f[c + 1].size(), "every room in column %d has a parent" % (c + 1))
 		shapes[str(f[4].map(func(r): return r.lane))] = true
-		check(f[-1][0].enemies == ["warden"] and f[-1][0].label == "Boss: Bone Warden" and f[-1][0].next == [], "the boss is last")
+		check(f[-1][0].enemies == data.boss and f[-1][0].label == "Boss: " + CombatScript.TYPES[data.boss[0]].name and f[-1][0].next == [], "the boss is last")
 		check(groups.size() == groups.reduce(func(u, g): return u if g in u else u + [g], []).size(), "no group twice")
 	for k in ["fight", "unknown", "forge", "campfire"]:
 		check(kinds_mid.get(k, 0) > 0, "%s shows up in columns 3-7" % k)
 	check(shapes.size() > 5, "column 4 differs from floor to floor")
-	var used := {}
-	for i in 100:  # more groups than fit, so repeats must be accepted instead of looping forever
-		Floor.group(Floor.ENTRANCE_HP, used)
-	var c := CombatScript.new(7)
-	c.start_group(["rat", "rat", "rat"])
-	check(c.enemies.map(func(e): return e.name) == ["Bone Rat A", "Bone Rat B", "Bone Rat C"], "a dealt group starts like a set fight")
 
 
 func _meta() -> void:
 	check(Meta.embers_for(7, 3, 50, false) == 35 + 30 + 25, "Embers: 5 per kill, 10 per room, half the boss %")
-	check(Meta.embers_for(0, 0, 0, true) == 50, "a win adds 50")
+	check(Meta.embers_for(0, 0, 0, true) == 100, "a win (the Pit King) adds 100")
 	var m := Meta.new()
 	m.embers = 120
 	check(m.unlock("thick_skin") and m.embers == 20, "unlock spends Embers")
@@ -503,6 +669,10 @@ func _meta() -> void:
 	var back := Meta.load_from(path)
 	check(back.embers == m.embers and back.owned == m.owned and back.equipped == m.equipped and back.tutorial_done, "save and load round-trip")
 	check(back.music == 1.0 and back.sounds == 1.0 and not back.muted, "sound starts at full volume, unmuted")
+	check(not back.mine_unlocked, "the Mine starts locked")
+	m.mine_unlocked = true
+	m.save()
+	check(Meta.load_from(path).mine_unlocked, "an unlocked Mine round-trips")
 	m.music = 0.25
 	m.sounds = 0.0
 	m.muted = true
@@ -514,6 +684,7 @@ func _meta() -> void:
 	f.close()
 	back = Meta.load_from(path)
 	check(back.music == 1.0 and back.sounds == 0.0, "out-of-range volumes in a save are clamped")
+	check(not back.mine_unlocked, "an old save without the Mine loads it locked")
 	AudioServer.add_bus()
 	AudioServer.set_bus_name(AudioServer.bus_count - 1, "Music")
 	back.music = 0.5
@@ -523,6 +694,11 @@ func _meta() -> void:
 	back.apply_sound()
 	DirAccess.remove_absolute(path)
 	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")
+
+
+func _event_backdrops() -> void:
+	for id in Events.IDS:
+		check(ResourceLoader.exists("res://assets/ui/bg_event_%s.webp" % id), "event %s has its backdrop" % id)
 
 
 func _backdrop_life() -> void:
@@ -538,11 +714,11 @@ func _backdrop_life() -> void:
 	check(mid.is_equal_approx(Vector2(906, 360)), "backdrop life: image centre stays centred, got %s" % mid)
 	var keys: Array = BackdropLife.LIFE.keys()
 	keys.sort()
-	check(keys == ["camp", "fight", "menu"], "backdrop life: menu, camp and fight only")
+	check(keys == ["camp", "fight", "menu", "mine"], "backdrop life: menu, camp, fight and mine only")
 	for art: String in keys:
 		for part: Dictionary in BackdropLife.LIFE[art].parts:
 			check(ResourceLoader.exists("res://assets/ui/life/%s.png" % part.art), "backdrop life: %s art %s exists" % [art, part.art])
-	for want: Array in [["menu", 2], ["camp", 1], ["fight", 2]]:
+	for want: Array in [["menu", 2], ["camp", 1], ["fight", 2], ["mine", 2]]:
 		var flames: Array = BackdropLife.LIFE[want[0]].parts.filter(func(p): return p.kind == "flame")
 		check(flames.size() >= want[1], "backdrop life: %s has %d+ flames, got %d" % [want[0], want[1], flames.size()])
 	var rect := TextureRect.new()
@@ -554,7 +730,7 @@ func _backdrop_life() -> void:
 	check(s0.is_playing() and s0.position == parts[0].at and s0.scale == Vector2(2, 2), "backdrop life: a flame plays at its spot, px-scaled")
 	rect.free()
 
-	for want: Array in [["menu", "moat"], ["camp", "ground"]]:
+	for want: Array in [["menu", "moat"], ["camp", "ground"], ["mine", "dust"]]:
 		var fogs: Array = BackdropLife.LIFE[want[0]].parts.filter(func(p): return p.kind == "fog" and p.art == want[1])
 		check(fogs.size() == 1, "backdrop life: %s has %s fog" % want)
 	for art: String in keys:
@@ -566,9 +742,9 @@ func _backdrop_life() -> void:
 			var h := band.get_height()
 			check(band.get_width() % p == 0 and band.get_width() >= 2 * p, "backdrop life: %s band is whole periods" % part.art)
 			check(band.get_region(Rect2i(0, 0, p, h)).get_data() == band.get_region(Rect2i(p, 0, p, h)).get_data(), "backdrop life: %s band repeats without a seam" % part.art)
-			if art == "fight":
-				var bottom: float = part.at.y + h * BackdropLife.LIFE.fight.px
-				check(bottom < CombatScreen.FLOOR_LEDGE * 572, "backdrop life: fight fog stays above the floor ledge, bottom %s" % bottom)
+			if CombatScreen.LEDGES.has(art):
+				var bottom: float = part.at.y + h * BackdropLife.LIFE[art].px
+				check(bottom < CombatScreen.LEDGES[art] * 572, "backdrop life: %s fog stays above the floor ledge, bottom %s" % [art, bottom])
 	var menu := TextureRect.new()
 	var mlife: BackdropLife = BackdropLife.attach(menu, "menu")
 	var mparts: Array = BackdropLife.LIFE.menu.parts
@@ -606,32 +782,6 @@ func _backdrop_life() -> void:
 
 
 func _chains() -> void:
-	const Cut := preload("res://tools/cut_chains.gd")
-	for name: String in Cut.CHAINS:
-		var chains: Array = BackdropLife.LIFE[name].parts.filter(func(p): return p.kind == "chain")
-		check(chains.size() == Cut.CHAINS[name].size() and chains.size() >= 3, "chains: %s has a part per cut chain (3+)" % name)
-		for i in chains.size():
-			var part: Dictionary = chains[i]
-			var sf: SpriteFrames = BackdropLife.frames(part.art, 1.0)
-			check(part.art == "chain_%s_%d" % [name, i] and sf.get_frame_count("default") == 5, "chains: %s strip has 5 frames" % part.art)
-			# Frame 2 is unswayed, so the strip's top-left sits a swing's width left of the chain's outline box.
-			var box: Rect2i = Cut.box(Cut.CHAINS[name][i].outline)
-			check(part.at == Vector2(box.position.x - Cut.SWING, box.position.y), "chains: %s sits on its painted chain, at %s" % [part.art, part.at])
-			check(part.period >= 3.0 and part.period <= 4.0, "chains: %s swings in 3-4 s" % part.art)
-		var once: Dictionary = Cut.cut(name)
-		var twice: Dictionary = Cut.cut(name)
-		check(once.has("res://assets/ui/bg_%s.webp" % name), "chains: cut writes the %s backdrop" % name)
-		for path: String in once:
-			var a: Image = once[path]
-			var disk := Image.new()
-			var bytes := FileAccess.get_file_as_bytes(path)
-			if path.ends_with(".webp"):
-				disk.load_webp_from_buffer(bytes)
-			else:
-				disk.load_png_from_buffer(bytes)
-			disk.convert(Image.FORMAT_RGBA8)
-			check(a.get_data() == (twice[path] as Image).get_data(), "chains: cutting %s twice gives the same %s" % [name, path])
-			check(a.get_size() == disk.get_size() and a.get_data() == disk.get_data(), "chains: %s on disk is the tool's output" % path)
 	var rect := TextureRect.new()
 	var life: BackdropLife = BackdropLife.attach(rect, "fight")
 	var parts: Array = BackdropLife.LIFE.fight.parts
@@ -645,3 +795,62 @@ func _chains() -> void:
 	check(is_equal_approx(s.sprite_frames.get_animation_speed("default"), 8.0 / parts[ci].period), "chains: one swing there and back per period")
 	check(s.is_playing() and s.scale == Vector2.ONE, "chains: strips are in image px, unscaled")
 	rect.free()
+	# Every backdrop with chains draws them as strips (art/pxl/bg_fights.px.js, bg_screens.px.js).
+	for want: Array in [["fight", 3], ["mine", 1], ["menu", 3]]:
+		var art: String = want[0]
+		var bg: Texture2D = load("res://assets/ui/bg_%s.webp" % art)
+		check(bg != null and bg.get_size() == BackdropLife.IMAGE, "%s: backdrop is 1024x572" % art)
+		var drawn: Array = BackdropLife.LIFE[art].parts.filter(func(p): return p.kind == "chain")
+		check(drawn.size() >= want[1], "%s: has %d+ swaying chains" % want)
+		for i in drawn.size():
+			var part: Dictionary = drawn[i]
+			check(part.art == "chain_%s_%d" % [art, i], "%s: chain %d is chain_%s_%d" % [art, i, art, i])
+			check(BackdropLife.frames(part.art, 1.0).get_frame_count("default") == 5 and part.period >= 3.0 and part.period <= 4.0, "%s: %s is a 5-frame strip swinging in 3-4 s" % [art, part.art])
+	check(CombatScreen.LEDGES.keys() == ["fight", "mine"], "mine: a floor ledge per fight backdrop")
+
+
+## A run saved at a campfire comes back as it was; a broken or old save is no save at all.
+func _run_save() -> void:
+	const PATH := "user://test_run_save.json"  # never the player's real save
+	var c := CombatScript.new(7)
+	c.apply_perks(["steady_hand", "thick_skin"])
+	c.add_perk("bonfire_keeper")
+	c.player_hp = 23
+	c.shards = 11
+	c.kills = 5
+	c.bonus_embers = 30
+	c.dungeon_turns = 4
+	c.forge(0, 2, true)
+	c.curse_face(1, 5)
+	c.dice[2].faces[3] = CombatScript.CURSE  # a fight's curse, not lasting
+	check(RunSave.write({"combat": c.to_dict(), "layer": 3}, PATH), "the run saves")
+	check(RunSave.write({"combat": c.to_dict(), "layer": 3}, PATH), "and saves again over the old file")
+	var data := RunSave.read(PATH)
+	check(data.get("layer") is int and data.get("layer") == 3, "ints come back as ints")
+	var back := CombatScript.from_dict(data.combat)
+	check(back.player_hp == 23 and back.max_hp == 50 and back.shards == 11 and back.kills == 5, "HP, max HP, Shards and kills come back")
+	check(back.perks == ["steady_hand", "thick_skin", "bonfire_keeper"] and back.bonus_perk == "bonfire_keeper", "perks and the bonus perk come back")
+	check(back.bonus_embers == 30 and back.dungeon_turns == 4, "promised Embers and the murmur count come back")
+	check(back.dice[0].base == [1, 2, 5, 4, 5, 6], "a forged face comes back")
+	check(back.dice[1].base[5] == CombatScript.CURSE and back.dice[1].uncursed == {5: 6}, "a lasting curse comes back, still liftable")
+	back.forge(1, 5, true)
+	check(back.dice[1].base[5] == 6, "and forging lifts it")
+	check(back.dice[2].faces[3] == CombatScript.CURSE and back.dice[2].base[3] == 4, "a fight's curse comes back on the faces only")
+	check(back.dice[0].slot == CombatScript.Slot.NONE and back.dice[0].buried == 0, "the dice keep their other fields")
+	var f := FileAccess.open(PATH, FileAccess.WRITE)
+	f.store_string("{not json")
+	f.close()
+	check(RunSave.read(PATH).is_empty() and not RunSave.exists(PATH), "a corrupt save loads as no save")
+	f = FileAccess.open(PATH, FileAccess.WRITE)
+	f.store_string(JSON.stringify(JSON.from_native({"version": RunSave.VERSION + 1, "layer": 3})))
+	f.close()
+	check(RunSave.read(PATH).is_empty(), "a save from another version loads as no save")
+	check(CombatScript.valid_dict(c.to_dict()), "a saved Combat is valid")
+	var short := c.to_dict()
+	short.dice.pop_back()
+	check(not CombatScript.valid_dict(short) and not CombatScript.valid_dict({}), "a Combat missing dice or fields is not")
+	RunSave.write({"layer": 3}, PATH)
+	DirAccess.rename_absolute(ProjectSettings.globalize_path(PATH), ProjectSettings.globalize_path(PATH + ".tmp"))
+	check(RunSave.read(PATH).get("layer") == 3, "a save left only as its temp file is recovered")
+	RunSave.erase(PATH)
+	check(not FileAccess.file_exists(PATH) and not FileAccess.file_exists(PATH + ".tmp") and RunSave.read(PATH).is_empty(), "an erased save is gone")

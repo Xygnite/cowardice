@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "shaft_foreman_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 80
+  },
+  "shaft_foreman_attack_1": {
+   "frame": {
+    "x": 118,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 80
+  },
+  "shaft_foreman_attack_2": {
+   "frame": {
+    "x": 236,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 40
+  },
+  "shaft_foreman_attack_3": {
+   "frame": {
+    "x": 354,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_attack_4": {
+   "frame": {
+    "x": 472,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_attack_5": {
+   "frame": {
+    "x": 590,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_attack_6": {
+   "frame": {
+    "x": 708,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "shaft_foreman_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 826,
+   "h": 132
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "shaft_foreman_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,169 @@
+{
+ "frames": {
+  "miner_attack_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 80
+  },
+  "miner_attack_1": {
+   "frame": {
+    "x": 96,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 80
+  },
+  "miner_attack_2": {
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 40
+  },
+  "miner_attack_3": {
+   "frame": {
+    "x": 288,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 100
+  },
+  "miner_attack_4": {
+   "frame": {
+    "x": 384,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 100
+  },
+  "miner_attack_5": {
+   "frame": {
+    "x": 480,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 100
+  },
+  "miner_attack_6": {
+   "frame": {
+    "x": 576,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 96,
+    "h": 102
+   },
+   "sourceSize": {
+    "w": 96,
+    "h": 102
+   },
+   "duration": 60
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "miner_attack.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 672,
+   "h": 102
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "miner_attack",
+    "from": 0,
+    "to": 6,
+    "direction": "forward"
+   }
+  ]
+ }
+}

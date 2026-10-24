@@ -21,7 +21,8 @@ var tries := 0
 
 func _ready() -> void:
 	var root := UI.page(self)
-	UI.backdrop(self, "campfire")
+	var art := "event_" + id  # each event's own still; the campfire if one is missing
+	UI.backdrop(self, art if ResourceLoader.exists("res://assets/ui/bg_%s.webp" % art) else "campfire")
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
 	var event: Dictionary = Events.EVENTS[id]
 	_centered(UI.heading(root, 48, event.title))
@@ -73,8 +74,6 @@ func choose(choice: int, die := 0) -> void:
 			which = range(combat.dice.size())
 	var rolled: Array = combat.roll_dice(which)
 	if which:
-		for i in which:
-			_show_die(i)
 		var thrown := which.duplicate()
 		if id == "gambler":
 			for k in 3:
@@ -86,6 +85,10 @@ func choose(choice: int, die := 0) -> void:
 		tray.throw(thrown)
 		await tray.landed
 		busy = false
+		rolled = thrown.map(func(i): return tray.dice[i].value)  # the faces that came up are the roll
+		for i in which:
+			combat.dice[i].value = tray.dice[i].value
+			_show_die(i)
 	tries += 1
 	var result: Dictionary = Events.resolve(id, choice, combat, rolled, tries)
 	text.text = result.text

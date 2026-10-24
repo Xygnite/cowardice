@@ -1,7 +1,8 @@
-// Flames and fog laid over the backdrop paintings (scripts/backdrop_life.gd). One pxl pixel is the painting's
-// own pixel: 2 image px on menu and fight, 4 on camp.
+// Flames and fog laid over the backdrops (scripts/backdrop_life.gd). One pxl pixel is the backdrop's own pixel:
+// 2 image px each. The fight and Mine chains and the Mine's lantern and dust are in bg_fights.px.js; the menu's chains in bg_screens.px.js.
 // Build: node .claude/skills/pxl-pixel-art/bin/pxl.js build art/pxl/life.px.js
 // then copy out/anims/<name>.png + .json (flames) and out/sprites/<name>.png (fog) to assets/ui/life/.
+include("screen_flames.px.js")  // the menu's and camp's flame masks, painted into their backdrops by bg_screens.px.js
 
 // A looping flame over a painted one. `mask` is the painted flame's silhouette, read off the backdrop at
 // its pxl pixel size: every frame keeps all of it opaque, so the still painting never shows through.
@@ -65,74 +66,14 @@ function flame(name, { mask, top, tongue, fps, frames = 8, sparks = [] }) {
 	})
 }
 
-// Menu: the two torch braziers flanking the stairs (2 image px a pixel).
-pal({ R: "#a8522e", o: "#e8743c", y: "#f6b45e", w: "#fce290" })
-flame("torch", { top: 4, tongue: 3, fps: 10, mask: `
-	..................
-	.........oo.......
-	........ooyR......
-	......oooooR......
-	.....ooyoooR......
-	.....ooyoyyRR.....
-	.....Ryyyyooo.....
-	.....Royywyyoo....
-	...oooyywwyyyoo...
-	.oooooyywwwyyooR..
-	.ooyyyywwwwyyoyRo.
-	.oyoyywwwwwyyoyoo.
-	Ryooyywwwwwwyyyoo.
-	.yyyywwwoywwwwyyoo
-	ooyywwww..wwwwyyyo
-	..oywww....wwwyoo.
-	..yyww.....wwwyRo.
-	..yyyy......yyo...` })
-flame("torch_r", { top: 4, tongue: 3, fps: 10, mask: `
-	..........RR........
-	.........oooR.......
-	........Royoo.......
-	..o.....Roooo.......
-	..oyyo..RoyyoR......
-	..ooyooooyyyoR......
-	...ooooyyyyyoR......
-	....oooyyyyyooo.....
-	....ooyyywwwooo.....
-	.ooooyyyywwwoooo....
-	.ooooyywwwwwyoooo...
-	.ooyywwwwwwwyooyoo..
-	.yoyywwwwwwwyyoooo..
-	.ooyywwww.wwwyyyoo..
-	.yowwwwwo.wwwwyyoo..
-	.Rowwwyo..owwwyyR...
-	.Rowwww....wwwyy....
-	..oyy.......wyyo....` })
-
-// Camp: the campfire (4 image px a pixel), sparks drifting up out of it.
-pal({ R: "#9a3f14", o: "#d3621f", y: "#fa903e", w: "#ffd47a" })
-flame("campfire", { top: 6, tongue: 3, fps: 8, sparks: [{ x: 10, y: 7, off: 0 }, { x: 5, y: 9, off: 3 }, { x: 13, y: 10, off: 5 }], mask: `
-	.........o........
-	........ooR.......
-	........ooR.......
-	........oooR......
-	...oo...oooR......
-	...oo...oooo......
-	..ooo.Ro.yyoo.....
-	..oooooooyyoo.....
-	.oooooooyyyoo.oo..
-	.ooooooywyyoo.oo..
-	..ooooyywyyoo.ooo.
-	...oooyywwyyooooo.
-	...oyyyywwyyooooo.
-	..ooyyyywwyyoooR..
-	.Royyyywwwwyyooo..
-	.oyyyywwwwwyyyyo..
-	oyyywwwwoowwyyyoo.
-	oyywwwwwR.wwwwyyo.
-	oyywwwwwwwwwwwyyo.
-	oywwwwwwwwwwwwyyo.
-	oyywwwwwwwwwwyyyoo` })
+// Menu: the braziers either side of the gate; camp: its fire, sparks drifting up out of it. Both are painted with
+// kit.px.js's fire colours.
+pal({ R: "#a76236", o: "#e0782a", y: "#ffb24a", w: "#ffe08a" })
+flame("torch", { top: 4, tongue: 3, fps: 10, mask: TORCH_MASK })
+flame("campfire", { top: 6, tongue: 4, fps: 8, sparks: [{ x: 10, y: 6, off: 0 }, { x: 5, y: 9, off: 3 }, { x: 15, y: 8, off: 5 }], mask: CAMPFIRE_MASK })
 
 // Fight: one small candle flame for every candle on the ledges (2 image px a pixel).
-pal({ R: "#8a5a30", o: "#d49a5c", y: "#efbe7c", w: "#fbe0a8" })
+pal({ R: "#a76236", o: "#e0782a", y: "#ffb24a", w: "#ffe08a" })  // kit.px.js's fire, as painted on bg_fight's candles
 // Too small for flame(): the body (rows 2-6) stays put and covers any painted candle flame up to 6x10
 // image px; the tip flickers and leans above it.
 anim("candle", { w: 3, h: 7, fps: 8 }, grid(0, 2, `
@@ -172,9 +113,9 @@ function fog(name, { period, h, seed }) {
 pal({ a: "#4f7a8640", b: "#6f97a370", c: "#9cc0cc98" })
 fog("moat", { period: 96, h: 28, seed: 1 })
 
-// Camp: low ground fog in the strip between the perk board and the buttons (4 image px a pixel).
+// Camp: low ground fog in the strip between the perk board and the buttons.
 pal({ a: "#4c627340", b: "#5f758570", c: "#7a8e9c98" })
-fog("ground", { period: 64, h: 13, seed: 2 })
+fog("ground", { period: 128, h: 22, seed: 2 })
 
 // Fight: mist along the foot of the back wall, ending above the floor ledge (2 image px a pixel); paler
 // than the others, as the floor there is already the fog's grey.

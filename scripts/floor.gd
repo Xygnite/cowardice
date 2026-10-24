@@ -1,22 +1,27 @@
 class_name Floor
 extends RefCounted
-## Deals one floor of the Sunken Chapel: a left-to-right map of columns, each a list of rooms sorted by lane.
+## Deals one floor (see FLOORS): a left-to-right map of columns, each a list of rooms sorted by lane.
 ## Room: {kind: fight|unknown|forge|campfire, lane, next: indices into the next column, label, enemies (fights)}.
 
-## Enemies a run can deal into its fights, and how much total enemy HP a fight gets by depth.
-const ENEMIES := ["rat", "skeleton", "acolyte", "doctor", "bell", "treant", "moss", "grieve", "archivist"]
-const ENTRANCE_HP := [18, 26]
-const EARLY_HP := [18, 38]
-const LATE_HP := [42, 56]
-const BOSS := 6  # Combat.FIGHTS index
+## Each floor's name, boss-lair label, enemies a run can deal into its fights, total enemy HP of a fight by depth
+## (entrance, columns 1-4, columns 5-7), boss (a Combat.TYPES key list) and fight backdrop.
+const FLOORS := {
+	"chapel": {"title": "The Sunken Chapel", "lair": "The Warden's Lair",
+		"enemies": ["rat", "skeleton", "acolyte", "doctor", "bell", "treant", "moss", "grieve", "archivist"],
+		"hp": [[18, 26], [18, 38], [42, 56]], "boss": ["warden"], "backdrop": "fight"},
+	"mine": {"title": "The Hollow Mine", "lair": "The Pit King's Throne",
+		"enemies": ["miner", "crawler", "hulk", "canary", "shaft_foreman"],
+		"hp": [[24, 36], [34, 50], [56, 72]], "boss": ["pit_king"], "backdrop": "mine"},
+}
 const COLUMNS := 10
 const LANES := 5
-const EARLY_COLUMNS := 4  # columns 1-4 get EARLY_HP fights, 5-7 LATE_HP
+const EARLY_COLUMNS := 4  # columns 1-4 get early-HP fights, 5-7 late-HP
 const MID := 2  # the entrance and boss lane
 
 
 ## A fresh floor: entrance, eight columns of branching rooms (the last all campfires), then the boss.
-static func deal() -> Array:
+static func deal(floor_id := "chapel") -> Array:
+	var data: Dictionary = FLOORS[floor_id]
 	var rooms: Array = []  # per column: lane -> room
 	var links: Array = []  # per gap: [from_lane, to_lane] pairs
 	while true:
@@ -31,9 +36,9 @@ static func deal() -> Array:
 		for lane in rooms[c]:
 			var room: Dictionary = rooms[c][lane]
 			if room.kind == "fight":
-				var hp: Array = ENTRANCE_HP if c == 0 else (EARLY_HP if c <= EARLY_COLUMNS else LATE_HP)
-				room.merge(fight_room(group(hp, used)), true)
-	rooms[COLUMNS - 1][MID].merge(fight_room(Combat.FIGHTS[BOSS]), true)
+				var hp: Array = data.hp[0] if c == 0 else (data.hp[1] if c <= EARLY_COLUMNS else data.hp[2])
+				room.merge(fight_room(group(hp, used, data.enemies)), true)
+	rooms[COLUMNS - 1][MID].merge(fight_room(data.boss), true)
 	var floor_map: Array = []
 	for c in COLUMNS:
 		var lanes: Array = rooms[c].keys()
@@ -108,22 +113,30 @@ static func _roll_kinds(rooms: Array, links: Array) -> void:
 			room["label"] = {"unknown": "?", "forge": "Forge", "campfire": "Campfire"}.get(kind, "")
 
 
-## One to three random ENEMIES whose total HP is within `hp`, a group not yet in `used`.
-## After 200 failed tries a repeat is accepted, so a crowded floor can't loop forever.
-static func group(hp: Array, used: Dictionary) -> Array:
-	var tries := 0
-	while true:
-		tries += 1
-		var keys := []
-		for i in randi_range(1, 3):
-			keys.append(ENEMIES.pick_random())
-		keys.sort()
-		var total: int = keys.reduce(func(t, k): return t + Combat.TYPES[k].hp, 0)
-		var id := ",".join(keys)
-		if total >= hp[0] and total <= hp[1] and (not used.has(id) or tries > 200):
-			used[id] = true
-			return keys
-	return []
+## One to three random `enemies` whose total HP is within `hp`, a group not yet in `used`.
+## Picks from every group that fits, so a repeat only happens once all of them are used.
+static func group(hp: Array, used: Dictionary, enemies: Array = FLOORS.chapel.enemies) -> Array:
+	var fits: Array = []
+	var pool: Array = enemies.duplicate()
+	pool.sort()
+	for a in pool.size():  # every multiset of 1-3 enemies; index pool.size() means "no enemy here"
+		for b in range(a, pool.size() + 1):
+			for c in range(b, pool.size() + 1):
+				var keys: Array = [pool[a]]
+				if b < pool.size():
+					keys.append(pool[b])
+					if c < pool.size():
+						keys.append(pool[c])
+				var total: int = keys.reduce(func(t, k): return t + Combat.TYPES[k].hp, 0)
+				if total >= hp[0] and total <= hp[1] and not fits.has(keys):
+					fits.append(keys)
+	if fits.is_empty():
+		push_error("No group of %s fits %s HP" % [enemies, hp])
+		return [enemies[0]]
+	var fresh := fits.filter(func(k): return not used.has(",".join(k)))
+	var keys: Array = (fresh if fresh else fits).pick_random()
+	used[",".join(keys)] = true
+	return keys
 
 
 ## "Fight: Archivist, Bone Rats" from the fight's enemies.

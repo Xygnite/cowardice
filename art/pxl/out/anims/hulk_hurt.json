@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "hulk_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 116
+   },
+   "duration": 70
+  },
+  "hulk_hurt_1": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 116
+   },
+   "duration": 130
+  },
+  "hulk_hurt_2": {
+   "frame": {
+    "x": 216,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 116
+   },
+   "duration": 100
+  },
+  "hulk_hurt_3": {
+   "frame": {
+    "x": 324,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 108,
+    "h": 116
+   },
+   "sourceSize": {
+    "w": 108,
+    "h": 116
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "hulk_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 432,
+   "h": 116
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "hulk_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

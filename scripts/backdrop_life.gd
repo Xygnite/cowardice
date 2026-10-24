@@ -9,36 +9,56 @@ const IMAGE := Vector2(1024, 572)
 ## A flame also has "fps". Its sheet covers the painted flame under it on every frame.
 ## A fog band also has "width" (image px it covers), "period" (pxl px after which the band repeats),
 ## "step_s" (seconds per one-pxl-pixel drift step) and "alpha".
-## A chain (cut out of the painting by tools/cut_chains.gd, in image px) also has "period": seconds for one
+## A chain (a strip in image px, drawn so in pxl) also has "period": seconds for one
 ## swing there and back across its 5 sway frames.
 const LIFE := {
+	# Drawn as one with its parts in art/pxl/bg_screens.px.js: flames on its braziers (M.brazier), chains under its
+	# MENU_CHAINS, fog over the moat.
 	"menu": {"px": 2, "parts": [
-		{"kind": "flame", "art": "torch", "at": Vector2(290, 314), "fps": 10.0},
-		{"kind": "flame", "art": "torch_r", "at": Vector2(698, 314), "fps": 10.0},
+		{"kind": "flame", "art": "torch", "at": Vector2(272, 322), "fps": 10.0},
+		{"kind": "flame", "art": "torch", "at": Vector2(728, 322), "fps": 10.0},
 		{"kind": "fog", "art": "moat", "at": Vector2(0, 516), "width": 1024.0, "period": 96, "step_s": 0.4, "alpha": 0.9},
-		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(210, 209), "period": 3.4},
-		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(242, 207), "period": 3.8},
-		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(771, 199), "period": 3.6},
+		{"kind": "chain", "art": "chain_menu_0", "at": Vector2(74, 0), "period": 3.4},
+		{"kind": "chain", "art": "chain_menu_1", "at": Vector2(132, 0), "period": 3.8},
+		{"kind": "chain", "art": "chain_menu_2", "at": Vector2(876, 0), "period": 3.6},
+		{"kind": "chain", "art": "chain_menu_3", "at": Vector2(930, 0), "period": 3.3},
 	]},
-	"camp": {"px": 4, "parts": [
-		{"kind": "flame", "art": "campfire", "at": Vector2(173, 396), "fps": 8.0},
-		# In the strip between the perk board and the buttons, the one stretch of ground left in view;
-		# it starts right of the campfire, which greyed out under it.
-		{"kind": "fog", "art": "ground", "at": Vector2(248, 464), "width": 776.0, "period": 64, "step_s": 0.5, "alpha": 0.9},
+	# Also from bg_screens.px.js: the flame on its fire (CAMP.fire), fog in the strip between the perk board and the
+	# buttons, the one stretch of ground left in view, starting past the fire and the log, thin over the tent.
+	"camp": {"px": 2, "parts": [
+		{"kind": "flame", "art": "campfire", "at": Vector2(196, 450), "fps": 8.0},
+		{"kind": "fog", "art": "ground", "at": Vector2(380, 472), "width": 644.0, "period": 128, "step_s": 0.5, "alpha": 0.55},
 	]},
+	# Drawn as one with its parts in art/pxl/bg_fights.px.js (its build prints these spots): flames on the candles in
+	# the nave's two nearer bays a side, chains under the eyes on the near arch.
 	"fight": {"px": 2, "parts": [
-		{"kind": "flame", "art": "candle", "at": Vector2(157, 265), "fps": 8.0},
-		{"kind": "flame", "art": "candle", "at": Vector2(262, 266), "fps": 8.0},
-		{"kind": "flame", "art": "candle", "at": Vector2(277, 248), "fps": 8.0},
-		{"kind": "flame", "art": "candle", "at": Vector2(290, 274), "fps": 8.0},
-		{"kind": "flame", "art": "candle", "at": Vector2(737, 266), "fps": 8.0},
-		{"kind": "flame", "art": "candle", "at": Vector2(755, 253), "fps": 8.0},
-		{"kind": "flame", "art": "candle", "at": Vector2(865, 274), "fps": 8.0},
-		# Ends at y 390, above the floor ledge (CombatScreen.FLOOR_LEDGE), so the fighters stand in front of it.
+		{"kind": "flame", "art": "candle", "at": Vector2(158, 266), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(186, 268), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(202, 264), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(248, 260), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(262, 262), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(758, 262), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(772, 260), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(818, 264), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(834, 268), "fps": 8.0},
+		{"kind": "flame", "art": "candle", "at": Vector2(862, 266), "fps": 8.0},
+		# Ends at y 390, along the foot of the step behind the fighters (CombatScreen.LEDGES), so they stand in front of it.
 		{"kind": "fog", "art": "floor", "at": Vector2(0, 366), "width": 1024.0, "period": 96, "step_s": 0.55, "alpha": 0.8},
-		{"kind": "chain", "art": "chain_fight_0", "at": Vector2(104, 106), "period": 3.2},
-		{"kind": "chain", "art": "chain_fight_1", "at": Vector2(596, 62), "period": 3.8},
-		{"kind": "chain", "art": "chain_fight_2", "at": Vector2(889, 68), "period": 3.5},
+		{"kind": "chain", "art": "chain_fight_0", "at": Vector2(96, 112), "period": 3.2},
+		{"kind": "chain", "art": "chain_fight_1", "at": Vector2(598, 62), "period": 3.8},
+		{"kind": "chain", "art": "chain_fight_2", "at": Vector2(956, 132), "period": 3.5},
+	]},
+	# Also from bg_fights.px.js: flames on the glass of its LANTERNS, chains under the eye bolts on its sets' caps.
+	"mine": {"px": 2, "parts": [
+		{"kind": "flame", "art": "lantern", "at": Vector2(444, 226), "fps": 6.0},
+		{"kind": "flame", "art": "lantern", "at": Vector2(576, 226), "fps": 6.0},
+		{"kind": "flame", "art": "lantern", "at": Vector2(268, 216), "fps": 6.0},
+		{"kind": "flame", "art": "lantern", "at": Vector2(752, 216), "fps": 6.0},
+		# Ends at y 380, above the ground sill (CombatScreen.LEDGES), so the fighters stand in front of it.
+		{"kind": "fog", "art": "dust", "at": Vector2(0, 300), "width": 1024.0, "period": 128, "step_s": 0.6, "alpha": 1.0},
+		{"kind": "chain", "art": "chain_mine_0", "at": Vector2(228, 122), "period": 3.4},
+		{"kind": "chain", "art": "chain_mine_1", "at": Vector2(798, 122), "period": 3.9},
+		{"kind": "chain", "art": "chain_mine_2", "at": Vector2(592, 170), "period": 3.1},
 	]},
 }
 

@@ -1,1 +1,127 @@
-{"frames":{"chain_fight_1_0":{"frame":{"x":0,"y":0,"w":24,"h":171},"duration":100},"chain_fight_1_1":{"frame":{"x":24,"y":0,"w":24,"h":171},"duration":100},"chain_fight_1_2":{"frame":{"x":48,"y":0,"w":24,"h":171},"duration":100},"chain_fight_1_3":{"frame":{"x":72,"y":0,"w":24,"h":171},"duration":100},"chain_fight_1_4":{"frame":{"x":96,"y":0,"w":24,"h":171},"duration":100}}}
+{
+ "frames": {
+  "chain_fight_1_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 146
+   },
+   "duration": 125
+  },
+  "chain_fight_1_1": {
+   "frame": {
+    "x": 20,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 146
+   },
+   "duration": 125
+  },
+  "chain_fight_1_2": {
+   "frame": {
+    "x": 40,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 146
+   },
+   "duration": 125
+  },
+  "chain_fight_1_3": {
+   "frame": {
+    "x": 60,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 146
+   },
+   "duration": 125
+  },
+  "chain_fight_1_4": {
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 20,
+    "h": 146
+   },
+   "sourceSize": {
+    "w": 20,
+    "h": 146
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "chain_fight_1.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 100,
+   "h": 146
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "chain_fight_1",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   }
+  ]
+ }
+}

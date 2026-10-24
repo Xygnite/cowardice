@@ -2,16 +2,18 @@ class_name CombatScreen
 extends Control
 ## One fight on screen, built in code. The hero and enemies with a sprite are rigs from scenes/
 ## (made by tools/rig_sprites.gd); enemies without one are placeholder boxes.
-## Rules are taught only in the tutorial fight; the boss is hinted at only by murmurs in the dungeon fights.
-## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up. Click an enemy to target it,
+## Rules are taught only in the tutorial fight; a floor's boss is hinted at only by murmurs in the fights before him.
+## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up, Esc the fight menu. Click an enemy to target it,
 ## a die for its actions (lock, place).
 
 signal finished(won: bool)
+signal abandoned  # quit from the fight menu
 
 const SLOT_NAMES := ["-", "Attack", "Guard", "Cleave"]
 const SLOT_ICONS := ["", "attack", "guard", "cleave"]  # assets/ui/cut/slot_*.png, by Combat.Slot
 const SPRITE_SCALE := 3  # whole-number scaling keeps every game pixel square
-const FLOOR_LEDGE := 0.683  # how far down the crypt picture (as a fraction) its stone floor's top edge is
+## How far down each fight picture (as a fraction) its floor's top edge is, by backdrop.
+const LEDGES := {"fight": 0.683, "mine": 0.671}
 const FEET_SINK := 10  # screen pixels the fighters' feet stand below that edge, on the floor's surface
 const SPRITE_PAD := 2  # empty rows under every sprite (tools/make_sprites.gd "pad")
 const TRAY_HEIGHT := 230  # screen pixels; leaves the fight row room for the tallest fight (the boss)
@@ -23,7 +25,6 @@ const TRAY_INSET := 6  # screen pixels from the box's edge to the felt, which tu
 const LOG_LINES := 4
 const STRIKE_DELAY := 0.2  # seconds into an enemy's attack animation when the blow lands
 const MENU_LOCK := 100  # die menu id for lock/unlock; the other ids are Combat.Slot values
-const DICE_SFX := preload("res://assets/audio/dice.wav")
 const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
 
@@ -36,19 +37,29 @@ const LESSONS := [
 	"Red means no shield will hold. Put a die in Guard and press SPACE inside the red zone to parry. A higher die gives you more time.",
 ]
 
-## Cryptic hints about the Bone Warden, one per turn across the dungeon fights before him.
-const MURMURS := [
+## Cryptic hints about the floor's boss (Bone Warden, Pit King), one per turn across the fights before him, by backdrop.
+const MURMURS := {"fight": [
 	"The walls murmur: \"...he keeps the tallest bone for himself...\"",
 	"The walls murmur: \"...two of a kind walk where one cannot...\"",
 	"The walls murmur: \"...when he cracks in half, he writes on your bones...\"",
 	"The walls murmur: \"...hold the stained bone to your shield, and it burns clean...\"",
 	"The walls murmur: \"...at the last, he swings what no shield can hold...\"",
-]
+], "mine": [
+	"The timbers creak: \"...the King keeps what the mountain takes...\"",
+	"The timbers creak: \"...when the roof speaks, one die goes under...\"",
+	"The timbers creak: \"...the rock gives back what it buries, in time...\"",
+	"The timbers creak: \"...he never takes the last one. He wants you digging...\"",
+	"The timbers creak: \"...wounded, he brings the roof down with every swing...\"",
+]}
 
 var combat: Combat  # set by game.gd before the screen enters the tree
-var busy := false  # true while the enemies act, and after the fight ends
+var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
+var meta: Meta  # for the fight menu's settings; set by game.gd
+var busy := false  # true while the dice are in the air or the enemies act, and after the fight ends
+var rolling: Array = []  # indices of the dice in the air; their values aren't known until they land
 var acting := -1  # enemy currently acting, highlighted
 
+var menu_button: Button
 var hp_label: Label
 var hp_bar: ProgressBar
 var crypt: TextureRect  # the fight backdrop
@@ -91,7 +102,7 @@ func _ready() -> void:
 	if combat.is_boss_fight():
 		_log("Something large stirs below.")
 	_refresh()
-	_roll_anim(range(combat.dice.size()))
+	_roll_anim(range(combat.dice.size()), combat.rigged_turn())
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -101,6 +112,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_reroll()
 	elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 		_on_end_turn()
+	elif event.keycode == KEY_ESCAPE:
+		get_viewport().set_input_as_handled()
+		_open_menu()
+
+
+## Only on the player's turn, with the dice at rest, so no roll, bar or blow resolves behind it.
+## The screen stays busy while it is open, which shuts out every key and click; Esc closes it (Overlay).
+func _open_menu() -> void:
+	if busy:
+		return
+	busy = true
+	var m := FightMenu.new()
+	m.meta = meta
+	m.quit.connect(abandoned.emit)
+	m.tree_exited.connect(func() -> void:
+		busy = false
+		_refresh())
+	add_child(m)
+	_refresh()
 
 
 func _on_reroll() -> void:
@@ -108,8 +138,7 @@ func _on_reroll() -> void:
 		return
 	if not combat.reroll():
 		return
-	_refresh()
-	_roll_anim(range(combat.dice.size()).filter(func(i): return not combat.dice[i].locked))
+	_roll_anim(range(combat.dice.size()).filter(func(i): return not combat.dice[i].locked and combat.dice[i].buried == 0))
 
 
 func _on_lock(i: int) -> void:
@@ -144,10 +173,15 @@ func _on_end_turn() -> void:
 	if dealt > 0:
 		await _play(hero, "attack")
 	for i in combat.enemies.size():
-		if combat.enemies[i].hp < enemy_hp_before[i]:
+		var swapped: bool = combat.enemies[i].has("from")  # a Hulk died and Rubble stands in its slot
+		if swapped or combat.enemies[i].hp < enemy_hp_before[i]:
 			_play(enemy_ui[i].rig, "hurt")
 			_slash(enemy_ui[i].body)
-			_float(enemy_ui[i].body, "-%d" % (enemy_hp_before[i] - combat.enemies[i].hp), UI.DANGER)
+			_float(enemy_ui[i].body, "-%d" % (enemy_hp_before[i] - (0 if swapped else combat.enemies[i].hp)), UI.DANGER)
+		if swapped:
+			_log("The %s collapses into %s." % [combat.enemies[i].from, combat.enemies[i].name])
+			_swap_body(i)
+			combat.enemies[i].erase("from")  # handled; later turns must not replay the swap
 	if unplaced > 0:
 		_log("+%d Grit." % unplaced)
 	_refresh()
@@ -155,7 +189,7 @@ func _on_end_turn() -> void:
 		_end(true)
 		return
 	for i in combat.enemies.size():
-		if not combat.alive(i):
+		if not combat.alive(i) or combat.enemies[i].intent.is_empty():  # a fresh Rubble waits a turn
 			continue
 		acting = i
 		_refresh()
@@ -174,6 +208,7 @@ func _on_end_turn() -> void:
 			_play(enemy_ui[i].rig, "block")
 		var hp_before := combat.player_hp
 		_log(combat.resolve_enemy(i, grade))
+		_refresh()  # a cave-in shows its rubble at once
 		var at: Control = hero.get_parent()
 		if combat.player_hp < hp_before:
 			_play(hero, "hurt")
@@ -193,9 +228,7 @@ func _on_end_turn() -> void:
 		_end(true)
 	else:
 		combat.start_turn()
-		busy = false
-		_refresh()
-		_roll_anim(range(combat.dice.size()))
+		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), combat.rigged_turn())
 
 
 ## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
@@ -222,15 +255,16 @@ func _refresh() -> void:
 	hp_label.text = "%d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards]
 	hp_bar.max_value = combat.max_hp
 	hp_bar.value = combat.player_hp
-	fight_label.text = "Tutorial" if combat.is_tutorial() else ("Boss" if combat.is_boss_fight() else "Dungeon")
+	fight_label.text = "Tutorial" if combat.is_tutorial() else ("Boss" if combat.is_boss_fight() else ("Mine" if backdrop == "mine" else "Dungeon"))
 	for i in enemy_ui.size():
 		var e: Dictionary = combat.enemies[i]
 		var ui: Dictionary = enemy_ui[i]
 		var up := combat.alive(i)
 		var kind: String = e.intent.get("kind", "") if up else ""
-		ui.icon.texture = load(UI.ART % ("intent_" + kind)) if kind else null
-		ui.intent.text = ("die %d" % (e.intent.target + 1)) if kind == "curse" else str(e.intent.get("value", ""))
-		ui.intent.add_theme_color_override("font_color", UI.DANGER if kind in ["unblockable", "curse"] else Color.WHITE)
+		ui.icon.texture = load(UI.ART % ("intent_" + ("unblockable" if kind == "cave_in" else kind))) if kind else null  # no rocks icon: the label says it
+		var cave: bool = kind == "cave_in" or e.intent.get("cave_in", false)
+		ui.intent.text = ("die %d" % (e.intent.target + 1)) if kind == "curse" else ("CAVE-IN" if kind == "cave_in" else str(e.intent.get("value", "")) + (" + cave-in" if cave else ""))
+		ui.intent.add_theme_color_override("font_color", UI.DANGER if kind in ["unblockable", "curse"] or cave else Color.WHITE)
 		ui.rune.visible = up and e.intent.get("rung", false)
 		ui.arcs.visible = kind == "ring"
 		if ui.rig == null:
@@ -246,17 +280,19 @@ func _refresh() -> void:
 		lesson_label.text = LESSONS[combat.turn]
 	# Blank rather than hidden: the murmur label is the gap that pushes the enemies to the right.
 	var murmurs := not combat.is_tutorial() and not combat.is_boss_fight()
-	murmur_label.text = MURMURS[mini(combat.dungeon_turns, MURMURS.size() - 1)] if murmurs else ""
+	var lines: Array = MURMURS[backdrop]
+	murmur_label.text = lines[mini(combat.dungeon_turns, lines.size() - 1)] if murmurs else ""
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
-		var art := "cursed" if d.value == Combat.CURSE else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
-		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked)
+		var art := "cursed" if d.value == Combat.CURSE and i not in rolling else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
+		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0)
 	var pair := "   Pair of %ds" % combat.rolled_pair() if combat.rolled_pair() else ""
-	summary_label.text = "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
-	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() else Color.WHITE)
+	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
+	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() and not rolling else Color.WHITE)
 	reroll_button.text = "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = busy or combat.rerolls == 0
 	end_button.disabled = busy
+	menu_button.disabled = busy
 	log_label.text = "\n".join(log_lines)
 
 
@@ -271,7 +307,7 @@ func _log(line: String) -> void:
 func _build() -> void:
 	var root := UI.page(self)
 	# Placed by _ground_backdrop once the fighters are laid out; the rest sinks behind the dice tray.
-	crypt = UI.backdrop(self, "fight")
+	crypt = UI.backdrop(self, backdrop)
 	# The strip it uncovers at the bottom takes the colour of the picture's bottom edge, so no seam shows.
 	var art := crypt.texture.get_image()
 	(get_child(0) as ColorRect).color = art.get_pixel(art.get_width() / 2, art.get_height() - 1)
@@ -282,6 +318,7 @@ func _build() -> void:
 	hp_label = UI.label(top, 22)
 	UI.spacer(top)
 	fight_label = UI.heading(top, 32)
+	menu_button = UI.button(top, "Menu  [Esc]", _open_menu)
 
 	var field := UI.row(root)
 	field.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -379,6 +416,19 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 	return {"intent": intent, "icon": icon, "rune": rune, "arcs": arcs, "body": body, "rig": rig, "hp": hp, "bar": bar, "mark": mark}
 
 
+## The slot's Rubble replaces its Hulk: new HP bar max, and a new rig if the new type has a sprite.
+func _swap_body(i: int) -> void:
+	var ui: Dictionary = enemy_ui[i]
+	ui.bar.max_value = combat.enemies[i].type.hp
+	if ui.rig:
+		ui.rig.queue_free()
+		ui.rig = null
+	var sprite: String = combat.enemies[i].type.get("sprite", "")
+	if sprite:
+		ui.body.flat = true
+		ui.rig = _add_rig(ui.body, sprite)
+
+
 ## Puts the rigged scene scenes/<sprite>.tscn inside `holder`, sized to the sprite at game scale.
 ## A frame-by-frame version (scenes/<sprite>_frames.tscn, tools/frames_scene.gd) wins when there is one.
 func _add_rig(holder: Control, sprite: String) -> Node2D:
@@ -422,7 +472,7 @@ func _build_dice(parent: Node) -> void:
 
 
 func _on_die_clicked(i: int) -> void:
-	if busy:
+	if busy or combat.dice[i].buried > 0:
 		return
 	var d: Dictionary = combat.dice[i]
 	menu_die = i
@@ -455,10 +505,19 @@ func _show_faces() -> void:
 	faces_popup.popup(Rect2i(Vector2i(faces_button.get_global_rect().end), faces_popup.size))
 
 
-## Tumbles the dice at `which` (indices) onto the values they just rolled.
-func _roll_anim(which: Array) -> void:
-	tray.throw(which)
-	_sfx(DICE_SFX)
+## Throws the dice at `which` (indices); the faces they land on become their values. Until then the
+## screen is busy, so nothing acts on Combat's provisional roll. `steer` lands them on that roll instead.
+func _roll_anim(which: Array, steer := false) -> void:
+	busy = true
+	rolling = which
+	tray.throw(which, steer)  # first, so the refresh doesn't square resting dice onto the provisional roll
+	_refresh()
+	await tray.landed
+	for i in which:
+		combat.dice[i].value = tray.dice[i].value
+	rolling = []
+	busy = false
+	_refresh()
 
 
 func _sfx(stream: AudioStream) -> void:
@@ -521,6 +580,6 @@ static func _arrow(color: Color) -> Texture2D:
 func _process(_delta: float) -> void:
 	var holder: Control = hero.get_parent()
 	var feet := holder.get_global_rect().end.y - SPRITE_PAD * SPRITE_SCALE - global_position.y
-	var shift: float = feet - FEET_SINK - FLOOR_LEDGE * size.y
+	var shift: float = feet - FEET_SINK - LEDGES[backdrop] * size.y
 	crypt.offset_top = shift
 	crypt.offset_bottom = shift

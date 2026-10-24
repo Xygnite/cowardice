@@ -1,0 +1,418 @@
+{
+ "frames": {
+  "shaft_foreman_idle_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 500
+  },
+  "shaft_foreman_idle_1": {
+   "frame": {
+    "x": 118,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 300
+  },
+  "shaft_foreman_idle_2": {
+   "frame": {
+    "x": 236,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 500
+  },
+  "shaft_foreman_idle_3": {
+   "frame": {
+    "x": 354,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 300
+  },
+  "shaft_foreman_attack_0": {
+   "frame": {
+    "x": 472,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 80
+  },
+  "shaft_foreman_attack_1": {
+   "frame": {
+    "x": 590,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 80
+  },
+  "shaft_foreman_attack_2": {
+   "frame": {
+    "x": 708,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 40
+  },
+  "shaft_foreman_attack_3": {
+   "frame": {
+    "x": 826,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_attack_4": {
+   "frame": {
+    "x": 944,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_attack_5": {
+   "frame": {
+    "x": 1062,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_attack_6": {
+   "frame": {
+    "x": 1180,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 60
+  },
+  "shaft_foreman_block_0": {
+   "frame": {
+    "x": 1298,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 60
+  },
+  "shaft_foreman_block_1": {
+   "frame": {
+    "x": 1416,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 240
+  },
+  "shaft_foreman_block_2": {
+   "frame": {
+    "x": 1534,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_hurt_0": {
+   "frame": {
+    "x": 1652,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 70
+  },
+  "shaft_foreman_hurt_1": {
+   "frame": {
+    "x": 1770,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 130
+  },
+  "shaft_foreman_hurt_2": {
+   "frame": {
+    "x": 1888,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  },
+  "shaft_foreman_hurt_3": {
+   "frame": {
+    "x": 2006,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 118,
+    "h": 132
+   },
+   "sourceSize": {
+    "w": 118,
+    "h": 132
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "shaft_foreman_frames.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 2124,
+   "h": 132
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "shaft_foreman_idle",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   },
+   {
+    "name": "shaft_foreman_attack",
+    "from": 4,
+    "to": 10,
+    "direction": "forward"
+   },
+   {
+    "name": "shaft_foreman_block",
+    "from": 11,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "shaft_foreman_hurt",
+    "from": 14,
+    "to": 17,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -1,0 +1,106 @@
+{
+ "frames": {
+  "canary_hurt_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 70
+  },
+  "canary_hurt_1": {
+   "frame": {
+    "x": 54,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 130
+  },
+  "canary_hurt_2": {
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 100
+  },
+  "canary_hurt_3": {
+   "frame": {
+    "x": 162,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 60
+   },
+   "duration": 100
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "canary_hurt.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 216,
+   "h": 60
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "canary_hurt",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

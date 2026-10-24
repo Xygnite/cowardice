@@ -1,8 +1,8 @@
 class_name CampScreen
 extends Control
-## The perk board: unlock perks with Embers, equip up to Meta.SLOTS of them, start a run.
+## The perk board: unlock perks with Embers, equip up to Meta.SLOTS of them, start a run (in the Mine too, once unlocked).
 
-signal start_run
+signal start_run(floor_id: String)
 signal main_menu
 
 var meta: Meta
@@ -51,10 +51,20 @@ func _ready() -> void:
 	var bottom := UI.row(root)
 	UI.button(bottom, "Main menu", main_menu.emit).custom_minimum_size = Vector2(200, 48)
 	UI.button(bottom, "Settings", SettingsPanel.open.bind(self, meta)).custom_minimum_size = Vector2(200, 48)
-	var start := UI.button(bottom, "Start run", start_run.emit)
+	var start := UI.button(bottom, "Start run", _on_start)
 	start.custom_minimum_size = Vector2(240, 48)
 	start.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_refresh()
+
+
+## Straight into the Chapel until the Mine is unlocked; after that, a window to choose the floor.
+func _on_start() -> void:
+	if not meta.mine_unlocked:
+		start_run.emit("chapel")
+		return
+	var pick := FloorPanel.new()
+	pick.chosen.connect(start_run.emit)
+	add_child(pick)
 
 
 func _on_card(id: String) -> void:

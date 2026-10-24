@@ -1,6 +1,6 @@
 class_name Meta
 extends RefCounted
-## What survives between runs and launches: Embers, perks, whether the tutorial is done, sound settings.
+## What survives between runs and launches: Embers, perks, whether the tutorial is done and the Mine unlocked, sound settings.
 
 signal sound_changed  # so on-screen sound controls follow the M key
 
@@ -24,6 +24,7 @@ var embers := 0
 var owned: Array = []
 var equipped: Array = []
 var tutorial_done := false
+var mine_unlocked := false  # beating the Warden opens the Hollow Mine as a starting floor
 var music := 1.0  # Music bus loudness, 0 to 1
 var sounds := 1.0  # SFX bus loudness, 0 to 1
 var muted := false
@@ -40,9 +41,9 @@ func apply_sound() -> void:
 	sound_changed.emit()
 
 
-## Embers paid out at the end of a run, won or lost.
+## Embers paid out at the end of a run, won (the Pit King beaten) or lost.
 static func embers_for(kills: int, rooms_cleared: int, boss_pct: int, won: bool) -> int:
-	return kills * 5 + rooms_cleared * 10 + boss_pct / 2 + (50 if won else 0)
+	return kills * 5 + rooms_cleared * 10 + boss_pct / 2 + (100 if won else 0)
 
 
 func unlock(id: String) -> bool:
@@ -70,7 +71,7 @@ func save() -> void:
 		push_error("Could not save progress to %s" % save_path)
 		return
 	f.store_string(JSON.stringify({"embers": embers, "owned": owned, "equipped": equipped, "tutorial_done": tutorial_done,
-		"music": music, "sounds": sounds, "muted": muted}))
+		"mine_unlocked": mine_unlocked, "music": music, "sounds": sounds, "muted": muted}))
 
 
 ## A missing or unreadable save starts fresh rather than crashing.
@@ -85,6 +86,7 @@ static func load_from(path := SAVE_PATH) -> Meta:
 		m.owned = data.get("owned", []).filter(func(id): return PERKS.has(id))
 		m.equipped = data.get("equipped", []).filter(func(id): return id in m.owned)
 		m.tutorial_done = bool(data.get("tutorial_done", false))
+		m.mine_unlocked = bool(data.get("mine_unlocked", false))
 		m.music = clampf(float(data.get("music", 1.0)), 0.0, 1.0)
 		m.sounds = clampf(float(data.get("sounds", 1.0)), 0.0, 1.0)
 		m.muted = bool(data.get("muted", false))

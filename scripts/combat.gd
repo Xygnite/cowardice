@@ -21,6 +21,7 @@ const CAMPFIRE_HEAL := 0.3  # share of max HP
 ## "rig_pair_turn": that turn's roll always contains a pair, so the Cleave lesson can happen.
 ## "bone_wall": blocks your highest Attack die aimed at it.
 ## "sprite": file name in assets/sprites/; enemies without one show a placeholder box.
+## A buried die ("buried" > 0) keeps its value and slot, and can't be rolled, locked or placed, for the next turn.
 ## A "ring" intent turns another enemy's attack this turn unblockable.
 const TYPES := {
 	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5, "rig_pair_turn": 2,
@@ -46,6 +47,24 @@ const TYPES := {
 	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
+	# The Hollow Mine. "pack": each other living one adds that much to its attack. "rallies": adds that much to every other
+	# enemy's attack. "leaves": a fresh enemy of that type takes its place when it dies.
+	"miner": {"name": "Lantern-Eye Miner", "hp": 22, "sprite": "miner",
+		"phase1": [{"kind": "attack", "value": 5}, {"kind": "attack", "value": 6}, {"kind": "unblockable", "value": 7}]},
+	"crawler": {"name": "Tunnel Crawler", "hp": 8, "sprite": "crawler", "pack": 1,
+		"phase1": [{"kind": "attack", "value": 3}]},
+	"hulk": {"name": "Rubble Hulk", "hp": 30, "sprite": "hulk", "leaves": "rubble",
+		"phase1": [{"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}]},
+	"rubble": {"name": "Rubble", "hp": 8, "sprite": "rubble",
+		"phase1": [{"kind": "attack", "value": 3}]},
+	"canary": {"name": "Canary Wraith", "hp": 12, "sprite": "canary",
+		"phase1": [{"kind": "ring"}, {"kind": "attack", "value": 3}]},
+	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "sprite": "shaft_foreman", "rallies": 2,
+		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
+	# Cave-ins bury a die (see bury_one). The Pit King's phase 2 attacks all carry one.
+	"pit_king": {"name": "Pit King", "hp": 110, "sprite": "pit_king", "boss": true,
+		"phase1": [{"kind": "attack", "value": 7}, {"kind": "cave_in"}, {"kind": "attack", "value": 10}, {"kind": "guard", "value": 6}],
+		"phase2": [{"kind": "attack", "value": 9, "cave_in": true}, {"kind": "attack", "value": 12, "cave_in": true}, {"kind": "attack", "value": 8, "cave_in": true}]},
 }
 
 ## Set fights for the tutorial (0), the boss (6), tests and the --fight shortcut. A run deals its own groups in game.gd.
@@ -53,12 +72,14 @@ const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acoly
 	["treant", "moss"], ["grieve", "archivist"], ["warden"]]
 
 var rng := RandomNumberGenerator.new()
-var perks: Array = []  # perk ids from Meta.PERKS equipped for this run
+var perks: Array = []  # perk ids from Meta.PERKS equipped for this run, plus the bonus one
+var bonus_perk := ""  # the perk picked after the Warden, active this run only
 var max_hp := PLAYER_MAX_HP
 var player_hp := PLAYER_MAX_HP
 var shards := 0
 var kills := 0
-var dungeon_turns := 0  # enemy turns in dungeon fights this run; drives the murmurs
+var replaced := 0  # enemies this fight that died and were replaced (a Hulk's Rubble); they still count as kills
+var dungeon_turns := 0  # enemy turns in dungeon fights on this floor; drives the murmurs
 var dice: Array[Dictionary] = []
 var rerolls := 0
 var grit := 0
@@ -75,14 +96,58 @@ func _init(seed_value := -1) -> void:
 	if seed_value >= 0:
 		rng.seed = seed_value
 	for i in 3:
-		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}})
+		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}, "buried": 0})
 	start_fight(0)
+
+
+## What a run save keeps (RunSave): only what lasts between fights, as it is at a campfire.
+const SAVED := ["max_hp", "player_hp", "shards", "kills", "perks", "bonus_perk", "bonus_embers", "dungeon_turns"]
+
+
+func to_dict() -> Dictionary:
+	var d := {"dice": dice.map(func(x): return {"base": x.base, "faces": x.faces, "uncursed": x.uncursed})}
+	for k in SAVED:
+		d[k] = get(k)
+	return d.duplicate(true)
+
+
+## Whether `d` is a to_dict() that from_dict() can load: every field there, with the right type, and all the dice.
+static func valid_dict(d) -> bool:
+	if not d is Dictionary or not d.get("dice") is Array:
+		return false
+	var blank := Combat.new()
+	if d.dice.size() != blank.dice.size():
+		return false
+	for x in d.dice:
+		if not (x is Dictionary and x.get("base") is Array and x.get("faces") is Array and x.get("uncursed") is Dictionary):
+			return false
+	return SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k)))
+
+
+static func from_dict(d: Dictionary) -> Combat:
+	var c := Combat.new()
+	for k in SAVED:
+		c.set(k, d[k])
+	for i in c.dice.size():
+		c.dice[i].merge(d.dice[i].duplicate(true), true)
+	return c
 
 
 func apply_perks(ids: Array) -> void:
 	perks = ids.duplicate()
 	max_hp = PLAYER_MAX_HP + (10 if "thick_skin" in perks else 0)
 	player_hp = max_hp
+
+
+## Adds a perk mid-run (the bonus after the Warden). Thick Skin's +10 max HP comes with +10 HP, once.
+func add_perk(id: String) -> void:
+	if id in perks:
+		return
+	perks.append(id)
+	bonus_perk = id
+	if id == "thick_skin":
+		max_hp += 10
+		player_hp += 10
 
 
 func heal(amount: int) -> void:
@@ -147,6 +212,7 @@ func lose_max_hp(amount: int) -> void:
 
 
 ## Rolls the dice at the indices in `which`; returns their new values in order.
+## On screen these are provisional: the thrown dice's landed faces replace them (as for every roll here).
 func roll_dice(which: Array) -> Array:
 	var out: Array = []
 	for i in which:
@@ -157,7 +223,7 @@ func roll_dice(which: Array) -> Array:
 
 ## Call once when a fight ends, won or lost: counts kills and pays Shards for them.
 func claim_fight() -> void:
-	var dead := enemies.filter(func(e): return e.hp == 0).size()
+	var dead := enemies.filter(func(e): return e.hp == 0).size() + replaced
 	kills += dead
 	if not is_tutorial():
 		shards += dead * (SHARDS_PER_KILL + (1 if "scavenger" in perks else 0))
@@ -178,6 +244,7 @@ func start_fight(index: int) -> void:
 ## Starts a fight against `keys` (TYPES keys, at most three of one type).
 func start_group(keys: Array) -> void:
 	enemies.clear()
+	replaced = 0
 	var seen := {}
 	for key in keys:
 		var t: Dictionary = TYPES[key]
@@ -192,6 +259,7 @@ func start_group(keys: Array) -> void:
 	ward_spent = false
 	for d in dice:
 		d.faces = d.base.duplicate()  # boss tampering ends with the fight
+		d.buried = 0
 	start_turn()
 
 
@@ -200,13 +268,22 @@ func start_turn() -> void:
 	grit = 0
 	for e in enemies:
 		e.intent = _next_intent(e) if e.hp > 0 else {}
+	_apply_bonuses()
 	_apply_rings()
 	for d in dice:
+		d.buried = maxi(0, d.buried - 1)  # buried at 2: held this turn (1), free the next
+		if d.buried > 0:
+			continue
 		d.locked = false
 		d.slot = Slot.NONE
 		_roll(d)
-	if enemies[0].type.get("rig_pair_turn", -1) == turn:
+	if rigged_turn():
 		dice[1].value = dice[0].value
+
+
+## This turn's opening roll is fixed to hold a pair (the tutorial's Cleave lesson); the screen steers the dice onto it.
+func rigged_turn() -> bool:
+	return enemies[0].type.get("rig_pair_turn", -1) == turn
 
 
 func alive(i: int) -> bool:
@@ -243,16 +320,20 @@ func reroll() -> bool:
 		return false
 	rerolls -= 1
 	for d in dice:
-		if not d.locked:
+		if not d.locked and d.buried == 0:
 			_roll(d)
 	return true
 
 
 func toggle_lock(i: int) -> void:
+	if dice[i].buried > 0:
+		return
 	dice[i].locked = not dice[i].locked
 
 
 func assign(i: int, slot: Slot) -> void:
+	if dice[i].buried > 0:
+		return
 	dice[i].slot = slot
 
 
@@ -315,7 +396,7 @@ func rolled_pair() -> int:
 
 
 func unplaced_count() -> int:
-	return _values_in(Slot.NONE).size()
+	return dice.filter(func(d): return d.slot == Slot.NONE and d.buried == 0).size()  # a buried die gives no Grit
 
 
 ## Damage your placed dice would deal to enemy i right now: Attack hits the target, Cleave is shared out.
@@ -350,10 +431,16 @@ func resolve_player() -> int:
 	for i in enemies.size():
 		if alive(i):
 			enemies[i].hp = maxi(floor_hp, enemies[i].hp - hits[i])
+			if enemies[i].hp == 0 and enemies[i].type.has("leaves"):
+				var t: Dictionary = TYPES[enemies[i].type.leaves]
+				var old: String = enemies[i].name
+				var tag: String = old.substr(enemies[i].type.name.length())  # a Hulk's " A" stays on its Rubble
+				enemies[i] = {"type": t, "name": t.name + tag, "hp": t.hp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
+				replaced += 1
 	for d in dice:
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
-		if d.slot == Slot.NONE:
+		if d.slot == Slot.NONE and d.buried == 0:
 			grit += 2 if "grit_teeth" in perks else 1
 	guard_pool = guard_total()
 	if not alive(target):
@@ -395,6 +482,8 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 				guard_pool = maxi(0, guard_pool - blocked)
 			player_hp -= hit
 			text = "%s%s hits for %d." % [["", "Good block! ", "Perfect block! "][grade], e.name, hit]
+			if e.intent.get("cave_in", false):
+				text += " " + _cave_in()
 		"unblockable":
 			if grade == Grade.PERFECT:
 				text = "Parried %s!" % e.name
@@ -414,6 +503,8 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 			text = "%s braced behind its guard." % e.name
 		"ring":
 			text = "%s tolls." % e.name
+		"cave_in":
+			text = _cave_in()
 	player_hp = maxi(0, player_hp)
 	return text
 
@@ -428,7 +519,7 @@ func intent_text(i: int) -> String:
 	var it: Dictionary = enemies[i].intent
 	match it.get("kind"):
 		"attack":
-			return "Attack %d" % it.value
+			return "Attack %d%s" % [it.value, " + cave-in" if it.get("cave_in", false) else ""]
 		"guard":
 			return "Guard %d" % it.value
 		"curse":
@@ -437,7 +528,27 @@ func intent_text(i: int) -> String:
 			return "UNBLOCKABLE %d" % it.value
 		"ring":
 			return "Ring"
+		"cave_in":
+			return "Cave-in"
 	return ""
+
+
+## Buries one random unburied die until the turn after next. Never the last unburied one. Returns its index, or -1.
+func bury_one() -> int:
+	var free: Array = []
+	for i in dice.size():
+		if dice[i].buried == 0:
+			free.append(i)
+	if free.size() < 2:
+		return -1
+	var i: int = free[rng.randi_range(0, free.size() - 1)]
+	dice[i].buried = 2
+	return i
+
+
+func _cave_in() -> String:
+	var i := bury_one()
+	return "Rubble buries die %d." % (i + 1) if i >= 0 else "Rubble falls, but your last free die holds."
 
 
 func _next_intent(e: Dictionary) -> Dictionary:
@@ -446,6 +557,21 @@ func _next_intent(e: Dictionary) -> Dictionary:
 	if next.kind == "curse":
 		next.target = rng.randi_range(0, dice.size() - 1)
 	return next
+
+
+## Pack and rally bonuses on attack values, from who is alive now, so the intent shows the final number.
+func _apply_bonuses() -> void:
+	var rally := 0
+	for e in enemies:
+		if e.hp > 0:
+			rally += e.type.get("rallies", 0)
+	for e in enemies:
+		if e.intent.get("kind") not in ["attack", "unblockable"]:
+			continue
+		var pack: int = e.type.get("pack", 0)
+		if pack:
+			e.intent.value += pack * (enemies.filter(func(o): return o.hp > 0 and o.type == e.type).size() - 1)
+		e.intent.value += rally - e.type.get("rallies", 0)
 
 
 ## A ringing enemy makes the first other enemy's attack this turn unblockable, shown in its intent.

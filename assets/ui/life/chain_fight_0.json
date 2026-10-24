@@ -1,1 +1,127 @@
-{"frames":{"chain_fight_0_0":{"frame":{"x":0,"y":0,"w":30,"h":95},"duration":100},"chain_fight_0_1":{"frame":{"x":30,"y":0,"w":30,"h":95},"duration":100},"chain_fight_0_2":{"frame":{"x":60,"y":0,"w":30,"h":95},"duration":100},"chain_fight_0_3":{"frame":{"x":90,"y":0,"w":30,"h":95},"duration":100},"chain_fight_0_4":{"frame":{"x":120,"y":0,"w":30,"h":95},"duration":100}}}
+{
+ "frames": {
+  "chain_fight_0_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 94
+   },
+   "duration": 125
+  },
+  "chain_fight_0_1": {
+   "frame": {
+    "x": 18,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 94
+   },
+   "duration": 125
+  },
+  "chain_fight_0_2": {
+   "frame": {
+    "x": 36,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 94
+   },
+   "duration": 125
+  },
+  "chain_fight_0_3": {
+   "frame": {
+    "x": 54,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 94
+   },
+   "duration": 125
+  },
+  "chain_fight_0_4": {
+   "frame": {
+    "x": 72,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 18,
+    "h": 94
+   },
+   "sourceSize": {
+    "w": 18,
+    "h": 94
+   },
+   "duration": 125
+  }
+ },
+ "meta": {
+  "app": "pxl",
+  "image": "chain_fight_0.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 90,
+   "h": 94
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "chain_fight_0",
+    "from": 0,
+    "to": 4,
+    "direction": "forward"
+   }
+  ]
+ }
+}

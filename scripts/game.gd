@@ -1,13 +1,16 @@
 extends Control
 ## Runs the game: a title menu, the tutorial on first play, then runs of map -> rooms -> boss,
-## with Embers and perks carried between runs by Meta.
+## the Chapel's Warden leading down to the Mine's Pit King, with Embers and perks carried between runs by Meta.
 
 var meta := Meta.load_from()
 var combat: Combat
+var floor_id := "chapel"
 var map: Array = []  # this run's floor, from Floor.deal()
 var layer := 0
+var rooms_before := 0  # rooms cleared on earlier floors this run
 var path: Array = []  # room picked on each layer so far
 var seen_events: Array = []  # "?" events met this run; each happens once
+var run_path := RunSave.PATH  # tests point it elsewhere, as they do Meta's
 var ambush := false  # the fight on now came from a "?" room
 var screen: Control
 var music := AudioStreamPlayer.new()
@@ -47,8 +50,10 @@ func _show_menu() -> void:
 	var s := MenuScreen.new()
 	s.tutorial_done = meta.tutorial_done
 	s.meta = meta
+	s.can_continue = not _saved_run().is_empty()
 	s.play.connect(_on_play)
-	s.tutorial.connect(_show_tutorial)
+	s.resume.connect(_continue_run)
+	s.tutorial.connect(_confirm_new_run.bind(_show_tutorial))
 	_show(s)
 
 
@@ -56,10 +61,26 @@ func _on_play() -> void:
 	if meta.tutorial_done:
 		_show_camp()
 	else:
-		_show_tutorial()
+		_confirm_new_run(_show_tutorial)
+
+
+## Calls `start` now, or once the player agrees to throw away the saved run it would replace.
+func _confirm_new_run(start: Callable) -> void:
+	if not RunSave.exists(run_path):
+		start.call()
+		return
+	var c := ConfirmPanel.new()
+	c.title = "Abandon saved run?"
+	c.text = "The run saved at the campfire will be lost."
+	c.yes = "Start a new run"
+	c.confirmed.connect(func() -> void:
+		RunSave.erase(run_path)
+		start.call())
+	screen.add_child(c)
 
 
 func _show_tutorial() -> void:
+	floor_id = "chapel"  # the tutorial's backdrop, even after a Mine run
 	combat = Combat.new()  # a new Combat starts on fight 0, the tutorial
 	_show_fight(_on_tutorial_finished)
 
@@ -105,19 +126,30 @@ func _on_tutorial_finished(_won: bool) -> void:
 	_start_run()
 
 
-func _start_run() -> void:
+func _start_run(first_floor := "chapel") -> void:
+	RunSave.erase(run_path)  # one run at a time
 	combat = Combat.new()
 	combat.apply_perks(meta.equipped)
-	map = Floor.deal()
+	rooms_before = 0
+	seen_events.clear()
+	_enter_floor(first_floor)
+
+
+## A fresh map of floor `id`, from its entrance. HP, Shards, dice, perks and seen events stay as they are; the murmurs start over.
+func _enter_floor(id: String) -> void:
+	floor_id = id
+	combat.dungeon_turns = 0
+	map = Floor.deal(floor_id)
 	layer = 0
 	path.clear()
-	seen_events.clear()
 	_show_map()
 
 
 func _show_map() -> void:
 	var s := MapScreen.new()
 	s.rooms = map
+	s.title = Floor.FLOORS[floor_id].title
+	s.lair = Floor.FLOORS[floor_id].lair
 	s.layer = layer
 	s.path = path
 	s.combat = combat
@@ -142,17 +174,59 @@ func _on_room_picked(i: int) -> void:
 		"forge":
 			_show_forge(false)
 		"campfire":
-			var heal := combat.campfire_heal_amount()
-			_show_notice("Campfire", ["HP %d/%d" % [combat.player_hp, combat.max_hp]], -1, [
-				["Rest  (+%d HP)" % heal, _on_rest],
-				["Tend the dice  (one free upgrade)", _show_forge.bind(true)],
-			], "campfire")
+			_show_campfire("room")
+
+
+## Rest or a free upgrade, then on `into`: "room" (the map's next column) or "mine" (down from the Warden).
+## Or save the run here and quit; continuing comes back to this same campfire.
+func _show_campfire(into: String) -> void:
+	var then := _next_room if into == "room" else _enter_floor.bind("mine")
+	var heal := combat.campfire_heal_amount()
+	_show_notice("Campfire", ["HP %d/%d" % [combat.player_hp, combat.max_hp]], -1, [
+		["Rest  (+%d HP)" % heal, _on_rest.bind(then)],
+		["Tend the dice  (one free upgrade)", _show_forge.bind(true, then)],
+		["Save and quit", _save_and_quit.bind(into)],
+	], "campfire")
+
+
+func _save_and_quit(into: String) -> void:
+	var data := {"combat": combat.to_dict(), "floor_id": floor_id, "map": map, "layer": layer, "path": path,
+		"rooms_before": rooms_before, "seen_events": seen_events, "into": into}
+	if RunSave.write(data, run_path):  # on failure stay at the campfire rather than lose the run
+		_show_menu()
+
+
+## Back to the campfire the run was saved at. The save stays until the run ends.
+func _continue_run() -> void:
+	var data := _saved_run()
+	if data.is_empty():
+		_show_menu()
+		return
+	combat = Combat.from_dict(data.combat)
+	floor_id = data.floor_id
+	map = data.map
+	layer = data.layer
+	path = data.path
+	rooms_before = data.rooms_before
+	seen_events = data.seen_events
+	ambush = false
+	_show_campfire(data.into)
+
+
+## The campfire save, or {} if there is none or it can't be loaded as _save_and_quit wrote it.
+func _saved_run() -> Dictionary:
+	var d := RunSave.read(run_path)
+	var ok: bool = Combat.valid_dict(d.get("combat")) and Floor.FLOORS.has(d.get("floor_id")) 		and d.get("map") is Array and d.get("path") is Array and d.get("seen_events") is Array 		and d.get("rooms_before") is int and d.get("into") in ["room", "mine"] 		and d.get("layer") is int and d.layer >= 0 and d.layer < d.map.size()
+	return d if ok else {}
 
 
 func _show_fight(on_finished: Callable) -> void:
 	var s := CombatScreen.new()
 	s.combat = combat
+	s.backdrop = Floor.FLOORS[floor_id].backdrop
+	s.meta = meta
 	s.finished.connect(on_finished)
+	s.abandoned.connect(_abandon_run)
 	_show(s)
 
 
@@ -163,10 +237,25 @@ func _on_fight_finished(won: bool) -> void:
 	ambush = false
 	if not won:
 		_end_run(false)
-	elif layer == map.size() - 1:
-		_end_run(true)
-	else:
+	elif layer < map.size() - 1:
 		_next_room()
+	elif floor_id == "chapel":  # the Warden always leads on down
+		_on_warden_beaten()
+	else:
+		_end_run(true)
+
+
+## The Mine opens for good; this run takes a bonus perk, a campfire, then the way down.
+func _on_warden_beaten() -> void:
+	meta.mine_unlocked = true
+	meta.save()
+	rooms_before += map.size()
+	var s := PerkPickScreen.new()
+	s.choices = PerkPickScreen.offer(combat.perks)
+	s.picked.connect(func(id: String) -> void:
+		combat.add_perk(id)
+		_show_campfire("mine"))
+	_show(s)
 
 
 func _show_event(id: String) -> void:
@@ -197,23 +286,23 @@ func _on_event_finished(result: Dictionary) -> void:
 
 func _start_ambush() -> void:
 	ambush = true
-	combat.start_group(Floor.group(Floor.EARLY_HP, {}))
+	combat.start_group(Floor.group(Floor.FLOORS[floor_id].hp[1], {}, Floor.FLOORS[floor_id].enemies))
 	_show_fight(_on_fight_finished)
 	screen._log("Something moves in the dark.")
 	screen._refresh()
 
 
-func _show_forge(no_cost: bool) -> void:
+func _show_forge(no_cost: bool, then := _next_room) -> void:
 	var s := ForgeScreen.new()
 	s.combat = combat
 	s.no_cost = no_cost
-	s.done.connect(_next_room)
+	s.done.connect(then)
 	_show(s)
 
 
-func _on_rest() -> void:
+func _on_rest(then: Callable) -> void:
 	combat.heal(combat.campfire_heal_amount())
-	_next_room()
+	then.call()
 
 
 func _next_room() -> void:
@@ -221,28 +310,41 @@ func _next_room() -> void:
 	_show_map()
 
 
+## Quit from the fight menu: the run is given up, with no Embers.
+func _abandon_run() -> void:
+	RunSave.erase(run_path)
+	ambush = false
+	_show_menu()
+
+
 func _end_run(won: bool) -> void:
-	var rooms_cleared := layer + (1 if won else 0)
+	RunSave.erase(run_path)
+	var rooms_cleared := rooms_before + layer + (1 if won else 0)
 	var boss_pct := combat.boss_damage_pct()
 	var earned := Meta.embers_for(combat.kills, rooms_cleared, boss_pct, won) + combat.bonus_embers
 	meta.embers += earned
 	meta.save()
-	var title := "The Bone Warden falls." if won else "You fled."
-	var narrator := "The chapel goes quiet." if won else ("The Warden will remember your back." if combat.is_boss_fight() else "The dungeon keeps what you dropped.")
+	var title := "The Pit King falls." if won else "You fled."
+	var narrator := "The mine goes still."
+	if not won:
+		var boss := "Pit King" if floor_id == "mine" else "Warden"
+		var place := "mine" if floor_id == "mine" else "dungeon"
+		narrator = "The %s will remember your back." % boss if combat.is_boss_fight() else "The %s keeps what you dropped." % place
 	_show_notice(title, [
 		narrator,
-		"Depth reached: room %d of %d" % [mini(layer + 1, map.size()), map.size()],
+		"Depth reached: %s, room %d of %d" % [Floor.FLOORS[floor_id].title, mini(layer + 1, map.size()), map.size()],
 		"Enemies slain: %d" % combat.kills,
 		"Boss damage dealt: %d%%" % boss_pct,
 		"Embers earned: +%d" % earned,
 		"Embers: %d" % meta.embers,
-	], 4, [["Walk back in", _start_run], ["Return to camp", _show_camp]], "victory" if won else "defeat")
+	], 4, [["Walk back in", _confirm_new_run.bind(_start_run.bind("chapel" if rooms_before > 0 else floor_id))], ["Return to camp", _show_camp]],
+		"victory" if won else "defeat")  # walking back in starts where this run did
 
 
 func _show_camp() -> void:
 	var s := CampScreen.new()
 	s.meta = meta
-	s.start_run.connect(_start_run)
+	s.start_run.connect(func(id: String) -> void: _confirm_new_run(_start_run.bind(id)))
 	s.main_menu.connect(_show_menu)
 	_show(s)
 
