@@ -15,8 +15,12 @@ static func write(data: Dictionary, path := PATH) -> bool:
 	if f == null:
 		push_error("Could not save the run to %s" % tmp)
 		return false
-	f.store_string(JSON.stringify(JSON.from_native(data.merged({"version": VERSION}))))
+	var ok := f.store_string(JSON.stringify(JSON.from_native(data.merged({"version": VERSION}))))
 	f.close()
+	if not ok or f.get_error() != OK:  # a part-written temp file must not replace the good save
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
+		push_error("Could not save the run to %s" % tmp)
+		return false
 	if DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path)) != OK:
 		push_error("Could not save the run to %s" % path)
 		return false
@@ -25,6 +29,8 @@ static func write(data: Dictionary, path := PATH) -> bool:
 
 ## The saved run, or {} if there is none, it is unreadable, or it is from another version.
 static func read(path := PATH) -> Dictionary:
+	if not FileAccess.file_exists(path) and FileAccess.file_exists(path + ".tmp"):
+		path += ".tmp"  # Windows' rename removes the old save before moving the new one in; a crash between leaves only this
 	if not FileAccess.file_exists(path):
 		return {}
 	var json := JSON.new()  # parse() on an instance fails quietly, where JSON.parse_string logs an error
@@ -39,5 +45,6 @@ static func exists(path := PATH) -> bool:
 
 
 static func erase(path := PATH) -> void:
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	for p in [path, path + ".tmp"]:
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(p))

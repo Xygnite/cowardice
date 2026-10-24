@@ -50,7 +50,7 @@ func _show_menu() -> void:
 	var s := MenuScreen.new()
 	s.tutorial_done = meta.tutorial_done
 	s.meta = meta
-	s.can_continue = RunSave.exists(run_path)
+	s.can_continue = not _saved_run().is_empty()
 	s.play.connect(_on_play)
 	s.resume.connect(_continue_run)
 	s.tutorial.connect(_confirm_new_run.bind(_show_tutorial))
@@ -198,8 +198,8 @@ func _save_and_quit(into: String) -> void:
 
 ## Back to the campfire the run was saved at. The save stays until the run ends.
 func _continue_run() -> void:
-	var data := RunSave.read(run_path)
-	if not data.has_all(["combat", "floor_id", "map", "layer", "path", "rooms_before", "seen_events", "into"]) or not Floor.FLOORS.has(data.floor_id):
+	var data := _saved_run()
+	if data.is_empty():
 		_show_menu()
 		return
 	combat = Combat.from_dict(data.combat)
@@ -211,6 +211,13 @@ func _continue_run() -> void:
 	seen_events = data.seen_events
 	ambush = false
 	_show_campfire(data.into)
+
+
+## The campfire save, or {} if there is none or it can't be loaded as _save_and_quit wrote it.
+func _saved_run() -> Dictionary:
+	var d := RunSave.read(run_path)
+	var ok: bool = Combat.valid_dict(d.get("combat")) and Floor.FLOORS.has(d.get("floor_id")) 		and d.get("map") is Array and d.get("path") is Array and d.get("seen_events") is Array 		and d.get("rooms_before") is int and d.get("into") in ["room", "mine"] 		and d.get("layer") is int and d.layer >= 0 and d.layer < d.map.size()
+	return d if ok else {}
 
 
 func _show_fight(on_finished: Callable) -> void:

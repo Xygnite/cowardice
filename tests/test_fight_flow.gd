@@ -515,6 +515,8 @@ func _campfire_save() -> void:
 		await process_frame
 	check(game.screen is MapScreen and game.layer == 4 and game.combat.dice[2].base[0] == 1 + Combat.FORGE_STEP, "and moves on, forged")
 	game.layer = game.map.size() - 1  # the stop between the Warden and the Mine
+	game.rooms_before = game.map.size()
+	game.combat.add_perk("bonfire_keeper")
 	game._show_campfire("mine")
 	await process_frame
 	_button(game.screen, "Save and quit").pressed.emit()
@@ -523,6 +525,11 @@ func _campfire_save() -> void:
 	game.screen.choices[0][1].call()
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "a save on the way down continues into the Mine")
+	check(game.rooms_before > 0 and game.combat.bonus_perk == "bonfire_keeper", "with the bonus perk and the Chapel's rooms kept")
+	var bad := RunSave.read(RUN)
+	bad.combat.dice.pop_back()
+	RunSave.write(bad, RUN)
+	check(game._saved_run().is_empty(), "a save that can't be loaded counts as none, so the menu shows no Continue")
 	await create_timer(0.3).timeout
 	check(errors.count == errors_before, "saving and continuing run with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()

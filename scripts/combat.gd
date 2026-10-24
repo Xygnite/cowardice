@@ -111,6 +111,19 @@ func to_dict() -> Dictionary:
 	return d.duplicate(true)
 
 
+## Whether `d` is a to_dict() that from_dict() can load: every field there, with the right type, and all the dice.
+static func valid_dict(d) -> bool:
+	if not d is Dictionary or not d.get("dice") is Array:
+		return false
+	var blank := Combat.new()
+	if d.dice.size() != blank.dice.size():
+		return false
+	for x in d.dice:
+		if not (x is Dictionary and x.get("base") is Array and x.get("faces") is Array and x.get("uncursed") is Dictionary):
+			return false
+	return SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k)))
+
+
 static func from_dict(d: Dictionary) -> Combat:
 	var c := Combat.new()
 	for k in SAVED:
