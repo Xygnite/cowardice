@@ -22,6 +22,7 @@ const BEAM = [18, 32]  // the cap beam across the top, rows
 const POSTS = [[22, 12], [148, 10], [354, 10], [478, 12]]  // timber posts: x, width
 const TUNNEL = { x0: 196, x1: 316, top: 58 }  // the drift mouth's timber set, outer edges
 const LANTERNS = [[211, 72], [294, 72], [162, 94], [342, 94]]  // lit lanterns, top-left of their 7x12 body
+const LAMPS = LANTERNS.map(([x, y]) => [x + 3, y + 5])  // the flames' centres, the only light
 const DRIPS = [96, 270, 414]  // x of the leaks under the cap beam
 // The eye bolts the swaying chains (chain_mine_<i>, below) hang from: x of the chain's middle, y of its top row.
 // In LIFE.mine a strip sits at image px (2 * (x - half - 2), 2 * y), half being 1 for a hook, 3 for the lantern.
@@ -31,6 +32,36 @@ const CHAINS = [[100, BEAM[1] + 2], [404, BEAM[1] + 2], [256, TUNNEL.top + 12]]
 function hash(a, b) {
   const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453
   return s - Math.floor(s)
+}
+
+// Relights the finished scene (lantern flames, "wyoR", keep their colour): a cold ambient that sinks to near-black
+// toward the roof and the far ends, plus a warm pool round each lamp falling off with the square of the distance
+// (squashed above the lamp, whose cap shades the roof).
+// Both are banded in dithered steps so the light lies in flat pixel-art shades, not a smooth airbrush.
+// `at`/`px`: where the canvas sits in the scene and its image px per pxl pixel, so a BackdropLife strip drawn
+// apart (the chains) is lit as it would be on its painted spot.
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
+function light(c, lamps, { amb = 0.45, warm = 2.2, reach = 150, cold = [0.62, 0.74, 1], fire = [1, 0.84, 0.66], step = 0.08, deep = null, at = [0, 0], px = 1 } = {}) {
+  const band = (v, x, y) => Math.floor(v / step + BAYER[(y & 3) * 4 + (x & 3)] / 16) * step
+  for (let y = 0; y < c.h; y++)
+    for (let x = 0; x < c.w; x++) {
+      const p = c.get(x, y) >>> 0
+      if ((p & 255) === 0 || c.is(x, y, "wyoR")) continue
+      const sx = at[0] + x / px, sy = at[1] + y / px
+      const edge = Math.min(1, Math.min(sx, W - sx) / 170), top = Math.min(1, Math.max(0, (sy - 12) / 110))
+      const a = band(amb * (0.25 + 0.75 * edge) * (0.2 + 0.8 * top), sx | 0, sy | 0)
+      let w = 0
+      for (const [lx, ly] of lamps) {
+        const f = Math.max(0, 1 - Math.hypot(sx - lx, (sy - ly) * (sy < ly ? 2 : 1.1)) / reach)
+        w += f * f
+      }
+      w = band(Math.min(1.4, w * warm), sx | 0, sy | 0)
+      let d = 0
+      if (deep) d = band(Math.max(0, 1 - Math.hypot(sx - deep[0], sy - deep[1]) / deep[2]) * 0.5, sx | 0, sy | 0)
+      const ch = (sh, i) => Math.min(255, Math.round(((p >>> sh) & 255) * (a * cold[i] + w * fire[i] + d * cold[i])))
+      const hex = (v) => v.toString(16).padStart(2, "0")
+      c.px(x, y, "#" + hex(ch(24, 0)) + hex(ch(16, 1)) + hex(ch(8, 2)))
+    }
 }
 
 // A faceted stone with a dark rim (so packed stones read apart), its top-left facet lit.
@@ -55,8 +86,8 @@ function wall(c) {
     const ry = 8 + Math.floor(hash(row, 1) * 5)
     for (let x = -16 + Math.floor(hash(row, 2) * 14); x < W + 16; ) {
       const rx = 12 + Math.floor(hash(row, x) * 14)
-      const lit = hash(x, row) > 0.7 ? "4" : null  // most faces turn away from the light
-      rock(c, x + rx, y + ry + Math.round((hash(x, 9) - 0.5) * 6), rx, ry + Math.floor(hash(x, 7) * 4), ["1", "2", "3", lit], hash(x, row) * 6)
+      const lit = hash(x, row) > 0.86 ? "3" : null  // most faces turn away from the light; the lamps do the rest
+      rock(c, x + rx, y + ry + Math.round((hash(x, 9) - 0.5) * 6), rx, ry + Math.floor(hash(x, 7) * 4), ["1", "2", "2", lit], hash(x, row) * 6)
       x += rx * 2 + 1
     }
     y += ry * 2 - 1
@@ -225,13 +256,15 @@ scene("bg_mine", { w: W, h: H, bg: "1" },
   // Away from the lanterns the mine sinks into the dark: the roof, the far ends, the drift.
   layer("dark", { shade: true }, rect(0, 0, W, BEAM[0], "k"), rect(0, 0, 18, LEDGE, "k"), rect(W - 18, 0, 18, LEDGE, "k")),
   layer("dim", { shade: true, density: 0.5 }, rect(0, BEAM[0], W, 10, "k"), rect(18, 0, 30, LEDGE, "k"), rect(W - 48, 0, 30, LEDGE, "k")),
+  // Only the lanterns light it: warm pools that fade into near-black, a faint cold breath from deep in the drift.
+  (c) => light(c, LAMPS, { deep: [256, 166, 34] }),
   glow("oyw", { r: 36, strength: 0.2, bands: 5, color: "#e8743c" }),
   glow("oyw", { r: 9, strength: 0.25, bands: 2, color: "#f6b45e" }))
 
 // A free-hanging chain as a BackdropLife sway strip: 5 frames, each sheared about its top row so the bottom row
 // sits -2..+2 pxl pixels off (frame 2 hangs straight), drawn at 2 image px a pixel, with 2 pxl pixels of room
 // either side. `rows` is the chain's pixel grid; its top row hangs from an eye bolt under the beam.
-function chain(name, rows) {
+function chain(name, rows, [cx, cy], half) {
   const g = rows.trim().split("\n").map((r) => r.trim())
   const w = g[0].length, h = g.length
   anim(name, { w: (w + 4) * 2, h: h * 2, frames: 5, fps: 8 }, (c) => {
@@ -239,6 +272,7 @@ function chain(name, rows) {
       const shift = Math.round(((c.frame - 2) * y) / (h - 1))
       for (let x = 0; x < w; x++) if (g[y][x] !== ".") c.rect((x + 2 + shift) * 2, y * 2, 2, 2, g[y][x])
     }
+    light(c, LAMPS, { at: [cx - half - 2, cy], px: 2 })
   })
 }
 
@@ -269,14 +303,14 @@ k51315k
 .24442.
 ..k2k..`
 
-chain("chain_mine_0", links(10, 4) + "\n" + HOOK)
-chain("chain_mine_1", links(14, 7) + "\n" + DEAD.trim())
-chain("chain_mine_2", links(5, 4) + "\n" + HOOK)
+chain("chain_mine_0", links(10, 4) + "\n" + HOOK, CHAINS[0], 1)
+chain("chain_mine_1", links(14, 7) + "\n" + DEAD.trim(), CHAINS[1], 3)
+chain("chain_mine_2", links(5, 4) + "\n" + HOOK, CHAINS[2], 1)
 
 // Dust hanging in the lantern light over the walkway: a still band two `period`s wide that tiles seamlessly, as
 // BackdropLife scrolls it a pxl pixel at a time. Motes thin out upward; a faint haze lies along the bottom.
 const DUST_PERIOD = 128
-pal({ m: "#9a8a7060", n: "#b8a58490", h: "#4c4a4626" })
+pal({ m: "#6e624e50", n: "#8e7e6270", h: "#24262c26" })  // dim: most of the band hangs out of the lamplight
 sprite("dust", { w: DUST_PERIOD * 2, h: 40 }, (c) => {
   for (let x = 0; x < c.w; x++) {
     const px = x % DUST_PERIOD
