@@ -26,6 +26,7 @@ func _init() -> void:
 	_tutorial()
 	_perks()
 	_forge_and_campfire()
+	_face_marks()
 	_fight_rewards()
 	_meta()
 	_floors()
@@ -434,6 +435,49 @@ func _forge_and_campfire() -> void:
 	c.player_hp = 30
 	c.heal(c.campfire_heal_amount())
 	check(c.player_hp == 40, "the campfire heals 12, capped at max HP")
+
+
+## Forged marks: Sharp cuts past Guard and Bone Wall, Ward doubles in Guard, Ember heals, Shard pays,
+## each only when its own face is the one rolled; a cursed face can't be marked, and marks survive a save.
+func _face_marks() -> void:
+	var c := fresh(WARDEN)
+	check(c.forge(0, 5, true, "sharp") and c.dice[0].base[5] == 6, "a mark leaves the number alone")
+	check(not c.forge(0, 5, true, "ward"), "one mark per face")
+	c.curse_face(1, 0)
+	check(not c.forge(1, 0, true, "ember"), "a cursed face can't be marked")
+	c.forge(1, 3, true, "ward")
+	c.forge(2, 0, true, "ember")
+	c.forge(2, 1, true, "shard")
+	c.start_turn()
+	c.enemies[0].intent = {"kind": "guard", "value": 4}
+	for i in 3:
+		c.dice[i].side = 5 if i == 0 else 4
+		c.dice[i].value = c.dice[i].faces[c.dice[i].side]
+		c.assign(i, Combat.Slot.ATTACK)
+	check(c.damage_to(0) == 7, "Sharp 6 dodges Bone Wall and Guard: the wall eats a 5, Guard 4 takes the other to 1 (got %d)" % c.damage_to(0))
+	c.dice[0].side = 4
+	c.dice[0].value = 6  # a 6 that isn't the marked side, as the tutorial's rigged pair sets it
+	check(Combat.mark_of(c.dice[0]) == "", "a value set without its side carries no mark")
+	c.dice[1].side = 3
+	c.dice[1].value = 4
+	c.assign(1, Combat.Slot.GUARD)
+	check(c.guard_total() == 8, "Ward 4 in Guard counts 8")
+	c.player_hp = 10
+	c.shards = 0
+	c.dice[2].side = 0
+	c.dice[2].value = 1
+	c.resolve_player()
+	check(c.player_hp == 10 + Combat.EMBER_HEAL, "a placed Ember face heals")
+	c.dice[2].side = 1
+	c.dice[2].value = 2
+	c.resolve_player()
+	check(c.shards == 1, "a placed Shard face pays a Shard")
+	var back := CombatScript.from_dict(c.to_dict())
+	check(back.dice[0].marks[5] == "sharp" and back.dice[2].marks == ["ember", "shard", "", "", "", ""], "marks come back from a save")
+	var old := c.to_dict()
+	for x in old.dice:
+		x.erase("marks")
+	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).dice[0].marks == ["", "", "", "", "", ""], "a save from before marks still loads, unmarked")
 
 
 func _fight_rewards() -> void:

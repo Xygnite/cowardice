@@ -27,6 +27,7 @@ const STRIKE_DELAY := 0.2  # seconds into an enemy's attack animation when the b
 const MENU_LOCK := 100  # die menu id for lock/unlock; the other ids are Combat.Slot values
 const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
+const MARK_SFX := preload("res://assets/audio/confirm.wav")  # an Ember or Shard face paying out
 
 ## One lesson per tutorial turn, indexed by Combat.turn.
 const LESSONS := [
@@ -168,8 +169,11 @@ func _on_end_turn() -> void:
 	busy = true
 	var unplaced := combat.unplaced_count()
 	var enemy_hp_before: Array = combat.enemies.map(func(e): return e.hp)
+	var hp_was := combat.player_hp
+	var shards_was := combat.shards
 	var dealt := combat.resolve_player()
 	_log("You deal %d." % dealt)
+	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
 	for i in combat.enemies.size():
@@ -285,7 +289,7 @@ func _refresh() -> void:
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
 		var art := "cursed" if d.value == Combat.CURSE and i not in rolling else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
-		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0)
+		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0, d.marks)
 	var pair := "   Pair of %ds" % combat.rolled_pair() if combat.rolled_pair() else ""
 	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() and not rolling else Color.WHITE)
@@ -499,7 +503,8 @@ func _on_die_menu(id: int) -> void:
 func _show_faces() -> void:
 	var lines := []
 	for i in combat.dice.size():
-		lines.append("Die %d:  %s" % [i + 1, "  ".join(combat.dice[i].faces.map(_face_text))])
+		var d: Dictionary = combat.dice[i]
+		lines.append("Die %d:  %s" % [i + 1, "  ".join(range(d.faces.size()).map(func(k): return _face_text(d.faces[k]) + (" " + Combat.MARKS[d.marks[k]].name if d.marks[k] else "")))])
 	faces_label.text = "\n".join(lines)
 	faces_popup.reset_size()
 	faces_popup.popup(Rect2i(Vector2i(faces_button.get_global_rect().end), faces_popup.size))
@@ -515,9 +520,25 @@ func _roll_anim(which: Array, steer := false) -> void:
 	await tray.landed
 	for i in which:
 		combat.dice[i].value = tray.dice[i].value
+		combat.dice[i].side = tray.top_face(i)  # which of equal faces landed decides its mark
 	rolling = []
 	busy = false
 	_refresh()
+
+
+## Floats and logs what Ember and Shard faces just paid, over the hero.
+func _mark_payout(healed: int, shards: int) -> void:
+	if healed <= 0 and shards <= 0:
+		return
+	var parts := []
+	if healed > 0:
+		parts.append("+%d HP" % healed)
+	if shards > 0:
+		parts.append("+%d Shard%s" % [shards, "" if shards == 1 else "s"])
+	var text := "  ".join(parts)
+	_sfx(MARK_SFX)
+	_float(hero.get_parent(), text, UI.MARK_COLORS.ember if healed > 0 else UI.MARK_COLORS.shard)
+	_log(text + ".")
 
 
 func _sfx(stream: AudioStream) -> void:

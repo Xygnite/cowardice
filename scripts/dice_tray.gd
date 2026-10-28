@@ -161,6 +161,13 @@ func add_die() -> void:
 		var turn := Basis.from_euler(side).inverse()
 		l.transform = Transform3D(turn, turn * Vector3(0, 0, 0.51))
 		cube.add_child(l)
+		var glyph := Sprite3D.new()  # a face's mark, small in its lower-left corner
+		glyph.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		glyph.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+		glyph.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		glyph.pixel_size = 0.0175  # the glyph art is at 2x; a touch under the digits, to clear the border
+		glyph.position = Vector3(-0.25, -0.27, 0)
+		l.add_child(glyph)
 		labels.append(l)
 	var chain := Sprite3D.new()  # wraps a locked die; follows it, but never turns with it (_process)
 	chain.texture = preload("res://assets/ui/cut/chains.png")
@@ -202,9 +209,9 @@ func add_die() -> void:
 
 ## Shows die i's faces in `art` (bone, locked, placed, cursed) with `value` up, and the icon
 ## assets/ui/cut/slot_<slot_icon>.png in its top-right corner, or none if `slot_icon` is empty;
-## a locked die is wrapped in chains, a buried one heaped with rubble.
+## a locked die is wrapped in chains, a buried one heaped with rubble. A face with a mark in `marks` is in its UI.MARK_COLORS.
 ## Mid-throw it only repaints; the throw lands on whatever face comes up.
-func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false) -> void:
+func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false, marks := []) -> void:
 	var d := dice[i]
 	d.faces = faces
 	d.value = value
@@ -212,6 +219,12 @@ func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, 
 	for k in d.labels.size():
 		d.labels[k].text = "X" if faces[k] == Combat.CURSE else str(faces[k])
 		d.labels[k].modulate = Color(0.16, 0.13, 0.1) if art == "bone" else Color.WHITE
+		var mark: String = marks[k] if k < marks.size() and faces[k] != Combat.CURSE else ""
+		if mark:
+			d.labels[k].modulate = UI.MARK_COLORS[mark]
+		var glyph: Sprite3D = d.labels[k].get_child(0)
+		glyph.texture = load(UI.ART % ("mark_" + mark)) if mark else null
+		glyph.modulate = d.labels[k].modulate
 	d.icon.texture = load(UI.ART % ("slot_" + slot_icon)) if slot_icon else null
 	d.chain.visible = locked
 	d.rubble.visible = buried

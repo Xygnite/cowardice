@@ -88,6 +88,7 @@ func choose(choice: int, die := 0) -> void:
 		rolled = thrown.map(func(i): return tray.dice[i].value)  # the faces that came up are the roll
 		for i in which:
 			combat.dice[i].value = tray.dice[i].value
+			combat.dice[i].side = tray.top_face(i)
 			_show_die(i)
 	tries += 1
 	var result: Dictionary = Events.resolve(id, choice, combat, rolled, tries)
@@ -128,7 +129,7 @@ func _clear_choices() -> void:
 
 func _show_die(i: int) -> void:
 	var d: Dictionary = combat.dice[i]
-	tray.show_die(i, d.faces, d.value, "cursed" if d.value == Combat.CURSE else "bone", "", false)
+	tray.show_die(i, d.faces, d.value, "cursed" if d.value == Combat.CURSE else "bone", "", false, false, d.marks)
 
 
 func _centered(l: Label) -> Label:

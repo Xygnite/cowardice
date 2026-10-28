@@ -4,6 +4,8 @@ class_name UI
 const DANGER := Color(1, 0.45, 0.4)
 const GOLD := Color(1, 0.85, 0.4)
 const QUIET := Color(0.6, 0.62, 0.7)
+## Number colour of a face carrying each Combat.MARKS mark, on every die art.
+const MARK_COLORS := {"sharp": Color(0.9, 0.22, 0.18), "ember": Color(1, 0.55, 0.1), "ward": Color(0.25, 0.55, 1), "shard": Color(0.72, 0.35, 0.95)}
 ## Body text is m6x11, the theme default (assets/ui_theme.tres); titles use this.
 const HEADING_FONT := preload("res://assets/fonts/alagard.ttf")
 const ART := "res://assets/ui/cut/%s.png"

@@ -15,6 +15,16 @@ const SHARDS_PER_KILL := 2
 const FORGE_COST := 4
 const FORGE_STEP := 2  # a forged face goes up by this much
 const CAMPFIRE_HEAL := 0.3  # share of max HP
+## Marks a face can be forged with instead of +FORGE_STEP. A mark works when its face is the one rolled and that die is
+## placed; a cursed face's mark sleeps until the curse lifts. Kept in each die's "marks", one per face ("" for none).
+## Each has a glyph, assets/ui/cut/mark_<key>.png (art/pxl/marks.px.js), so a mark reads without its colour.
+const MARKS := {
+	"sharp": {"name": "Sharp", "text": "In Attack, ignores enemy Guard and Bone Wall"},
+	"ember": {"name": "Ember", "text": "Placed anywhere, heals 2 HP"},
+	"ward": {"name": "Ward", "text": "In Guard, counts double"},
+	"shard": {"name": "Shard", "text": "Placed anywhere, +1 Shard"},
+}
+const EMBER_HEAL := 2
 
 ## Enemy types. Optional keys:
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
@@ -96,7 +106,7 @@ func _init(seed_value := -1) -> void:
 	if seed_value >= 0:
 		rng.seed = seed_value
 	for i in 3:
-		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}, "buried": 0})
+		dice.append({"base": [1, 2, 3, 4, 5, 6], "faces": [1, 2, 3, 4, 5, 6], "value": 1, "locked": false, "slot": Slot.NONE, "uncursed": {}, "buried": 0, "marks": ["", "", "", "", "", ""], "side": 0})
 	start_fight(0)
 
 
@@ -105,7 +115,7 @@ const SAVED := ["max_hp", "player_hp", "shards", "kills", "perks", "bonus_perk",
 
 
 func to_dict() -> Dictionary:
-	var d := {"dice": dice.map(func(x): return {"base": x.base, "faces": x.faces, "uncursed": x.uncursed})}
+	var d := {"dice": dice.map(func(x): return {"base": x.base, "faces": x.faces, "uncursed": x.uncursed, "marks": x.marks})}
 	for k in SAVED:
 		d[k] = get(k)
 	return d.duplicate(true)
@@ -158,14 +168,19 @@ func campfire_heal_amount() -> int:
 	return ceili(max_hp * (0.45 if "bonfire_keeper" in perks else CAMPFIRE_HEAL))
 
 
-## Raises face f of die i by FORGE_STEP for the rest of the run. Paid in Shards unless no_cost.
-func forge(i: int, f: int, no_cost := false) -> bool:
+## Raises face f of die i by FORGE_STEP for the rest of the run, or with `mark` (a MARKS key) marks it instead.
+## Paid in Shards unless no_cost. A cursed face can't be marked, nor a face marked twice.
+func forge(i: int, f: int, no_cost := false, mark := "") -> bool:
+	var d: Dictionary = dice[i]
+	if mark and (d.base[f] == CURSE or d.marks[f] != ""):
+		return false
 	if not no_cost:
 		if shards < FORGE_COST:
 			return false
 		shards -= FORGE_COST
-	var d: Dictionary = dice[i]
-	if d.uncursed.has(f):  # forging a lasting curse lifts it instead
+	if mark:
+		d.marks[f] = mark
+	elif d.uncursed.has(f):  # forging a lasting curse lifts it instead
 		d.base[f] = d.uncursed[f]
 		d.uncursed.erase(f)
 	else:
@@ -338,7 +353,7 @@ func assign(i: int, slot: Slot) -> void:
 
 
 func guard_total() -> int:
-	return _sum(_values_in(Slot.GUARD))
+	return _sum(_values_in(Slot.GUARD)) + _sum(_values_in(Slot.GUARD, "ward"))  # a Ward face counts twice
 
 
 func has_guard() -> bool:
@@ -407,11 +422,15 @@ func damage_to(i: int) -> int:
 	var damage := 0
 	if i == target:
 		var attack := _values_in(Slot.ATTACK)
+		var sharp := _values_in(Slot.ATTACK, "sharp")
+		for v in sharp:
+			attack.erase(v)
 		if e.type.get("bone_wall", false) and not attack.is_empty():
 			attack.erase(attack.max())  # Bone Wall: the Warden blocks your highest Attack die
 		damage = _sum(attack)
 		if e.intent.get("kind") == "guard":
 			damage = maxi(0, damage - e.intent.value)
+		damage += _sum(sharp)  # Sharp faces cut past Guard and Bone Wall
 	return damage + cleave_share(i)  # Cleave ignores Bone Wall and enemy Guard
 
 
@@ -438,6 +457,12 @@ func resolve_player() -> int:
 				enemies[i] = {"type": t, "name": t.name + tag, "hp": t.hp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
 				replaced += 1
 	for d in dice:
+		if d.slot != Slot.NONE and d.buried == 0:
+			match mark_of(d):
+				"ember":
+					heal(EMBER_HEAL)
+				"shard":
+					shards += 1
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
 		if d.slot == Slot.NONE and d.buried == 0:
@@ -587,7 +612,13 @@ func _apply_rings() -> void:
 
 
 func _roll(d: Dictionary) -> void:
-	d.value = d.faces[rng.randi_range(0, d.faces.size() - 1)]
+	d.side = rng.randi_range(0, d.faces.size() - 1)
+	d.value = d.faces[d.side]
+
+
+## The mark on die d's rolled face, or "" (none, a cursed face, or a value set without rolling that side).
+static func mark_of(d: Dictionary) -> String:
+	return d.marks[d.side] if d.faces[d.side] == d.value and d.value != CURSE else ""
 
 
 func _curse(d: Dictionary) -> void:
@@ -604,10 +635,11 @@ func _best_guard_pip() -> int:
 	return v.max() if not v.is_empty() else 0
 
 
-func _values_in(slot: Slot) -> Array[int]:
+## Values of the dice in `slot`; with `mark`, only those whose rolled face carries it.
+func _values_in(slot: Slot, mark := "") -> Array[int]:
 	var out: Array[int] = []
 	for d in dice:
-		if d.slot == slot:
+		if d.slot == slot and (mark == "" or mark_of(d) == mark):
 			out.append(d.value)
 	return out
 
