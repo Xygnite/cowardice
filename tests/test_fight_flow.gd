@@ -32,6 +32,7 @@ func _init() -> void:
 	await _play_events()
 	await _hulk_swap()
 	await _relic_picks()
+	await _fight_belt()
 	await _two_floors()
 	await _mine_start()
 	await _fight_menu()
@@ -370,6 +371,56 @@ func _relic_picks() -> void:
 	check(errors.count == errors_before, "relic picks run with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
+
+
+## The fight screen shows the belt, one icon per relic, and the summary shows Mult when it isn't 1. A turn with every
+## relic on the belt, five at a time, plays with no errors.
+func _fight_belt() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	for r in ["whetstone", "gravedigger", "spare_fuse"]:
+		game.combat.take_relic(r)
+	var screen: CombatScreen = await _belt_fight(game)
+	check(screen.belt.get_child_count() == 3, "three relics, three belt icons (got %d)" % screen.belt.get_child_count())
+	check("×" not in screen.summary_label.text, "no Mult on the summary at x1: %s" % screen.summary_label.text)
+	game.queue_free()
+	game = await _new_game()
+	game.combat.take_relic("black_candle")
+	screen = await _belt_fight(game)
+	check("(×1.5)" in screen.summary_label.text, "Black Candle shows x1.5 on the summary: %s" % screen.summary_label.text)
+	game.queue_free()
+	var ids: Array = Combat.RELICS.keys()
+	for start in range(0, ids.size(), Combat.BELT_SIZE):
+		game = await _new_game()
+		for r in ids.slice(start, start + Combat.BELT_SIZE):
+			game.combat.take_relic(r)
+		screen = await _belt_fight(game)
+		for r in game.combat.relics:  # growing relics with something to show
+			r.n = 8.0
+			r.f = 2.0
+		screen._refresh()
+		screen._on_end_turn()
+		var waited := 0
+		while game.screen == screen and screen.busy and waited < 600:
+			await process_frame
+			waited += 1
+		check(waited < 600, "a turn with %s ends" % [ids.slice(start, start + Combat.BELT_SIZE)])
+		game.queue_free()
+	await process_frame
+	check(errors.count == errors_before, "fights with relics run with no errors (got %d)" % (errors.count - errors_before))
+
+
+## A skeleton fight on screen with the dice landed, two in Attack.
+func _belt_fight(game: Node) -> CombatScreen:
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	while screen.busy:
+		await process_frame
+	for i in 2:
+		screen.combat.assign(i, Combat.Slot.ATTACK)
+	screen._refresh()
+	return screen
 
 
 ## A new run's entrance fight, won (the enemy left at 1 HP).

@@ -744,11 +744,27 @@ func _relic_times(id: String) -> float:
 	return 1.0
 
 
-## Belt slots whose effect changes this turn's damage or Mult right now (the screen flashes them).
+## Belt slots that change this turn's damage or Mult right now (the screen flashes them): a Mult add or multiplier,
+## Whetstone with a 5 or more in Attack, Cursed Crown with a curse in Attack, Ledger or Ward Icon with a bonus and a
+## die in Attack, Rosary when Flurry fires.
 func firing() -> Array[int]:
+	var attack := _values_in(Slot.ATTACK)
 	var out: Array[int] = []
 	for k in relics.size():
-		if _relic_add(k) != 0.0 or _relic_times(relic_id(k)) != 1.0:
+		var id := relic_id(k)
+		var lit := _relic_add(k) != 0.0 or _relic_times(id) != 1.0
+		match id:
+			"whetstone":
+				lit = attack.any(func(v): return v >= 5 or (v == CURSE and _has_relic("cursed_crown")))
+			"cursed_crown":
+				lit = CURSE in attack
+			"miners_ledger":
+				lit = not attack.is_empty() and floori(relics[k].n / 4) > 0
+			"ward_icon":
+				lit = not attack.is_empty() and relics[k].f > 0
+			"rosary":
+				lit = "flurry" in fired()
+		if lit:
 			out.append(k)
 	return out
 

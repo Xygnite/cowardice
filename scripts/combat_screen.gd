@@ -95,7 +95,9 @@ var faces_button: Button
 var skill_button: Button  # names the skills the Skill dice fire; hover or press for what every unlocked one needs
 var faces_popup: PopupPanel
 var faces_label: Label
-var summary_label: Label
+var summary_label: Label  # hover: each enemy's hits before and after Mult
+var belt: VBoxContainer  # the relic belt, one icon per slot, beside the dice tray
+var belt_values: Array[Label] = []  # a growing relic's current worth, over its icon
 var reroll_button: Button
 var end_button: Button
 var timing_hint: Label
@@ -194,11 +196,14 @@ func _on_end_turn() -> void:
 	var enemy_hp_before: Array = combat.enemies.map(func(e): return e.hp)
 	var hp_was := combat.player_hp
 	var shards_was := combat.shards
+	var lit := combat.firing()  # before resolving: growing relics count the turn up as it resolves
 	var dealt := combat.resolve_player()
 	_log("You deal %d." % dealt)
 	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
+	for k in lit:
+		_flash(belt.get_child(k))
 	for i in combat.enemies.size():
 		var swapped: bool = combat.enemies[i].has("from")  # a Hulk died and Rubble stands in its slot
 		if swapped or combat.enemies[i].hp < enemy_hp_before[i]:
@@ -324,13 +329,52 @@ func _refresh() -> void:
 	var fire := " + ".join(fired.map(func(id): return Combat.SKILLS[id].name))
 	var hint := ("   %s ready" % fire) if fire else ("   Skill in reach" if combat.skill_in_roll() else "")
 	skill_button.text = fire if fire else "Skills"
-	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), hint]
+	var m := combat.mult()
+	var times := not is_equal_approx(m, 1.0)
+	var damage := "Damage %d" % combat.preview_damage() + (" (×%.1f)" % m if times else "")
+	summary_label.text = "Rolling..." if rolling else "%s   Guard %d   Grit +%d%s" % [damage, combat.guard_total(), combat.unplaced_count(), hint]
+	summary_label.tooltip_text = _mult_text(m) if times and not rolling else ""
+	for k in belt_values.size():
+		belt_values[k].text = _relic_value(k)
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.skill_in_roll() and not combat.skill_ready() and not rolling else Color.WHITE)
 	reroll_button.text = "Hold to roll  [R]" if charge.waiting else "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = not charge.waiting and (busy or combat.rerolls == 0)
 	end_button.disabled = busy
 	menu_button.disabled = busy
 	log_label.text = "\n".join(log_lines)
+
+
+## Each enemy's base hits times Mult, then the Mult, for the summary's hover.
+func _mult_text(m: float) -> String:
+	var lines := []
+	for i in combat.enemies.size():
+		var hits := combat.hits_to(i)
+		if not hits.is_empty():
+			lines.append("%s: %s  × %.1f = %d" % [combat.enemies[i].name, " + ".join(hits.map(str)), m, combat.damage_to(i)])
+	lines.append("Mult ×%.1f" % m)
+	return "
+".join(lines)
+
+
+## What a growing relic in belt slot k is worth now, from the slot's own counters; blank at 0 or for the rest.
+func _relic_value(k: int) -> String:
+	var r: Dictionary = combat.relics[k]
+	match combat.relic_id(k):
+		"gravedigger":
+			return "+%.1f" % (0.1 * r.n) if r.n > 0 else ""
+		"spare_fuse":
+			return "+%.1f" % r.f if r.f > 0 else ""
+		"hungry_bell", "ward_icon":
+			return "+%d" % r.f if r.f > 0 else ""
+		"miners_ledger":
+			return "+%d" % floori(r.n / 4) if r.n >= 4 else ""
+	return ""
+
+
+## A belt icon glows gold and fades back: its relic counted in the blow that just landed.
+func _flash(icon: Control) -> void:
+	icon.modulate = Color(2.2, 1.8, 0.7)
+	icon.create_tween().tween_property(icon, "modulate", Color.WHITE, 0.6)
 
 
 ## A new murmur rises out of the dark, lingers a few seconds, then sinks back.
@@ -390,12 +434,27 @@ func _build() -> void:
 		enemy_ui.append(_build_enemy(enemy_row, i))
 
 	summary_label = UI.label(root, 18)
+	summary_label.mouse_filter = Control.MOUSE_FILTER_PASS  # for its Mult hover
 
 	# The dice row has a set height (tray_height) and the fight row above takes what is left, so the
 	# dice box, which the throw's walls are sized to, is the same in every fight.
 	bottom_row = UI.row(root, 24)
 	bottom_row.custom_minimum_size.y = tray_height
 	_build_dice(bottom_row)
+	belt = VBoxContainer.new()
+	belt.alignment = BoxContainer.ALIGNMENT_CENTER
+	belt.visible = not combat.relics.is_empty()
+	bottom_row.add_child(belt)
+	for k in combat.relics.size():
+		var value := UI.label(RelicPickScreen.belt_icon(belt, combat, k), 16)
+		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		value.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		value.offset_bottom = 8  # hangs a little under the icon, clear of its glyph
+		value.offset_right = 6
+		value.add_theme_color_override("font_color", UI.GOLD)
+		value.add_theme_constant_override("outline_size", 6)
+		value.add_theme_color_override("font_outline_color", Color("070e10"))
+		belt_values.append(value)
 	var actions := VBoxContainer.new()
 	actions.custom_minimum_size.x = 280
 	bottom_row.add_child(actions)

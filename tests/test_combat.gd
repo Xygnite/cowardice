@@ -1117,6 +1117,7 @@ func _mult() -> void:
 	place(c, 0, 5, CombatScript.Slot.ATTACK)
 	place(c, 1, 4, CombatScript.Slot.ATTACK)
 	check(c.hits_to(0) == [9] and c.damage_to(0) == 13, "Black Candle: Attack 9 deals floor(13.5) = 13")
+	check(c.firing() == [0], "Black Candle flags its slot as firing")
 
 	c = fresh(RATS)
 	c.start_group(["rat", "rat", "rat"], 5.0)  # 30 HP rats, so nobody dies and every hit lands in full
@@ -1173,6 +1174,10 @@ func _relic_effects() -> void:
 	place(c, 0, 5, CombatScript.Slot.ATTACK)
 	place(c, 1, 2, CombatScript.Slot.ATTACK)
 	check(c.hits_to(0) == [10], "Whetstone: a 5 deals +3")
+	check(c.firing() == [0], "Whetstone fires with a 5 in Attack")
+	c.dice[0].slot = CombatScript.Slot.GUARD
+	check(c.firing().is_empty(), "Whetstone doesn't fire with no 5 or 6 in Attack")
+	c.dice[0].slot = CombatScript.Slot.ATTACK
 	c.enemies[0].intent = {"kind": "guard", "value": 4}
 	check(c.hits_to(0) == [6], "Whetstone adds before enemy Guard")
 

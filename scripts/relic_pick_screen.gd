@@ -73,13 +73,24 @@ func _show_belt() -> void:
 	if combat.relics.is_empty():
 		UI.label(belt_row, 16, "Empty").add_theme_color_override("font_color", UI.QUIET)
 	for k in combat.relics.size():
-		var r: Dictionary = Combat.RELICS[combat.relic_id(k)]
 		var col := UI.panel(belt_row, 4)
-		UI.image(col, "relic_" + combat.relic_id(k)).tooltip_text = "%s\n%s" % [r.name, r.text]
+		belt_icon(col, combat, k)
 		if k > 0:
 			UI.button(col, "◀", _move_left.bind(k))
 		if breaking != "":
 			UI.button(col, "Break", _ask_break.bind(k))
+
+
+## Belt slot k's icon, its name and text on hover; a Mirror Shard also names what it copies.
+static func belt_icon(parent: Node, combat: Combat, k: int) -> TextureRect:
+	var id: String = combat.relics[k].id
+	var r: Dictionary = Combat.RELICS[id]
+	var icon := UI.image(parent, "relic_" + id)
+	icon.tooltip_text = "%s\n%s" % [r.name, r.text]
+	if id == "mirror_shard":
+		var copy := combat.relic_id(k)
+		icon.tooltip_text += "\nCopying: " + (Combat.RELICS[copy].name if copy else "nothing")
+	return icon
 
 
 func _take(id: String) -> void:
@@ -91,7 +102,7 @@ func _take(id: String) -> void:
 
 
 func _ask_break(k: int) -> void:
-	var old: String = Combat.RELICS[combat.relic_id(k)].name
+	var old: String = Combat.RELICS[combat.relics[k].id].name
 	ConfirmPanel.ask(self, "Break %s?" % old, "Break %s for +%d Shards and take %s?" % [old, Combat.BREAK_SHARDS, Combat.RELICS[breaking].name], "Break it", _taken.bind(breaking, k))
 
 
