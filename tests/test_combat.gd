@@ -43,6 +43,7 @@ func _init() -> void:
 	_run_save()
 	_relic_belt()
 	_mult()
+	_relic_effects()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -1098,3 +1099,141 @@ func _mult() -> void:
 	c.dice[0].faces[c.dice[0].side] = 8  # mark_of reads the rolled face
 	c.dice[0].marks[c.dice[0].side] = "ember"
 	check(is_equal_approx(c.mult(), 1.0 + 0.2 + 0.5 + 0.5), "a placed Ember face gives Rusted Censer +0.5")
+
+
+## A fight against three 150 HP rats, all dice unplaced, so many turns of hits leave them standing.
+func _rats() -> CombatScript:
+	var c := fresh(RATS)
+	c.start_group(["rat", "rat", "rat"], 50.0)
+	for d in c.dice:
+		d.slot = CombatScript.Slot.NONE
+	for e in c.enemies:
+		e.intent = {"kind": "attack", "value": 1}
+	return c
+
+
+func _relic_effects() -> void:
+	var c := fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("whetstone")
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [10], "Whetstone: a 5 deals +3")
+	c.enemies[0].intent = {"kind": "guard", "value": 4}
+	check(c.hits_to(0) == [6], "Whetstone adds before enemy Guard")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("cursed_crown")
+	place(c, 0, CombatScript.CURSE, CombatScript.Slot.ATTACK)
+	place(c, 1, 3, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [9], "Cursed Crown: a curse in Attack counts as 6")
+	c = fresh(WARDEN)
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("cursed_crown")
+	place(c, 0, CombatScript.CURSE, CombatScript.Slot.ATTACK)
+	place(c, 1, 5, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [5], "Bone Wall drops the crowned curse as the highest die")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "guard", "value": 9}
+	c.take_relic("miners_ledger")
+	c.shards = 8
+	c.pay_forge()
+	c.pay_forge()
+	check(c.shards == 0 and c.relics[0].n == 8.0, "paying for forges feeds the Ledger")
+	place(c, 0, 3, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [2], "Ledger at 8: +2 after Guard soaks the 3")
+	c.refund_forge()
+	check(c.shards == 4 and c.relics[0].n == 4.0, "a refund takes it back")
+	c.relics[0].n = 7.0
+	check(c.hits_to(0) == [1], "Ledger at 7: +1")
+	c.dice[0].slot = CombatScript.Slot.NONE
+	check(c.hits_to(0).is_empty(), "no die in Attack, no Ledger hit")
+	c.shards = 4
+	c.forge(0, 0)
+	check(c.relics[0].n == 11.0, "a paid forge() feeds the Ledger too")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("ward_icon")
+	c.guard_pool = 5
+	c.end_enemy_phase()
+	check(c.relics[0].f == 5.0, "Ward Icon keeps the Guard left")
+	place(c, 0, 3, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.SKILL)
+	place(c, 2, 2, CombatScript.Slot.SKILL)
+	check(c.hits_to(0) == [8, 3], "Ward Icon adds to the Attack hit, not the Cleave")
+	check(c.skill_share(0) == 3, "skill_share leaves the Attack hit out")
+	c.resolve_player()
+	check(c.relics[0].f == 0.0, "Ward Icon is spent on the Attack")
+	c.relics[0].f = 4.0
+	c.start_group(["rat"])
+	check(c.relics[0].f == 0.0, "Ward Icon's Guard is gone at fight start")
+
+	c = fresh()
+	c.take_relic("gravedigger")
+	for e in c.enemies:
+		e.hp = 0
+	c.claim_fight()
+	check(c.relics[0].n == 2.0 and is_equal_approx(c.mult(), 1.2), "Gravedigger: two kills, +0.2")
+
+	c = _rats()
+	c.take_relic("spare_fuse")
+	place(c, 0, 3, CombatScript.Slot.ATTACK)
+	c.rerolls = 2
+	check(is_equal_approx(c.mult(), 1.0), "Spare Fuse gives nothing the turn it's earned")
+	c.resolve_player()
+	check(is_equal_approx(c.mult(), 1.5), "Spare Fuse: two unused rerolls, +0.5 after")
+
+	c = _rats()
+	c.take_relic("hungry_bell")
+	check(is_equal_approx(c.mult(), 1.0), "Hungry Bell without a skill: +0")
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	var bell: Array = []
+	for t in 3:
+		bell.append(c.mult())
+		c.resolve_player()
+	check(bell == [2.0, 3.0, 4.0], "Hungry Bell: +1, +2, +3 over three skill turns")
+	c.dice[1].slot = CombatScript.Slot.NONE
+	c.resolve_player()
+	c.dice[1].slot = CombatScript.Slot.SKILL
+	check(is_equal_approx(c.mult(), 2.0), "Hungry Bell is back to +1 after a turn without a skill")
+	c.resolve_player()
+	c.start_group(["rat"], 50.0)
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	check(is_equal_approx(c.mult(), 2.0), "Hungry Bell is back to +1 in a new fight")
+
+	c = fresh()
+	c.skills = ["flurry"]
+	c.take_relic("rosary")
+	place(c, 0, 2, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	place(c, 2, 4, CombatScript.Slot.SKILL)
+	check(c.hits_to(c.target) == [18], "Rosary: Flurry 2-3-4 deals 9 + 9")
+
+	c = fresh()
+	c.take_relic("tithe_box")
+	c.shards = 10
+	c.claim_fight()
+	check(c.shards == 12, "Tithe Box: 10 held, +2")
+	c.shards = 30
+	c.claim_fight()
+	check(c.shards == 33, "Tithe Box pays at most +3")
+	c.shards = 10
+	c.claim_fight(false)
+	check(c.shards == 10, "Tithe Box pays nothing for a lost fight")
+	c.relics.clear()
+	c.take_relic("mirror_shard")
+	c.take_relic("tithe_box")
+	c.shards = 10
+	c.claim_fight()
+	check(c.shards == 14, "Mirror + Tithe Box pays twice: 10 +2, then 12 +2")
+
+	c = fresh()
+	c.take_relic("whetstone")
+	c.shards = 0
+	check(c.take_relic("rosary", 0) and c.relics.size() == 2 and c.relic_id(0) == "whetstone" and c.shards == 0,
+		"a belt with room appends and breaks nothing")

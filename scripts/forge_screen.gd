@@ -132,7 +132,7 @@ func _on_roll() -> void:
 	if busy or owed or not _can_pay():
 		return
 	if not no_cost:
-		combat.shards -= Combat.FORGE_COST
+		combat.pay_forge()
 	busy = true
 	_refresh()
 	tray.throw([0])  # lands on whatever comes up
@@ -141,7 +141,7 @@ func _on_roll() -> void:
 	var u: Dictionary = Combat.FORGE_ROLL[tray.dice[0].value - 1]  # the face that came up is the roll
 	if u.has("mark") and not combat.can_mark(u.mark):
 		if not no_cost:
-			combat.shards += Combat.FORGE_COST  # every face already carries it: nowhere for it to go
+			combat.refund_forge()  # every face already carries it: nowhere for it to go
 		info.text = "Rolled %s, but no face can take it. %s" % [_upgrade_name(u), "Roll again." if no_cost else "Shards returned."]
 		_refresh(false)
 		return

@@ -221,7 +221,7 @@ func forge(i: int, f: int, no_cost := false, mark := "", step := FORGE_STEP) -> 
 	if not no_cost:
 		if shards < FORGE_COST:
 			return false
-		shards -= FORGE_COST
+		pay_forge()
 	if mark:
 		d.marks[f] = mark
 		if d.base[f] == CURSE:
@@ -288,12 +288,37 @@ func roll_dice(which: Array) -> Array:
 	return out
 
 
-## Call once when a fight ends, won or lost: counts kills and pays Shards for them.
-func claim_fight() -> void:
+## Call once when a fight ends, won or lost: counts kills and pays Shards for them; a won fight pays Tithe Boxes.
+func claim_fight(won := true) -> void:
 	var dead := enemies.filter(func(e): return e.hp == 0).size() + replaced
 	kills += dead
 	if not is_tutorial():
 		shards += dead * (SHARDS_PER_KILL + (1 if "scavenger" in perks else 0))
+	for k in relics.size():
+		match relic_id(k):
+			"gravedigger":
+				relics[k].n += dead
+			"tithe_box":
+				if won:
+					shards += mini(3, shards / 5)
+
+
+## Pays FORGE_COST Shards for a forge throw; every Miner's Ledger counts it.
+func pay_forge() -> void:
+	shards -= FORGE_COST
+	_ledger(FORGE_COST)
+
+
+## Gives back a forge throw's Shards, and takes them off every Ledger again.
+func refund_forge() -> void:
+	shards += FORGE_COST
+	_ledger(-FORGE_COST)
+
+
+func _ledger(amount: int) -> void:
+	for k in relics.size():
+		if relic_id(k) == "miners_ledger":
+			relics[k].n += amount
 
 
 ## How much of the boss's HP you took, 0 to 100. 0 outside a boss fight.
@@ -497,10 +522,12 @@ func cleave_damage() -> int:
 
 ## What the skills that fire deal enemy i before Mult, added up.
 func skill_share(i: int) -> int:
-	var hits := hits_to(i)
-	if i == target and not hits.is_empty() and not _values_in(Slot.ATTACK).is_empty():
-		hits.remove_at(0)  # the Attack hit
-	return _sum(hits)
+	if not alive(i):
+		return 0
+	var total := 0
+	for id in fired():
+		total += _skill_hit(id, i)
+	return total
 
 
 ## What skill `id` deals enemy i before Mult, if it fires.
@@ -510,7 +537,7 @@ func _skill_hit(id: String, i: int) -> int:
 		"sunder":
 			return ceili(total * SUNDER_MULTIPLIER)
 		"flurry":
-			return total + FLURRY_BONUS if i == target else 0
+			return total + (9 if _has_relic("rosary") else FLURRY_BONUS) if i == target else 0
 		"oath":
 			return total if i == target and total % 2 == 1 else 0  # three odd dice sum odd, three even sum even
 		"gambit":
@@ -571,18 +598,42 @@ func hits_to(i: int) -> Array[int]:
 		var sharp := _values_in(Slot.ATTACK, "sharp")
 		for v in sharp:
 			attack.erase(v)
+		attack.assign(attack.map(_attack_value))  # Crown and Whetstone come before Bone Wall and Guard
+		sharp.assign(sharp.map(_attack_value))
 		if e.type.get("bone_wall", false) and not attack.is_empty():
 			attack.erase(attack.max())  # Bone Wall: the Warden blocks your highest Attack die
 		damage = _sum(attack)
 		if e.intent.get("kind") == "guard":
 			damage = maxi(0, damage - e.intent.value)
 		damage += _sum(sharp)  # Sharp faces cut past Guard and Bone Wall
+		for k in relics.size():  # Ledger and Ward Icon land after Guard
+			match relic_id(k):
+				"miners_ledger":
+					damage += floori(relics[k].n / 4)
+				"ward_icon":
+					damage += int(relics[k].f)
 		hits.append(damage)
 	for id in fired():
 		var h := _skill_hit(id, i)
 		if h > 0:
 			hits.append(h)
 	return hits
+
+
+## An Attack die's worth: Cursed Crown makes a curse a 6, then each Whetstone adds 3 to a 5 or more.
+func _attack_value(v: int) -> int:
+	for k in relics.size():
+		if relic_id(k) == "cursed_crown" and v == CURSE:
+			v = 6
+	var out := v
+	for k in relics.size():
+		if relic_id(k) == "whetstone" and v >= 5:
+			out += 3
+	return out
+
+
+func _has_relic(id: String) -> bool:
+	return range(relics.size()).any(func(k): return relic_id(k) == id)
 
 
 ## Grit this turn's unplaced dice would give.
@@ -600,16 +651,17 @@ func relic_id(k: int) -> String:
 	return relics[k + 1].id
 
 
-## Puts relic `id` on the belt. Refuses one already on it, or a full belt unless `replace` names the slot to break.
+## Puts relic `id` on the belt. Refuses one already on it, or a full belt unless `replace` names the slot to break
+## (only a full belt breaks one; otherwise it appends).
 func take_relic(id: String, replace := -1) -> bool:
 	if relics.any(func(r): return r.id == id):
 		return false
 	var entry := {"id": id, "n": 0.0, "f": 0.0}
-	if replace >= 0 and replace < relics.size():
+	if relics.size() < BELT_SIZE:
+		relics.append(entry)
+	elif replace >= 0 and replace < relics.size():
 		relics[replace] = entry
 		shards += BREAK_SHARDS
-	elif relics.size() < BELT_SIZE:
-		relics.append(entry)
 	else:
 		return false
 	return true
@@ -624,14 +676,21 @@ func mult() -> float:
 	var add := 0.0
 	var times := 1.0
 	for k in relics.size():
-		add += _relic_add(relic_id(k))
+		add += _relic_add(k)
 		times *= _relic_times(relic_id(k))
 	return (1.0 + add) * times
 
 
-## What relic `id` adds to Mult right now.
-func _relic_add(id: String) -> float:
-	match id:
+## What belt slot k adds to Mult right now (growing relics read the slot's own counters).
+func _relic_add(k: int) -> float:
+	var r: Dictionary = relics[k]
+	match relic_id(k):
+		"gravedigger":
+			return 0.1 * r.n
+		"spare_fuse":
+			return r.f
+		"hungry_bell":
+			return r.f + 1.0 if not fired().is_empty() else 0.0
 		"twin_saints":
 			return 1.0 if "cleave" in fired() or "sunder" in fired() else 0.0
 		"rusted_censer":
@@ -658,7 +717,7 @@ func _relic_times(id: String) -> float:
 func firing() -> Array[int]:
 	var out: Array[int] = []
 	for k in relics.size():
-		if _relic_add(relic_id(k)) != 0.0 or _relic_times(relic_id(k)) != 1.0:
+		if _relic_add(k) != 0.0 or _relic_times(relic_id(k)) != 1.0:
 			out.append(k)
 	return out
 
@@ -714,6 +773,14 @@ func resolve_player() -> int:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
 	grit += gain
 	guard_pool = guard_total()
+	for k in relics.size():  # growing relics count this turn once its damage is dealt
+		match relic_id(k):
+			"spare_fuse":
+				relics[k].f += 0.25 * rerolls
+			"hungry_bell":
+				relics[k].f = relics[k].f + 1.0 if not fire.is_empty() else 0.0
+			"ward_icon":
+				relics[k].f = 0.0
 	if not alive(target):
 		for i in enemies.size():
 			if alive(i):
@@ -783,6 +850,9 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 
 
 func end_enemy_phase() -> void:
+	for k in relics.size():
+		if relic_id(k) == "ward_icon":
+			relics[k].f = guard_pool
 	turn += 1
 	if not is_tutorial() and not is_boss_fight():
 		dungeon_turns += 1

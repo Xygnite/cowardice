@@ -245,7 +245,7 @@ func _show_fight(on_finished: Callable) -> void:
 
 
 func _on_fight_finished(won: bool) -> void:
-	combat.claim_fight()
+	combat.claim_fight(won)
 	if ambush and won:
 		combat.shards += Events.AMBUSH_SHARDS
 	ambush = false
