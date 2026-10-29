@@ -91,6 +91,7 @@ var combat: Combat  # set by game.gd before the screen enters the tree
 var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
 var meta: Meta  # for the fight menu's settings; set by game.gd
 var busy := false  # true while the dice are in the air or the enemies act, and after the fight ends
+var paused := false  # the fight menu is open
 var rolling: Array = []  # indices of the dice in the air; their values aren't known until they land
 var acting := -1  # enemy currently acting, highlighted
 
@@ -166,18 +167,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		_open_menu()
 
 
-## Only on the player's turn, with the dice at rest, so no roll, bar or blow resolves behind it.
-## The screen stays busy while it is open, which shuts out every key and click; Esc closes it (Overlay).
+## Only on the player's turn, with the dice at rest or a turn's throw waiting on the press, so no roll,
+## bar or blow resolves behind it. The screen stays busy while it is open, which shuts out every key and
+## click; Esc closes it (Overlay) and puts things back as they were, a waiting throw still waiting.
 func _open_menu() -> void:
-	if busy:
+	if not _menu_allowed():
 		return
+	var was_busy := busy
+	paused = true
 	busy = true
 	guide.hide()  # the menu is the one thing over the tutorial's dark
 	var m := FightMenu.new()
 	m.meta = meta
 	m.quit.connect(abandoned.emit)
 	m.tree_exited.connect(func() -> void:
-		busy = false
+		paused = false
+		busy = was_busy
 		_refresh()
 		if combat.is_tutorial():
 			_guide_show())
@@ -187,8 +192,14 @@ func _open_menu() -> void:
 
 ## The Roll button and its keys: held to wind up a throw that is waiting, or, with the dice at rest,
 ## to start a reroll and wind it up in the same press.
+## The menu opens on the player's turn, or while a turn's opening throw waits unheld: its dice are in
+## the hand then, so the refresh under the menu can't show the roll early (a reroll's wind-up is held).
+func _menu_allowed() -> bool:
+	return not paused and (not busy or (charge.waiting and charge.held < 0))
+
+
 func _on_roll_key(down: bool) -> void:
-	if combat.is_tutorial():  # nothing is thrown there
+	if combat.is_tutorial() or paused:  # nothing is thrown in the tutorial, nor behind the menu
 		return
 	if down and not charge.waiting:
 		_on_reroll()
@@ -390,7 +401,7 @@ func _refresh() -> void:
 	reroll_button.text = "Hold to roll  [R]" if charge.waiting else "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = not charge.waiting and (busy or combat.rerolls == 0)
 	end_button.disabled = busy
-	menu_button.disabled = busy
+	menu_button.disabled = not _menu_allowed()
 	log_label.text = "\n".join(log_lines)
 	var step := _tutorial_step()
 	if combat.is_tutorial() and guide.visible and step.get("until") == "place" and combat.dice[step.die].slot == step.slot:
@@ -785,7 +796,7 @@ func _roll_anim(which: Array, stow := false) -> void:
 		_refresh()
 	# No refresh while winding up: it would square the resting dice onto the provisional roll.
 	end_button.disabled = true
-	menu_button.disabled = true
+	menu_button.disabled = false  # the menu may still open while the throw waits (_menu_allowed)
 	reroll_button.text = "Hold to roll  [R]"
 	reroll_button.disabled = false
 	var power: float = await charge.wind_up()

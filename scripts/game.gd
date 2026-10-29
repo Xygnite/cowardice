@@ -164,7 +164,9 @@ func _show_map() -> void:
 	s.path = path
 	s.combat = combat
 	s.seen_events = seen_events
+	s.meta = meta
 	s.picked.connect(_on_room_picked)
+	s.abandoned.connect(_abandon_run)
 	_show(s)
 
 

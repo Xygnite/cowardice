@@ -3,6 +3,7 @@ extends Control
 ## The floor as a branching map, entrance on the left and boss on the right. You can only step along a link.
 
 signal picked(index: int)
+signal abandoned  # quit from the menu
 
 const INK := Color(0.23, 0.16, 0.1)
 const WALKED := Color(0.48, 0.14, 0.09)
@@ -16,6 +17,7 @@ var rooms: Array = []  # columns of room dictionaries, entrance first
 var layer := 0
 var path: Array = []
 var combat: Combat
+var meta: Meta  # for the menu's settings
 var seen_events: Array = []  # for the "?" rooms' odds
 var room_buttons: Array = []  # per column, its rooms' buttons
 var _field: Control  # the parchment area the rooms sit on
@@ -44,6 +46,7 @@ func _ready() -> void:
 	UI.label(top, 22, "%d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards])
 	UI.spacer(top)
 	UI.heading(top, 32, title)
+	UI.button(top, "Menu  [Esc]", _open_menu)
 	_field = Control.new()
 	_field.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_KEEP_SIZE, 8)
 	_field.offset_top = 72
@@ -61,6 +64,22 @@ func _ready() -> void:
 	lair_label.add_theme_color_override("font_color", INK)
 	_field.resized.connect(_place_rooms)  # only now: it needs the buttons
 	_place_rooms()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		get_viewport().set_input_as_handled()
+		_open_menu()
+
+
+## The fight's menu, opened over the map; quitting from it gives up the run.
+func _open_menu() -> void:
+	if not find_children("*", "FightMenu", true, false).is_empty():
+		return
+	var m := FightMenu.new()
+	m.meta = meta
+	m.quit.connect(abandoned.emit)
+	add_child(m)
 
 
 func _taken(c: int, i: int) -> bool:

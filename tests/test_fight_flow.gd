@@ -38,6 +38,8 @@ func _init() -> void:
 	await _two_floors()
 	await _mine_start()
 	await _fight_menu()
+	await _menu_before_throw()
+	await _map_menu()
 	await _quick_dice()
 	await _campfire_save()
 	await _new_run_asks()
@@ -818,6 +820,65 @@ func _fight_menu() -> void:
 	check(game.meta.embers == embers and Meta.load_from(SAVE).embers == embers, "quitting pays no Embers")
 	await create_timer(0.3).timeout
 	check(errors.count == errors_before, "the fight menu runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The menu opens while a throw waits on the Roll press, R can't throw behind it, and closing it leaves
+## the throw waiting; once the dice are in the air it stays shut.
+func _menu_before_throw() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	ChargeBar.auto = false
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	await process_frame
+	check(screen.charge.waiting and not screen.menu_button.disabled, "the Menu button is on while the throw waits")
+	await _press(KEY_ESCAPE)
+	check(_overlays(game, "FightMenu").size() == 1, "Esc opens the menu before the dice are thrown")
+	screen._on_roll_key(true)
+	screen._on_roll_key(false)
+	await process_frame
+	check(screen.charge.waiting and screen.rolling.size() == 3 and not screen.tray.in_flight, "R throws nothing behind the menu")
+	await _press(KEY_ESCAPE)
+	await process_frame
+	check(_overlays(game, "FightMenu").is_empty() and screen.busy and screen.charge.waiting, "closing it leaves the throw waiting")
+	screen._on_roll_key(true)
+	screen._on_roll_key(false)
+	await process_frame
+	check(screen.tray.in_flight, "the throw goes once the menu is shut")
+	await _press(KEY_ESCAPE)
+	check(_overlays(game, "FightMenu").is_empty(), "the menu stays shut while the dice are in the air")
+	ChargeBar.auto = true
+	while screen.busy:
+		await process_frame
+	check(errors.count == errors_before, "the menu before a throw runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The map has the fight's menu: its Menu button or Esc opens it, and quitting from it gives up the run.
+func _map_menu() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	var embers: int = game.meta.embers
+	check(game.screen is MapScreen and _button(game.screen, "Menu  [Esc]") != null, "the map has a Menu button")
+	await _press(KEY_ESCAPE)
+	var menu: Array = _overlays(game, "FightMenu")
+	check(menu.size() == 1, "Esc opens the menu on the map")
+	await _press(KEY_ESCAPE)
+	await process_frame
+	check(_overlays(game, "FightMenu").is_empty() and game.screen is MapScreen, "Esc again closes it, back on the map")
+	_button(game.screen, "Menu  [Esc]").pressed.emit()
+	await process_frame
+	_button(_overlays(game, "FightMenu")[0], "Quit to main menu").pressed.emit()
+	await process_frame
+	_agree(game)
+	await process_frame
+	check(game.screen is MenuScreen and not RunSave.exists(RUN), "quitting from the map gives up the run for the main menu")
+	check(game.meta.embers == embers, "quitting from the map pays no Embers")
+	check(errors.count == errors_before, "the map menu runs with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
 
