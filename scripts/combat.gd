@@ -157,9 +157,15 @@ func _init(seed_value := -1) -> void:
 const SAVED := ["max_hp", "player_hp", "shards", "kills", "perks", "bonus_perk", "bonus_embers", "dungeon_turns"]
 
 
+## Fields added after run saves existed: an older save may lack them (they load as these defaults), but not hold the wrong type.
+const SAVED_LATER := {"relics": [], "best_hit": 0, "best_mult": 1.0}
+
+
 func to_dict() -> Dictionary:
 	var d := {"dice": dice.map(func(x): return {"base": x.base, "faces": x.faces, "uncursed": x.uncursed, "marks": x.marks})}
 	for k in SAVED:
+		d[k] = get(k)
+	for k in SAVED_LATER:
 		d[k] = get(k)
 	return d.duplicate(true)
 
@@ -174,13 +180,20 @@ static func valid_dict(d) -> bool:
 	for x in d.dice:
 		if not (x is Dictionary and x.get("base") is Array and x.get("faces") is Array and x.get("uncursed") is Dictionary):
 			return false
-	return SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k)))
+	if not SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k))):
+		return false
+	if d.has("relics") and not (d.relics is Array and d.relics.all(func(r): return r is Dictionary and r.get("id") is String and r.get("n") is float and r.get("f") is float)):
+		return false
+	return ["best_hit", "best_mult"].all(func(k): return not d.has(k) or typeof(d[k]) in [TYPE_INT, TYPE_FLOAT])
 
 
 static func from_dict(d: Dictionary) -> Combat:
 	var c := Combat.new()
 	for k in SAVED:
 		c.set(k, d[k])
+	c.relics = d.get("relics", []).map(func(r): return {"id": r.id, "n": float(r.n), "f": float(r.f)})
+	c.best_hit = int(d.get("best_hit", 0))
+	c.best_mult = float(d.get("best_mult", 1.0))
 	for i in c.dice.size():
 		c.dice[i].merge(d.dice[i].duplicate(true), true)
 	return c
@@ -657,6 +670,7 @@ func take_relic(id: String, replace := -1) -> bool:
 	if relics.any(func(r): return r.id == id):
 		return false
 	var entry := {"id": id, "n": 0.0, "f": 0.0}
+	var before := _acting_ids()
 	if relics.size() < BELT_SIZE:
 		relics.append(entry)
 	elif replace >= 0 and replace < relics.size():
@@ -664,11 +678,28 @@ func take_relic(id: String, replace := -1) -> bool:
 		shards += BREAK_SHARDS
 	else:
 		return false
+	_reset_changed_mirrors(before)
 	return true
 
 
 func move_relic(from: int, to: int) -> void:
+	var before := _acting_ids()
 	relics.insert(to, relics.pop_at(from))
+	_reset_changed_mirrors(before)
+
+
+## Each Mirror Shard's belt entry with the id it acts as, to see what a belt change did to it.
+func _acting_ids() -> Array:
+	return range(relics.size()).filter(func(k): return relics[k].id == "mirror_shard").map(func(k): return [relics[k], relic_id(k)])
+
+
+## A Mirror Shard's counters belong to what it copies: when that changes, they start over.
+func _reset_changed_mirrors(before: Array) -> void:
+	for pair in before:
+		var k := range(relics.size()).filter(func(i): return is_same(relics[i], pair[0]))  # by identity: two Mirrors can look alike
+		if not k.is_empty() and relic_id(k[0]) != pair[1]:
+			relics[k[0]].n = 0.0
+			relics[k[0]].f = 0.0
 
 
 ## This turn's Mult: 1 plus every slot's adds, then times every slot's multipliers.

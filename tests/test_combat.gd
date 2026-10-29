@@ -42,6 +42,7 @@ func _init() -> void:
 	_backdrop_life()
 	_run_save()
 	_relic_belt()
+	_relic_save()
 	_mult()
 	_relic_effects()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
@@ -1014,6 +1015,52 @@ func _run_save() -> void:
 	check(RunSave.read(PATH).get("layer") == 3, "a save left only as its temp file is recovered")
 	RunSave.erase(PATH)
 	check(not FileAccess.file_exists(PATH) and not FileAccess.file_exists(PATH + ".tmp") and RunSave.read(PATH).is_empty(), "an erased save is gone")
+
+
+func _relic_save() -> void:
+	const PATH := "user://test_relic_save.json"
+	var c := fresh()
+	for id in ["black_candle", "gravedigger", "mirror_shard", "miners_ledger"]:
+		c.take_relic(id)
+	c.relics[1].n = 7.0
+	c.relics[3].n = 8.0
+	c.best_hit = 42
+	c.best_mult = 2.5
+	RunSave.write({"combat": c.to_dict()}, PATH)
+	var d := RunSave.read(PATH)
+	RunSave.erase(PATH)
+	check(CombatScript.valid_dict(d.combat), "a saved belt passes valid_dict after a real file round trip")
+	var back := CombatScript.from_dict(d.combat)
+	check(back.relics.map(func(r): return r.id) == ["black_candle", "gravedigger", "mirror_shard", "miners_ledger"], "the belt keeps its order")
+	check(back.relics[1].n == 7.0 and typeof(back.relics[1].n) == TYPE_FLOAT and back.relics[3].n == 8.0, "relic counters come back as floats")
+	check(back.best_hit == 42 and typeof(back.best_hit) == TYPE_INT and is_equal_approx(back.best_mult, 2.5), "best hit and best Mult come back")
+	var old := c.to_dict()
+	for k in ["relics", "best_hit", "best_mult"]:
+		old.erase(k)
+	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).relics.is_empty(), "a save from before relics loads with an empty belt")
+	var bad := c.to_dict()
+	bad.relics = "x"
+	check(not CombatScript.valid_dict(bad), "a belt of the wrong type is refused")
+	# a Mirror's counters don't follow it onto another relic
+	c = fresh()
+	for id in ["mirror_shard", "miners_ledger", "gravedigger"]:
+		c.take_relic(id)
+	c.relics[0].n = 40.0
+	c.relics[0].f = 2.0
+	c.move_relic(2, 1)  # Mirror now copies the Tally
+	check(c.relic_id(0) == "gravedigger" and c.relics[0].n == 0.0 and c.relics[0].f == 0.0, "a Mirror's counters reset when it copies something else")
+	c.relics[0].n = 40.0
+	c.move_relic(2, 1)  # back: copies the Ledger again, reset again
+	check(c.relics[0].n == 0.0, "and again when it swaps back")
+	c.relics[0].n = 40.0
+	c.move_relic(2, 2)  # nothing moves
+	check(c.relics[0].n == 40.0, "a move that keeps the copied relic keeps the counter")
+	c.take_relic("whetstone")
+	c.take_relic("twin_saints")
+	c.take_relic("tithe_box")  # full belt now refuses; replace the copied relic
+	c.relics[0].n = 40.0
+	c.take_relic("rosary", 1)
+	check(c.relics[0].n == 0.0, "breaking the relic a Mirror copies resets the Mirror")
 
 
 func _relic_belt() -> void:
