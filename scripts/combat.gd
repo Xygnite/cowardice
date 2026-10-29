@@ -182,7 +182,7 @@ static func valid_dict(d) -> bool:
 			return false
 	if not SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k))):
 		return false
-	if d.has("relics") and not (d.relics is Array and d.relics.all(func(r): return r is Dictionary and r.get("id") is String and r.get("n") is float and r.get("f") is float)):
+	if d.has("relics") and not (d.relics is Array and d.relics.all(func(r): return r is Dictionary and r.get("id") is String and Combat.RELICS.has(r.id) and r.get("n") is float and r.get("f") is float)):
 		return false
 	return ["best_hit", "best_mult"].all(func(k): return not d.has(k) or typeof(d[k]) in [TYPE_INT, TYPE_FLOAT])
 
@@ -899,7 +899,7 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 func end_enemy_phase() -> void:
 	for k in relics.size():
 		if relic_id(k) == "ward_icon":
-			relics[k].f = guard_pool
+			relics[k].f = float(guard_pool)
 	turn += 1
 	if not is_tutorial() and not is_boss_fight():
 		dungeon_turns += 1

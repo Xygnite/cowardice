@@ -342,8 +342,8 @@ func _relic_picks() -> void:
 		for r in fill:
 			game.combat.take_relic(r)
 		pick._show_belt()  # redraw the belt with the relics just added
-		check(pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "◀").size() == 4, "every belt relic but the first has a move-left button")
-		pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "◀")[0].pressed.emit()
+		check(pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<").size() == 4, "every belt relic but the first has a move-left button")
+		pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<")[0].pressed.emit()
 		check(game.combat.relic_id(0) == fill[1] and game.combat.relic_id(1) == fill[0], "◀ moves a belt relic left")
 		var id: String = pick.choices[0]
 		_takes(pick)[0].pressed.emit()

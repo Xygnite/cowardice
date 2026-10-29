@@ -1048,6 +1048,19 @@ func _relic_save() -> void:
 	var bad := c.to_dict()
 	bad.relics = "x"
 	check(not CombatScript.valid_dict(bad), "a belt of the wrong type is refused")
+	bad = c.to_dict()
+	bad.relics = [{"id": "nope", "n": 0.0, "f": 0.0}]
+	check(not CombatScript.valid_dict(bad), "a belt with an unknown relic is refused")
+	# Ward Icon's stored Guard is an int in memory; it must still survive the save
+	var w := fresh()
+	w.enemies[0].intent = {"kind": "attack", "value": 5}
+	w.take_relic("ward_icon")
+	w.guard_pool = 5
+	w.end_enemy_phase()
+	RunSave.write({"combat": w.to_dict()}, PATH)
+	var wd := RunSave.read(PATH)
+	RunSave.erase(PATH)
+	check(wd.has("combat") and CombatScript.valid_dict(wd.combat), "a Ward Icon holding Guard passes valid_dict after a file round trip")
 	# a Mirror's counters don't follow it onto another relic
 	c = fresh()
 	for id in ["mirror_shard", "miners_ledger", "gravedigger"]:

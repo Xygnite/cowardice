@@ -202,8 +202,9 @@ func _on_end_turn() -> void:
 	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
-	for k in lit:
-		_flash(belt.get_child(k))
+	if dealt > 0:
+		for k in lit:
+			_flash(belt.get_child(k))
 	for i in combat.enemies.size():
 		var swapped: bool = combat.enemies[i].has("from")  # a Hulk died and Rubble stands in its slot
 		if swapped or combat.enemies[i].hp < enemy_hp_before[i]:
@@ -350,7 +351,7 @@ func _mult_text(m: float) -> String:
 	for i in combat.enemies.size():
 		var hits := combat.hits_to(i)
 		if not hits.is_empty():
-			lines.append("%s: %s  × %.1f = %d" % [combat.enemies[i].name, " + ".join(hits.map(str)), m, combat.damage_to(i)])
+			lines.append("%s: %s  × %.1f = %d" % [combat.enemies[i].name, ("(" + " + ".join(hits.map(str)) + ")") if hits.size() > 1 else str(hits[0]), m, combat.damage_to(i)])
 	lines.append("Mult ×%.1f" % m)
 	return "
 ".join(lines)
@@ -364,7 +365,9 @@ func _relic_value(k: int) -> String:
 			return "+%.1f" % (0.1 * r.n) if r.n > 0 else ""
 		"spare_fuse":
 			return "+%.1f" % r.f if r.f > 0 else ""
-		"hungry_bell", "ward_icon":
+		"hungry_bell":
+			return "+%d" % (r.f + 1) if r.f > 0 else ""  # the streak's next firing turn adds one more
+		"ward_icon":
 			return "+%d" % r.f if r.f > 0 else ""
 		"miners_ledger":
 			return "+%d" % floori(r.n / 4) if r.n >= 4 else ""

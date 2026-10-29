@@ -76,7 +76,7 @@ func _show_belt() -> void:
 		var col := UI.panel(belt_row, 4)
 		belt_icon(col, combat, k)
 		if k > 0:
-			UI.button(col, "◀", _move_left.bind(k))
+			UI.button(col, "<", _move_left.bind(k))
 		if breaking != "":
 			UI.button(col, "Break", _ask_break.bind(k))
 
