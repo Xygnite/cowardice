@@ -50,11 +50,11 @@ func _ready() -> void:
 		var head := UI.row(col, 10)
 		UI.image(head, "relic_" + id).tooltip_text = "%s\n%s" % [r.name, r.text]
 		UI.label(head, 22, r.name).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		if r.rare:
-			UI.label(col, 16, "Rare").add_theme_color_override("font_color", UI.GOLD)
+		UI.label(col, 16, "Rare" if r.rare else "Common").add_theme_color_override("font_color", UI.GOLD if r.rare else UI.QUIET)
 		var text := UI.label(col, 16, r.text)
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		text.custom_minimum_size.y = text.get_line_height() * 3 + text.get_theme_constant("line_spacing") * 2
+		text.size_flags_vertical = Control.SIZE_EXPAND_FILL  # so every card's Take sits on the same line, at the bottom
 		text.add_theme_color_override("font_color", UI.QUIET)
 		UI.button(col, "Take", _take.bind(id)).custom_minimum_size.y = 48
 	var skip := UI.button(root, "Skip", func(): ConfirmPanel.ask(self, "Skip the relics?", "+%d Shards instead. All of them are left behind." % SKIP_SHARDS, "Skip", _skip))
