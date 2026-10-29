@@ -66,13 +66,12 @@ const BREAK_SHARDS := 2
 
 ## Enemy types. Optional keys:
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
-## "rig_pair_turn": that turn's roll always contains a pair, so the Cleave lesson can happen.
 ## "bone_wall": blocks your highest Attack die aimed at it.
 ## "sprite": file name in assets/sprites/; enemies without one show a placeholder box.
 ## A buried die ("buried" > 0) keeps its value and slot, and can't be rolled, locked or placed, for the next turn.
 ## A "ring" intent turns another enemy's attack this turn unblockable.
 const TYPES := {
-	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5, "rig_pair_turn": 2,
+	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5,
 		"phase1": [{"kind": "attack", "value": 3}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 2}, {"kind": "attack", "value": 3}, {"kind": "unblockable", "value": 5}]},
 	"rat": {"name": "Bone Rat", "hp": 6, "sprite": "bone_rat",
 		"phase1": [{"kind": "attack", "value": 2}]},
@@ -118,6 +117,8 @@ const TYPES := {
 ## Set fights for the tutorial (0), the boss (6), tests and the --fight shortcut. A run deals its own groups in game.gd.
 const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "doctor", "rat"],
 	["treant", "moss"], ["grieve", "archivist"], ["warden"]]
+## The tutorial's dice, by turn: one lesson each (Attack, Guard, a Cleave pair, Grit, a parry); the screen guides each.
+const TUTORIAL_DICE := [[5, 2, 3], [4, 1, 2], [6, 6, 1], [3, 5, 2], [6, 2, 3]]
 
 var rng := RandomNumberGenerator.new()
 var perks: Array = []  # perk ids from Meta.PERKS equipped for this run, plus the bonus one
@@ -390,13 +391,11 @@ func start_turn() -> void:
 		d.locked = false
 		d.slot = Slot.NONE
 		_roll(d)
-	if rigged_turn():
-		dice[1].value = dice[0].value
-
-
-## This turn's opening roll is fixed to hold a pair (the tutorial's Cleave lesson); the screen steers the dice onto it.
-func rigged_turn() -> bool:
-	return enemies[0].type.get("rig_pair_turn", -1) == turn
+	if is_tutorial():  # no throw: each lesson's dice are set (TUTORIAL_DICE), lying on a side that shows them
+		var set: Array = TUTORIAL_DICE[mini(turn, TUTORIAL_DICE.size() - 1)]
+		for i in dice.size():
+			dice[i].value = set[i]
+			dice[i].side = dice[i].faces.find(set[i])
 
 
 func alive(i: int) -> bool:

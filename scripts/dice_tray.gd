@@ -5,7 +5,6 @@ extends Control
 ## and knock into each other (and into locked dice, which stay put), clacking on every bump. Whatever
 ## face ends up on top is the roll: once a die stops, it is squared to the screen on that face and
 ## pinned there (a die left leaning on a wall settles onto the face pointing most upward).
-## A steered throw (the tutorial's pair turn) instead tips each die onto its given value with a hidden torque.
 ## Each side shows one of the die's faces, on the die art from assets/ui/cut/die_<art>.png.
 
 signal die_clicked(i: int)  # a left press on die i
@@ -34,11 +33,6 @@ const DIE_LAYER := 2  # a thrown die once it has landed; until then, and while l
 const LANDED_Y := 0.9  # a cube's centre is below this only when it touches the felt (corner down: 0.87)
 const BOUNCE := 0.3
 const FRICTION := 0.7
-## Below this speed the die is steered onto its rolled face: torque = error * STEER - spin * DAMP.
-## STEER must beat gravity (about 15 at the tipping point) so a die can be rolled over an edge.
-const STEER_BELOW := 3.0
-const STEER := 22.0
-const DAMP := 3.0
 const SETTLED_ANGLE := 0.05  # radians from the rest pose
 const NEARLY_SQUARE := 0.26  # radians; a stopped die this close is nudged the rest of the way
 const NUDGE_TIME := 0.1
@@ -77,11 +71,10 @@ static var _atlases := {}  # art name -> the die art tiled 3x2, the layout BoxMe
 var camera: Camera3D
 var walls: Array[CollisionShape3D] = []  # left, right, top, bottom; moved to the tray's edges on resize
 ## Per die: body (the RigidBody3D), cube (its mesh), labels, chain, slot (2D badge) with its icon,
-## clack (its AudioStreamPlayer), faces, value, rolling, steer, t (seconds since thrown),
+## clack (its AudioStreamPlayer), faces, value, rolling, t (seconds since thrown),
 ## slow (seconds it has been stopped), last_v (velocity a step ago) and quiet (seconds until it may clack).
 var dice: Array[Dictionary] = []
 var in_flight := false  # a throw has dice still rolling; landed fires when none are
-var torques := 0  # steering pushes so far; tests check a fair throw makes none
 
 
 func _init() -> void:
@@ -222,7 +215,7 @@ func add_die() -> void:
 	clack.bus = "SFX"
 	add_child(clack)
 	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "rubble": rubble, "halo": halo, "sparks": sparks, "slot": slot, "icon": icon,
-		"clack": clack, "hold": 0.0, "locked": false, "faces": [], "value": 0, "rolling": false, "steer": false, "t": 0.0, "slow": 0.0,
+		"clack": clack, "hold": 0.0, "locked": false, "faces": [], "value": 0, "rolling": false, "t": 0.0, "slow": 0.0,
 		"last_v": Vector3.ZERO, "quiet": 0.0})
 	for i in dice.size():  # the row stays centred as it grows
 		dice[i].body.position = _spot(i)
@@ -286,10 +279,10 @@ func stow(which: Array) -> void:
 
 
 ## Throws the dice at `which` (indices) in from the left. Each lands on whatever face comes up, its
-## value once `landed` fires; with `steer`, each is tipped onto its current value instead.
+## value once `landed` fires.
 ## `power` (0 to 1, from the charge bar) scales how hard they leave the hand.
-func throw(which: Array, steer := false, power := 1.0) -> void:
-	var force := lerpf(0.4, 1.0, power)  # full power is the tuned throw; harder upsets the steered pair
+func throw(which: Array, power := 1.0) -> void:
+	var force := lerpf(0.4, 1.0, power)  # full power is the tuned throw
 	if size.x == 0:
 		# The walls need the tray's size, and a new screen resizes it more than once while it lays out:
 		# throwing after the first would spawn dice where the walls then close in and shove them out.
@@ -303,7 +296,6 @@ func throw(which: Array, steer := false, power := 1.0) -> void:
 		var body: RigidBody3D = d.body
 		body.show()
 		d.rolling = true
-		d.steer = steer
 		d.t = 0.0
 		d.slow = 0.0
 		# Out of the hand in a loose line, so no two start inside each other.
@@ -329,8 +321,7 @@ func _physics_process(delta: float) -> void:
 			body.collision_layer = DIE_LAYER
 			body.collision_mask = TRAY_LAYER | DIE_LAYER
 		_clack(d, delta)
-		if not d.steer:
-			d.value = d.faces[_top(d)]  # the roll is whatever is up; _rest then squares the die on it
+		d.value = d.faces[_top(d)]  # the roll is whatever is up; _rest then squares the die on it
 		var rest := _rest(d, body.quaternion)
 		var off := _turn_between(body.quaternion, rest)
 		var angle := off.get_angle()
@@ -339,12 +330,8 @@ func _physics_process(delta: float) -> void:
 		if angle < NEARLY_SQUARE and stopped:
 			# Friction can hold a die a few degrees off, where it would rest crooked; nudge it.
 			_pin(d, 0.0 if angle < SETTLED_ANGLE else NUDGE_TIME)
-		elif d.t > GIVE_UP or (not d.steer and d.slow > SLOW_TIME):
+		elif d.t > GIVE_UP or d.slow > SLOW_TIME:
 			_pin(d, EASE_TIME)
-		elif d.steer and body.linear_velocity.length() < STEER_BELOW and angle > 0.001:
-			# Torque toward the rest pose, damped so it does not wobble.
-			body.apply_torque(off.get_axis() * angle * STEER - body.angular_velocity * DAMP)
-			torques += 1
 
 
 ## Plays a die's clack when its velocity jumps (it hit the floor, a wall or another die), louder the harder.

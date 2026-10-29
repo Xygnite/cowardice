@@ -29,6 +29,7 @@ func _init() -> void:
 	await _map_moves()
 	await _fair_throws()
 	await _dice_in_hand()
+	await _guided_tutorial()
 	await _gambler_throw()
 	await _play_events()
 	await _hulk_swap()
@@ -45,8 +46,9 @@ func _init() -> void:
 	await _camp_board()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"], ["pit_king"]]
-	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
-		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
+	# Every set fight but the tutorial (_guided_tutorial plays that one), plus dealt ones.
+	for keys in Combat.FIGHTS.slice(1) + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
+		await _play(keys)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	RunSave.erase(RUN)
 	print("FAILED: %d" % failures if failures else "All fight-flow checks passed.")
@@ -164,8 +166,7 @@ func _all_drawn(screen: CombatScreen) -> bool:
 
 
 ## Every throw on the real screen is fair: each die's value is the face drawn on its top, a forged and
-## cursed die included, and no steering torque touches the dice, except on the tutorial's pair turn,
-## which still lands its pair.
+## cursed die included.
 func _fair_throws() -> void:
 	var errors_before := errors.count
 	var game: Node = await _new_game()
@@ -180,15 +181,6 @@ func _fair_throws() -> void:
 		while screen.busy:
 			await process_frame
 		check(_all_drawn(screen), "throw %d: every die's value is the face drawn on its top" % throw)
-	check(screen.tray.torques == 0, "fair throws are never steered (got %d pushes)" % screen.tray.torques)
-	screen.combat.start_group(["dummy"])
-	screen.combat.turn = screen.combat.enemies[0].type.rig_pair_turn
-	screen.combat.start_turn()
-	screen._roll_anim(range(screen.combat.dice.size()), screen.combat.rigged_turn())
-	while screen.busy:
-		await process_frame
-	check(screen.combat.dice[0].value == screen.combat.dice[1].value, "the tutorial's pair turn still lands a pair")
-	check(_all_drawn(screen), "and the pair is what the dice show")
 	var lit := func(i): return screen.tray.dice[i].halo.visible
 	screen.combat.skills = ["cleave"]
 	for i in 3:
@@ -238,6 +230,62 @@ func _dice_in_hand() -> void:
 		await process_frame
 	ChargeBar.auto = true
 	check(errors.count == errors_before, "dice in hand run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The tutorial throws nothing: each turn's dice lie set on the felt, the screen goes dark but for one
+## spotlit target, only that target answers (other dice, End turn, R and Enter do nothing), and doing
+## each step in turn plays all five lessons through to the run.
+func _guided_tutorial() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.meta.tutorial_done = false
+	game._show_tutorial()
+	var screen: CombatScreen = game.screen
+	for i in 3:
+		await process_frame
+	var values := func(): return screen.combat.dice.map(func(d): return d.value)
+	check(values.call() == [5, 2, 3] and range(3).all(func(i): return screen.tray.dice[i].body.visible), "the first lesson's dice lie on the felt: 5, 2, 3")
+	check(not screen.reroll_button.visible and not screen.busy, "no Roll button and no throw in the tutorial")
+	check(screen.guide.visible and screen._tutorial_step().until == "next", "the first step explains, with a Next button")
+	screen.guide.next_button.pressed.emit()
+	screen.guide.next_button.pressed.emit()
+	var step: Dictionary = screen._tutorial_step()
+	check(step.until == "place" and step.die == 0, "the third step asks for the 5 in Attack")
+	var hole: Rect2 = screen.tray.die_rect(0)
+	check(not screen.guide._has_point(hole.get_center()) and screen.guide._has_point(Vector2(4, 4)), "the spotlit die takes clicks; the dark screen around it doesn't")
+	screen._on_die_clicked(1)
+	screen._on_left_released()
+	screen._on_end_turn()
+	var enter := InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	screen._unhandled_input(enter)
+	check(screen.combat.dice[1].slot == Combat.Slot.NONE and screen.combat.turn == 0 and not screen.busy, "other dice, End turn and Enter do nothing off the step")
+	var timing_steps := 0
+	var guard := 0
+	while game.screen is CombatScreen and guard < 400:
+		guard += 1
+		step = screen._tutorial_step()
+		if screen.guide.visible and screen.guide.panel.visible and step.get("until") == "timing":
+			timing_steps += 1
+			screen.guide.next_button.pressed.emit()  # the bar then runs out unanswered: a miss
+		elif not screen.busy and screen.guide.visible:
+			match step.until:
+				"next":
+					screen.guide.next_button.pressed.emit()
+				"place":
+					if screen.combat.turn == 2 and step.die == 0:
+						check(values.call() == [6, 6, 1], "the Cleave lesson deals a pair of 6s")
+					screen._on_die_clicked(step.die)
+					screen._on_left_released()
+				"end":
+					screen._on_end_turn()
+		await process_frame
+	check(timing_steps == 2, "a block and a parry are each explained before their bar (got %d)" % timing_steps)
+	check(not game.screen is CombatScreen and game.meta.tutorial_done, "doing every step finishes the tutorial")
+	check(errors.count == errors_before, "the guided tutorial runs with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
 

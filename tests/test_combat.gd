@@ -331,6 +331,8 @@ func _phase2() -> void:
 func _tutorial() -> void:
 	var c := CombatScript.new(3)
 	check(c.is_tutorial(), "a new game starts in the tutorial")
+	check(c.dice.map(func(d): return d.value) == [5, 2, 3], "the tutorial's first turn deals 5, 2, 3")
+	check(c.dice.all(func(d): return d.faces[d.side] == d.value), "each set die shows its value on the side it lies on")
 	place(c, 0, 6, CombatScript.Slot.ATTACK)
 	c.enemies[0].hp = 2
 	c.resolve_player()
@@ -339,7 +341,7 @@ func _tutorial() -> void:
 		c.resolve_enemy(0, CombatScript.Grade.MISS)
 		c.end_enemy_phase()
 		c.start_turn()
-	check(c.rolled_pair() != 0, "the Cleave lesson turn always rolls a pair")
+	check(c.dice.map(func(d): return d.value) == [6, 6, 1], "the Cleave lesson turn deals a pair of 6s")
 	for t in 3:
 		c.end_enemy_phase()
 	check(c.tutorial_done(), "the tutorial ends after 5 enemy turns")
