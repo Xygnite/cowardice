@@ -16,6 +16,7 @@ const FLOORS := {
 const COLUMNS := 10
 const LANES := 5
 const EARLY_COLUMNS := 4  # columns 1-4 get early-HP fights, 5-7 late-HP
+const LATE_SCALE := 1.5  # late-column enemies get this much HP
 const MID := 2  # the entrance and boss lane
 
 
@@ -38,7 +39,9 @@ static func deal(floor_id := "chapel") -> Array:
 			if room.kind == "fight":
 				var hp: Array = data.hp[0] if c == 0 else (data.hp[1] if c <= EARLY_COLUMNS else data.hp[2])
 				room.merge(fight_room(group(hp, used, data.enemies)), true)
+				room["scale"] = LATE_SCALE if c > EARLY_COLUMNS else 1.0
 	rooms[COLUMNS - 1][MID].merge(fight_room(data.boss), true)
+	rooms[COLUMNS - 1][MID]["scale"] = 1.0
 	var floor_map: Array = []
 	for c in COLUMNS:
 		var lanes: Array = rooms[c].keys()

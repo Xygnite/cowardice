@@ -30,20 +30,46 @@ const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
 const MARK_SFX := preload("res://assets/audio/confirm.wav")  # an Ember or Shard face paying out
 
-## One lesson per tutorial turn, indexed by Combat.turn; the turn's QUICK_LESSONS entry replaces it under
-## Quick dice control (Meta.quick_dice). Turn 2's roll is rigged to hold a pair, so its dice glow.
-const LESSONS := [
-	"Above the dummy is what it will do this turn. Hold R or the Roll button, then let go, to throw. Click a die to lock it or place it. Lock the dice you like, reroll the rest, then put a die in Attack and end the turn.",
-	"Put a die in Guard. When the dummy swings, press SPACE as the marker reaches the blue zone. The later you press, the better the block.",
-	"Two dice match, so they glow gold: a skill is ready. Put both in Skill to Cleave. A pair strikes harder and slips past any guard.",
-	"Leave one die unplaced. It becomes Grit: one extra reroll next turn.",
-	"Red means no shield will hold. Put a die in Guard and press SPACE inside the red zone to parry. A higher die gives you more time.",
+## The tutorial, step by step, over its set dice (Combat.TUTORIAL_DICE). Each step spotlights one target
+## ("at": intent, dice, die (with "die"), end, timing) and waits ("until") for Next, for "die" to reach
+## "slot", for End turn, or (timing) for Next and then the block or parry. "menu" replaces "text" when
+## dice open a menu instead of cycling on a click (Meta.quick_dice off).
+const TUTORIAL := [
+	{"turn": 0, "at": "intent", "until": "next", "title": "Intent",
+		"text": "Above the dummy is what it will do this turn: attack you for 3. Every enemy shows its next move."},
+	{"turn": 0, "at": "dice", "until": "next", "title": "Your dice",
+		"text": "In a fight you throw these, keep the ones you like and reroll the rest. Here they're set for you, so you can learn what each slot does."},
+	{"turn": 0, "at": "die", "die": 0, "slot": Combat.Slot.ATTACK, "until": "place", "title": "Attack",
+		"text": "Click the 5 to put it in Attack. Attack hits your target for the die's value.",
+		"menu": "Click the 5 and choose Attack. Attack hits your target for the die's value."},
+	{"turn": 0, "at": "end", "until": "end", "title": "End the turn",
+		"text": "Your Attack lands, then the dummy acts. Press End turn, or Enter."},
+	{"turn": 1, "at": "die", "die": 0, "slot": Combat.Slot.GUARD, "until": "place", "title": "Guard",
+		"text": "The dummy swings for 4. Click the 4 twice to put it in Guard: Guard soaks hits aimed at you.",
+		"menu": "The dummy swings for 4. Click the 4 and choose Guard: Guard soaks hits aimed at you."},
+	{"turn": 1, "at": "end", "until": "end", "title": "End the turn", "text": "Now end the turn and get ready to block."},
+	{"turn": 1, "at": "timing", "until": "timing", "title": "Block",
+		"text": "When the dummy swings, a marker runs along this bar. Press SPACE as it reaches the blue zone. The later you press, the better the block."},
+	{"turn": 2, "at": "die", "die": 0, "slot": Combat.Slot.SKILL, "until": "place", "title": "Skills",
+		"text": "Two dice match, so they glow gold: a skill is in reach. Right-click the first 6 to put it straight in Skill.",
+		"menu": "Two dice match, so they glow gold: a skill is in reach. Click the first 6 and choose Skill."},
+	{"turn": 2, "at": "die", "die": 1, "slot": Combat.Slot.SKILL, "until": "place", "title": "Cleave",
+		"text": "Now the other 6. A pair in Skill makes Cleave: 1.5 times the pair, and it slips past any guard.",
+		"menu": "Now the other 6, also into Skill. A pair in Skill makes Cleave: 1.5 times the pair, and it slips past any guard."},
+	{"turn": 2, "at": "end", "until": "end", "title": "End the turn", "text": "The dummy is guarding this turn, but Cleave cuts straight through."},
+	{"turn": 3, "at": "die", "die": 1, "slot": Combat.Slot.ATTACK, "until": "place", "title": "Attack",
+		"text": "Put the 5 in Attack.", "menu": "Click the 5 and choose Attack."},
+	{"turn": 3, "at": "end", "until": "end", "title": "Grit",
+		"text": "Leave the other two unplaced. Each die you don't place becomes Grit: one extra reroll next turn. End the turn."},
+	{"turn": 4, "at": "intent", "until": "next", "title": "Unblockable",
+		"text": "Red means no Guard will soak it. Only a parry stops an unblockable hit."},
+	{"turn": 4, "at": "die", "die": 0, "slot": Combat.Slot.GUARD, "until": "place", "title": "Parry",
+		"text": "A parry still needs a die in Guard, and a higher die gives you more time. Click the 6 twice to put it in Guard.",
+		"menu": "A parry still needs a die in Guard, and a higher die gives you more time. Click the 6 and choose Guard."},
+	{"turn": 4, "at": "end", "until": "end", "title": "End the turn", "text": "End the turn and get ready to parry."},
+	{"turn": 4, "at": "timing", "until": "timing", "title": "Parry",
+		"text": "Press SPACE while the marker is inside the red zone. Hit it and the blow misses entirely."},
 ]
-const QUICK_LESSONS := {
-	0: "Above the dummy is what it will do this turn. Hold R or the Roll button, then let go, to throw. Click a die to move it to the next slot, right-click to go back, hold it down to lock it. Lock the dice you like, reroll the rest, then put a die in Attack and end the turn.",
-	1: "Click a die twice to put it in Guard. When the dummy swings, press SPACE as the marker reaches the blue zone. The later you press, the better the block.",
-	2: "Two dice match, so they glow gold: a skill is ready. Right-click each one to put it straight in Skill and Cleave. A pair strikes harder and slips past any guard.",
-}
 
 const MURMUR_COLOR := Color(0.62, 0.72, 0.9)  # cold, like the window light
 ## Cryptic hints about the floor's boss (Bone Warden, Pit King), one per turn across the fights before him, by backdrop.
@@ -65,6 +91,7 @@ var combat: Combat  # set by game.gd before the screen enters the tree
 var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.webp; set by game.gd
 var meta: Meta  # for the fight menu's settings; set by game.gd
 var busy := false  # true while the dice are in the air or the enemies act, and after the fight ends
+var paused := false  # the fight menu is open
 var rolling: Array = []  # indices of the dice in the air; their values aren't known until they land
 var acting := -1  # enemy currently acting, highlighted
 
@@ -85,7 +112,8 @@ var fight_label: Label
 var enemy_ui: Array[Dictionary] = []
 var murmur_label: RichTextLabel
 var murmur_tween: Tween
-var lesson_label: Label
+var guide: TutorialGuide
+var tutorial_at := 0  # the TUTORIAL step on show or next up
 var tray: DiceTray
 var die_menu: PopupMenu
 var menu_die := 0  # die the open action menu acts on
@@ -95,7 +123,9 @@ var faces_button: Button
 var skill_button: Button  # names the skills the Skill dice fire; hover or press for what every unlocked one needs
 var faces_popup: PopupPanel
 var faces_label: Label
-var summary_label: Label
+var summary_label: Label  # hover: each enemy's hits before and after Mult
+var belt: VBoxContainer  # the relic belt, one icon per slot, beside the dice tray
+var belt_values: Array[Label] = []  # a growing relic's current worth, over its icon
 var reroll_button: Button
 var end_button: Button
 var timing_hint: Label
@@ -116,7 +146,11 @@ func _ready() -> void:
 	if combat.is_boss_fight():
 		_log("Something large stirs below.")
 	_refresh()
-	_roll_anim(range(combat.dice.size()), combat.rigged_turn())
+	if combat.is_tutorial():  # the tutorial throws nothing: its dice lie set, and the guide leads
+		reroll_button.hide()
+		_guide_show()
+	else:
+		_roll_anim(range(combat.dice.size()), true)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -133,25 +167,40 @@ func _unhandled_input(event: InputEvent) -> void:
 		_open_menu()
 
 
-## Only on the player's turn, with the dice at rest, so no roll, bar or blow resolves behind it.
-## The screen stays busy while it is open, which shuts out every key and click; Esc closes it (Overlay).
+## Only on the player's turn, with the dice at rest or a turn's throw waiting on the press, so no roll,
+## bar or blow resolves behind it. The screen stays busy while it is open, which shuts out every key and
+## click; Esc closes it (Overlay) and puts things back as they were, a waiting throw still waiting.
 func _open_menu() -> void:
-	if busy:
+	if not _menu_allowed():
 		return
+	var was_busy := busy
+	paused = true
 	busy = true
+	guide.hide()  # the menu is the one thing over the tutorial's dark
 	var m := FightMenu.new()
 	m.meta = meta
 	m.quit.connect(abandoned.emit)
 	m.tree_exited.connect(func() -> void:
-		busy = false
-		_refresh())
+		paused = false
+		busy = was_busy
+		_refresh()
+		if combat.is_tutorial():
+			_guide_show())
 	add_child(m)
 	_refresh()
 
 
 ## The Roll button and its keys: held to wind up a throw that is waiting, or, with the dice at rest,
 ## to start a reroll and wind it up in the same press.
+## The menu opens on the player's turn, or while a turn's opening throw waits unheld: its dice are in
+## the hand then, so the refresh under the menu can't show the roll early (a reroll's wind-up is held).
+func _menu_allowed() -> bool:
+	return not paused and (not busy or (charge.waiting and charge.held < 0))
+
+
 func _on_roll_key(down: bool) -> void:
+	if combat.is_tutorial() or paused:  # nothing is thrown in the tutorial, nor behind the menu
+		return
 	if down and not charge.waiting:
 		_on_reroll()
 	charge.press(down)
@@ -166,14 +215,14 @@ func _on_reroll() -> void:
 
 
 func _on_lock(i: int) -> void:
-	if busy:
+	if busy or combat.is_tutorial():  # no rerolls there, so nothing to lock for
 		return
 	combat.toggle_lock(i)
 	_refresh()
 
 
 func _on_assign(i: int, slot: int) -> void:
-	if busy:
+	if busy or not _guide_allows(i):
 		return
 	combat.assign(i, slot)
 	_refresh()
@@ -187,18 +236,24 @@ func _on_target(i: int) -> void:
 
 
 func _on_end_turn() -> void:
-	if busy:
+	if busy or (combat.is_tutorial() and _tutorial_step().get("until") != "end"):
 		return
+	if combat.is_tutorial():
+		_guide_done()
 	busy = true
 	var unplaced := combat.unplaced_count()
 	var enemy_hp_before: Array = combat.enemies.map(func(e): return e.hp)
 	var hp_was := combat.player_hp
 	var shards_was := combat.shards
+	var lit := combat.firing()  # before resolving: growing relics count the turn up as it resolves
 	var dealt := combat.resolve_player()
 	_log("You deal %d." % dealt)
 	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
+	if dealt > 0:
+		for k in lit:
+			_flash(belt.get_child(k))
 	for i in combat.enemies.size():
 		var swapped: bool = combat.enemies[i].has("from")  # a Hulk died and Rubble stands in its slot
 		if swapped or combat.enemies[i].hp < enemy_hp_before[i]:
@@ -222,11 +277,20 @@ func _on_end_turn() -> void:
 		_refresh()
 		var grade: int = Combat.Grade.MISS
 		if combat.needs_timing(i):
+			var lesson: bool = combat.is_tutorial() and _tutorial_step().get("until") == "timing"
 			timing_hint.text = ("BLOCK!  " if combat.enemies[i].intent.kind == "attack" else "PARRY!  ") + combat.enemies[i].name
 			timing_hint.show()
 			timing.start(combat, i)
+			if lesson:  # the bar waits, shown, while the guide explains it; it runs on Next, the panel out of its way
+				timing.running = false
+				_guide_show()
+				await guide.next
+				guide.hide_panel()
+				timing.running = true
 			grade = await timing.finished
 			timing_hint.hide()
+			if lesson:
+				_guide_done()
 		var kind: String = combat.enemies[i].intent.get("kind", "")
 		if kind in ["attack", "unblockable"]:
 			_play(enemy_ui[i].rig, "attack")
@@ -257,7 +321,12 @@ func _on_end_turn() -> void:
 		_end(true)
 	else:
 		combat.start_turn()
-		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), combat.rigged_turn())
+		if combat.is_tutorial():
+			busy = false
+			_refresh()
+			_guide_show()
+		else:
+			_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), true)
 
 
 ## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
@@ -300,13 +369,10 @@ func _refresh() -> void:
 			ui.body.text = e.name
 		ui.body.disabled = not up
 		ui.body.modulate = Color(1, 1, 1, 1 if up else 0.3)
-		ui.hp.text = "%s  %d/%d" % [e.name, e.hp, e.type.hp] if up else e.name + "  down"
+		ui.hp.text = "%s  %d/%d" % [e.name, e.hp, e.max] if up else e.name + "  down"
 		ui.bar.value = e.hp
 		ui.mark.texture = ACTING_ARROW if i == acting else TARGET_ARROW
 		ui.mark.modulate.a = 1.0 if i == acting or (i == combat.target and up) else 0.0
-	lesson_label.visible = combat.is_tutorial() and combat.turn < LESSONS.size()
-	if lesson_label.visible:
-		lesson_label.text = QUICK_LESSONS.get(combat.turn, LESSONS[combat.turn]) if meta and meta.quick_dice else LESSONS[combat.turn]
 	# Blank rather than hidden: the murmur label is the gap that pushes the enemies to the right.
 	var murmurs := not combat.is_tutorial() and not combat.is_boss_fight()
 	var lines: Array = MURMURS[backdrop]
@@ -324,13 +390,109 @@ func _refresh() -> void:
 	var fire := " + ".join(fired.map(func(id): return Combat.SKILLS[id].name))
 	var hint := ("   %s ready" % fire) if fire else ("   Skill in reach" if combat.skill_in_roll() else "")
 	skill_button.text = fire if fire else "Skills"
-	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), hint]
+	var m := combat.mult()
+	var times := not is_equal_approx(m, 1.0)
+	var damage := "Damage %d" % combat.preview_damage() + (" (×%.1f)" % m if times else "")
+	summary_label.text = "Rolling..." if rolling else "%s   Guard %d   Grit +%d%s" % [damage, combat.guard_total(), combat.unplaced_count(), hint]
+	summary_label.tooltip_text = _mult_text(m) if times and not rolling else ""
+	for k in belt_values.size():
+		belt_values[k].text = _relic_value(k)
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.skill_in_roll() and not combat.skill_ready() and not rolling else Color.WHITE)
 	reroll_button.text = "Hold to roll  [R]" if charge.waiting else "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = not charge.waiting and (busy or combat.rerolls == 0)
 	end_button.disabled = busy
-	menu_button.disabled = busy
+	menu_button.disabled = not _menu_allowed()
 	log_label.text = "\n".join(log_lines)
+	var step := _tutorial_step()
+	if combat.is_tutorial() and guide.visible and step.get("until") == "place" and combat.dice[step.die].slot == step.slot:
+		_guide_done()
+
+
+## The tutorial step on show or next up, or {} outside the tutorial and after its last step.
+func _tutorial_step() -> Dictionary:
+	return TUTORIAL[tutorial_at] if combat.is_tutorial() and tutorial_at < TUTORIAL.size() else {}
+
+
+## Spotlights the step up next if it belongs to this turn; otherwise the guide steps aside.
+func _guide_show() -> void:
+	var step := _tutorial_step()
+	if step.is_empty() or step.turn != combat.turn:
+		guide.hide()
+		return
+	var text: String = step.text if meta == null or meta.quick_dice else step.get("menu", step.text)
+	guide.point(_guide_target.bind(step), step.title, text, step.until in ["next", "timing"])
+
+
+## The step is done: on to the next. A timing step waits, hidden, for its enemy's swing (_on_end_turn).
+func _guide_done() -> void:
+	tutorial_at += 1
+	if _tutorial_step().get("until") == "timing":
+		guide.hide()
+	else:
+		_guide_show()
+
+
+## Where a step's spotlight goes, in screen space.
+func _guide_target(step: Dictionary) -> Rect2:
+	match step.at:
+		"intent":
+			return enemy_ui[0].intent.get_parent().get_global_rect()
+		"dice":  # the row of dice, not the whole tray
+			var row := tray.die_rect(0)
+			for i in range(1, combat.dice.size()):
+				row = row.merge(tray.die_rect(i))
+			return row
+		"die":
+			return tray.die_rect(step.die)
+		"end":
+			return end_button.get_global_rect()
+	return timing.get_global_rect()
+
+
+func _on_guide_next() -> void:
+	if _tutorial_step().get("until") == "next":
+		_guide_done()
+
+
+## Outside the tutorial any die may move; inside it, only the die the step spotlights.
+func _guide_allows(i: int) -> bool:
+	var step := _tutorial_step()
+	return not combat.is_tutorial() or (step.get("until") == "place" and step.die == i)
+
+
+## Each enemy's base hits times Mult, then the Mult, for the summary's hover.
+func _mult_text(m: float) -> String:
+	var lines := []
+	for i in combat.enemies.size():
+		var hits := combat.hits_to(i)
+		if not hits.is_empty():
+			lines.append("%s: %s  × %.1f = %d" % [combat.enemies[i].name, ("(" + " + ".join(hits.map(str)) + ")") if hits.size() > 1 else str(hits[0]), m, combat.damage_to(i)])
+	lines.append("Mult ×%.1f" % m)
+	return "
+".join(lines)
+
+
+## What a growing relic in belt slot k is worth now, from the slot's own counters; blank at 0 or for the rest.
+func _relic_value(k: int) -> String:
+	var r: Dictionary = combat.relics[k]
+	match combat.relic_id(k):
+		"gravedigger":
+			return "+%.1f" % (0.1 * r.n) if r.n > 0 else ""
+		"spare_fuse":
+			return "+%.1f" % r.f if r.f > 0 else ""
+		"hungry_bell":
+			return "+%d" % (r.f + 1) if r.f > 0 else ""  # the streak's next firing turn adds one more
+		"ward_icon":
+			return "+%d" % r.f if r.f > 0 else ""
+		"miners_ledger":
+			return "+%d" % floori(r.n / 4) if r.n >= 4 else ""
+	return ""
+
+
+## A belt icon glows gold and fades back: its relic counted in the blow that just landed.
+func _flash(icon: Control) -> void:
+	icon.modulate = Color(2.2, 1.8, 0.7)
+	icon.create_tween().tween_property(icon, "modulate", Color.WHITE, 0.6)
 
 
 ## A new murmur rises out of the dark, lingers a few seconds, then sinks back.
@@ -390,12 +552,27 @@ func _build() -> void:
 		enemy_ui.append(_build_enemy(enemy_row, i))
 
 	summary_label = UI.label(root, 18)
+	summary_label.mouse_filter = Control.MOUSE_FILTER_PASS  # for its Mult hover
 
 	# The dice row has a set height (tray_height) and the fight row above takes what is left, so the
 	# dice box, which the throw's walls are sized to, is the same in every fight.
 	bottom_row = UI.row(root, 24)
 	bottom_row.custom_minimum_size.y = tray_height
 	_build_dice(bottom_row)
+	belt = VBoxContainer.new()
+	belt.alignment = BoxContainer.ALIGNMENT_CENTER
+	belt.visible = not combat.relics.is_empty()
+	bottom_row.add_child(belt)
+	for k in combat.relics.size():
+		var value := UI.label(RelicPickScreen.belt_icon(belt, combat, k), 16)
+		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		value.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		value.offset_bottom = 8  # hangs a little under the icon, clear of its glyph
+		value.offset_right = 6
+		value.add_theme_color_override("font_color", UI.GOLD)
+		value.add_theme_constant_override("outline_size", 6)
+		value.add_theme_color_override("font_outline_color", Color("070e10"))
+		belt_values.append(value)
 	var actions := VBoxContainer.new()
 	actions.custom_minimum_size.x = 280
 	bottom_row.add_child(actions)
@@ -414,13 +591,6 @@ func _build() -> void:
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# Floating over the layout, not in it, so showing them never moves anything.
-	lesson_label = UI.label(self, 20)  # tutorial lessons, over the top of the scene
-	lesson_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lesson_label.add_theme_color_override("font_color", UI.GOLD)
-	lesson_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	lesson_label.offset_left = 24
-	lesson_label.offset_right = -24
-	lesson_label.offset_top = 72
 	timing_hint = UI.label(dice_box, 20)  # the block/parry bar, over the top of the dice tray: no dice are
 	timing_hint.position = Vector2(132, 20)  # used while the enemies act; right of the Faces button
 	timing_hint.hide()
@@ -432,6 +602,9 @@ func _build() -> void:
 	timing.offset_bottom = 48 + 32
 	timing.hide()
 	dice_box.add_child(timing)
+	guide = TutorialGuide.new()  # last, so its dark covers everything built above
+	guide.next.connect(_on_guide_next)
+	add_child(guide)
 
 
 ## One column per enemy: intent, clickable body (sets the target), name and HP, and a TARGET/ACTING mark.
@@ -453,7 +626,7 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 	# Name and HP go above the sprite, so every fighter's feet end on the same line as the hero's,
 	# written on the bar itself to keep the header short.
 	var bar := UI.hp_bar(col, 0)
-	bar.max_value = combat.enemies[i].type.hp
+	bar.max_value = combat.enemies[i].max
 	bar.custom_minimum_size.x = 150
 	var hp := UI.label(bar, 16)
 	hp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -476,7 +649,7 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 ## The slot's Rubble replaces its Hulk: new HP bar max, and a new rig if the new type has a sprite.
 func _swap_body(i: int) -> void:
 	var ui: Dictionary = enemy_ui[i]
-	ui.bar.max_value = combat.enemies[i].type.hp
+	ui.bar.max_value = combat.enemies[i].max
 	if ui.rig:
 		ui.rig.queue_free()
 		ui.rig = null
@@ -534,7 +707,7 @@ func _build_dice(parent: Node) -> void:
 
 
 func _on_die_clicked(i: int) -> void:
-	if busy or combat.dice[i].buried > 0:
+	if busy or combat.dice[i].buried > 0 or not _guide_allows(i):
 		return
 	if meta and meta.quick_dice:  # a quick click cycles on release; held long enough, it locks instead
 		held = i
@@ -613,17 +786,22 @@ func _show_faces() -> void:
 
 
 ## Throws the dice at `which` (indices); the faces they land on become their values. Until then the
-## screen is busy, so nothing acts on Combat's provisional roll. `steer` lands them on that roll instead.
-func _roll_anim(which: Array, steer := false) -> void:
+## screen is busy, so nothing acts on Combat's provisional roll.
+## `stow` (a turn's opening throw) keeps them in the hand, off the felt, until the throw.
+func _roll_anim(which: Array, stow := false) -> void:
 	busy = true
+	if stow:
+		rolling = which  # so the refresh shows "Rolling..." rather than the provisional roll's damage
+		tray.stow(which)
+		_refresh()
 	# No refresh while winding up: it would square the resting dice onto the provisional roll.
 	end_button.disabled = true
-	menu_button.disabled = true
+	menu_button.disabled = false  # the menu may still open while the throw waits (_menu_allowed)
 	reroll_button.text = "Hold to roll  [R]"
 	reroll_button.disabled = false
 	var power: float = await charge.wind_up()
 	rolling = which
-	tray.throw(which, steer, power)  # first, so the refresh doesn't square resting dice onto the provisional roll
+	tray.throw(which, power)  # first, so the refresh doesn't square resting dice onto the provisional roll
 	_refresh()
 	await tray.landed
 	for i in which:

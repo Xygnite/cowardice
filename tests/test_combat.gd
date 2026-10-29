@@ -31,6 +31,7 @@ func _init() -> void:
 	_fight_rewards()
 	_meta()
 	_floors()
+	_hp_scaling()
 	_mine_enemies()
 	_mine_sprites()
 	_pit_king()
@@ -40,6 +41,12 @@ func _init() -> void:
 	_event_backdrops()
 	_backdrop_life()
 	_run_save()
+	_relic_belt()
+	_relic_save()
+	_mult()
+	_relic_effects()
+	_relic_icons()
+	_relic_offer()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -324,6 +331,8 @@ func _phase2() -> void:
 func _tutorial() -> void:
 	var c := CombatScript.new(3)
 	check(c.is_tutorial(), "a new game starts in the tutorial")
+	check(c.dice.map(func(d): return d.value) == [5, 2, 3], "the tutorial's first turn deals 5, 2, 3")
+	check(c.dice.all(func(d): return d.faces[d.side] == d.value), "each set die shows its value on the side it lies on")
 	place(c, 0, 6, CombatScript.Slot.ATTACK)
 	c.enemies[0].hp = 2
 	c.resolve_player()
@@ -332,7 +341,7 @@ func _tutorial() -> void:
 		c.resolve_enemy(0, CombatScript.Grade.MISS)
 		c.end_enemy_phase()
 		c.start_turn()
-	check(c.rolled_pair() != 0, "the Cleave lesson turn always rolls a pair")
+	check(c.dice.map(func(d): return d.value) == [6, 6, 1], "the Cleave lesson turn deals a pair of 6s")
 	for t in 3:
 		c.end_enemy_phase()
 	check(c.tutorial_done(), "the tutorial ends after 5 enemy turns")
@@ -574,8 +583,8 @@ func _fight_rewards() -> void:
 	c.claim_fight()
 	check(c.kills == 2 and c.shards == 4, "two dead rats: 2 kills, 4 Shards")
 	c.start_fight(WARDEN)
-	c.enemies[0].hp = 30
-	check(c.boss_damage_pct() == 60, "Warden at 30/75 took 60%")
+	c.enemies[0].hp = 48
+	check(c.boss_damage_pct() == 60, "Warden at 48/120 took 60%")
 	c.start_fight(RATS)
 	c.end_enemy_phase()
 	c.start_fight(WARDEN)
@@ -647,9 +656,34 @@ func _mine_enemies() -> void:
 	check(c.enemies[1].intent.kind == "unblockable" and c.enemies[1].intent.value == 5, "a Canary's ring makes another's attack unblockable")
 
 
+func _hp_scaling() -> void:
+	var c := fresh(RATS)
+	c.start_group(["skeleton"], 1.5)
+	check(c.enemies[0].hp == 30 and c.enemies[0].max == 30, "a 1.5x Skeleton has 30 HP")
+	c = fresh()
+	c.start_group(["hulk"], 1.5)
+	c.turn = 1
+	c.start_turn()
+	c.enemies[0].hp = 3
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble" and c.enemies[0].hp == ceili(8 * 1.5) and c.enemies[0].max == 12, "a scaled Hulk leaves a scaled Rubble")
+	c.start_fight(WARDEN)
+	check(c.enemies[0].max == 120, "the Warden has 120 HP")
+	c.enemies[0].hp = 60
+	check(c.is_phase2(c.enemies[0]) and c.boss_damage_pct() == 50, "the Warden enters phase 2 and has taken 50% at 60/120")
+	var map := Floor.deal("chapel")
+	var ok := true
+	for col in map.size():
+		for room in map[col]:
+			if room.kind == "fight":
+				ok = ok and room.scale == (1.5 if col >= 5 and col <= 7 else 1.0)
+	check(ok, "only columns 5-7 fights are dealt a 1.5 scale")
+
+
 func _pit_king() -> void:
 	var c := _mine_group(["pit_king"], 1)  # turn 1 is the cave-in
-	check(c.is_boss_fight() and c.enemies[0].type.hp == 110, "the Pit King is a 110 HP boss")
+	check(c.is_boss_fight() and c.enemies[0].max == 220, "the Pit King is a 220 HP boss")
 	check(c.enemies[0].intent.kind == "cave_in" and c.intent_text(0) == "Cave-in", "the Pit King's second move is a cave-in")
 	place(c, 0, 4, CombatScript.Slot.GUARD)
 	place(c, 1, 2, CombatScript.Slot.SKILL)
@@ -827,6 +861,11 @@ func _meta() -> void:
 	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")
 
 
+func _relic_icons() -> void:
+	for id in Combat.RELICS:
+		check(ResourceLoader.exists("res://assets/ui/cut/relic_%s.png" % id), "relic %s has its icon" % id)
+
+
 func _event_backdrops() -> void:
 	for id in Events.IDS:
 		check(ResourceLoader.exists("res://assets/ui/bg_event_%s.webp" % id), "event %s has its backdrop" % id)
@@ -985,3 +1024,313 @@ func _run_save() -> void:
 	check(RunSave.read(PATH).get("layer") == 3, "a save left only as its temp file is recovered")
 	RunSave.erase(PATH)
 	check(not FileAccess.file_exists(PATH) and not FileAccess.file_exists(PATH + ".tmp") and RunSave.read(PATH).is_empty(), "an erased save is gone")
+
+
+func _relic_save() -> void:
+	const PATH := "user://test_relic_save.json"
+	var c := fresh()
+	for id in ["black_candle", "gravedigger", "mirror_shard", "miners_ledger"]:
+		c.take_relic(id)
+	c.relics[1].n = 7.0
+	c.relics[3].n = 8.0
+	c.best_hit = 42
+	c.best_mult = 2.5
+	RunSave.write({"combat": c.to_dict()}, PATH)
+	var d := RunSave.read(PATH)
+	RunSave.erase(PATH)
+	check(CombatScript.valid_dict(d.combat), "a saved belt passes valid_dict after a real file round trip")
+	var back := CombatScript.from_dict(d.combat)
+	check(back.relics.map(func(r): return r.id) == ["black_candle", "gravedigger", "mirror_shard", "miners_ledger"], "the belt keeps its order")
+	check(back.relics[1].n == 7.0 and typeof(back.relics[1].n) == TYPE_FLOAT and back.relics[3].n == 8.0, "relic counters come back as floats")
+	check(back.best_hit == 42 and typeof(back.best_hit) == TYPE_INT and is_equal_approx(back.best_mult, 2.5), "best hit and best Mult come back")
+	var old := c.to_dict()
+	for k in ["relics", "best_hit", "best_mult"]:
+		old.erase(k)
+	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).relics.is_empty(), "a save from before relics loads with an empty belt")
+	var bad := c.to_dict()
+	bad.relics = "x"
+	check(not CombatScript.valid_dict(bad), "a belt of the wrong type is refused")
+	bad = c.to_dict()
+	bad.relics = [{"id": "nope", "n": 0.0, "f": 0.0}]
+	check(not CombatScript.valid_dict(bad), "a belt with an unknown relic is refused")
+	# Ward Icon's stored Guard is an int in memory; it must still survive the save
+	var w := fresh()
+	w.enemies[0].intent = {"kind": "attack", "value": 5}
+	w.take_relic("ward_icon")
+	w.guard_pool = 5
+	w.end_enemy_phase()
+	RunSave.write({"combat": w.to_dict()}, PATH)
+	var wd := RunSave.read(PATH)
+	RunSave.erase(PATH)
+	check(wd.has("combat") and CombatScript.valid_dict(wd.combat), "a Ward Icon holding Guard passes valid_dict after a file round trip")
+	# a Mirror's counters don't follow it onto another relic
+	c = fresh()
+	for id in ["mirror_shard", "miners_ledger", "gravedigger"]:
+		c.take_relic(id)
+	c.relics[0].n = 40.0
+	c.relics[0].f = 2.0
+	c.move_relic(2, 1)  # Mirror now copies the Tally
+	check(c.relic_id(0) == "gravedigger" and c.relics[0].n == 0.0 and c.relics[0].f == 0.0, "a Mirror's counters reset when it copies something else")
+	c.relics[0].n = 40.0
+	c.move_relic(2, 1)  # back: copies the Ledger again, reset again
+	check(c.relics[0].n == 0.0, "and again when it swaps back")
+	c.relics[0].n = 40.0
+	c.move_relic(2, 2)  # nothing moves
+	check(c.relics[0].n == 40.0, "a move that keeps the copied relic keeps the counter")
+	c.take_relic("whetstone")
+	c.take_relic("twin_saints")
+	c.take_relic("tithe_box")  # full belt now refuses; replace the copied relic
+	c.relics[0].n = 40.0
+	c.take_relic("rosary", 1)
+	check(c.relics[0].n == 0.0, "breaking the relic a Mirror copies resets the Mirror")
+
+
+func _relic_belt() -> void:
+	var c := fresh()
+	check(c.take_relic("black_candle"), "a relic goes on the belt")
+	check(not c.take_relic("black_candle"), "the same relic can't go on twice")
+	for id in ["whetstone", "twin_saints", "tithe_box", "ward_icon"]:
+		c.take_relic(id)
+	check(c.relics.size() == CombatScript.BELT_SIZE, "the belt holds five")
+	check(not c.take_relic("rosary"), "a full belt refuses a new relic without a slot to break")
+	var shards := c.shards
+	check(c.take_relic("rosary", 2) and c.relic_id(2) == "rosary" and c.shards == shards + CombatScript.BREAK_SHARDS,
+		"breaking slot 2 puts the Rosary there and pays 2 Shards")
+	check(c.relics.size() == CombatScript.BELT_SIZE, "breaking keeps the belt at five")
+	c.move_relic(2, 0)
+	check(c.relic_id(0) == "rosary" and c.relic_id(1) == "black_candle", "a relic can move along the belt")
+	for id in CombatScript.RELICS:
+		var r: Dictionary = CombatScript.RELICS[id]
+		check(r.name != "" and r.text != "" and r.has("rare"), "relic %s has a name, text and rarity" % id)
+	c.relics.clear()
+	c.take_relic("mirror_shard")
+	check(c.relic_id(0) == "", "a Mirror at the end of the belt copies nothing")
+	c.relics = [{"id": "mirror_shard", "n": 0.0, "f": 0.0}, {"id": "mirror_shard", "n": 0.0, "f": 0.0}]
+	check(c.relic_id(0) == "" and is_equal_approx(c.mult(), 1.0), "a Mirror before a Mirror copies nothing")
+	c.relics.clear()
+	c.take_relic("mirror_shard")
+	c.take_relic("black_candle")
+	check(c.relic_id(0) == "black_candle" and is_equal_approx(c.mult(), 2.25), "a Mirror before Black Candle: x1.5 twice")
+	c.relics[0].f = 3.0
+	c.start_group(["rat"])
+	check(c.relics[0].f == 0.0, "a new fight zeroes each relic's fight counter")
+
+
+func _mult() -> void:
+	var c := fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("twin_saints")
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	check(is_equal_approx(c.mult(), 2.0) and c.firing() == [0], "Twin Saints with a Cleave pair: x2")
+	c.dice[1].slot = CombatScript.Slot.NONE
+	check(is_equal_approx(c.mult(), 1.0) and c.firing().is_empty(), "no pattern, no Twin Saints")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("black_candle")
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	place(c, 1, 4, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [9] and c.damage_to(0) == 13, "Black Candle: Attack 9 deals floor(13.5) = 13")
+	check(c.firing() == [0], "Black Candle flags its slot as firing")
+
+	c = fresh(RATS)
+	c.start_group(["rat", "rat", "rat"], 5.0)  # 30 HP rats, so nobody dies and every hit lands in full
+	for d in c.dice:
+		d.slot = CombatScript.Slot.NONE
+	c.take_relic("black_candle")
+	c.enemies[2].hp = 0  # two rats left, so Cleave 15 splits unevenly: 8 to the target, 7 to the other
+	place(c, 0, 5, CombatScript.Slot.SKILL)
+	place(c, 1, 5, CombatScript.Slot.SKILL)
+	var each: Array[int] = []
+	for i in 3:
+		each.append(c.damage_to(i))
+	var preview := c.preview_damage()
+	check(each == [12, 10, 0], "Cleave 8 and 7, times 1.5, floor to 12 and 10")
+	check(c.resolve_player() == preview, "resolve deals exactly the preview")
+	check(range(3).all(func(i): return c.enemies[i].hp == (30 - each[i] if i < 2 else 0)), "each rat lost what damage_to said")
+	check(c.best_hit == 12 and is_equal_approx(c.best_mult, 1.5), "best hit and best Mult are recorded")
+
+	c = fresh()
+	c.take_relic("pit_lantern")
+	check(is_equal_approx(c.mult(), 1.0), "Pit Lantern with no die placed: x1")
+	place(c, 0, 4, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.ATTACK)
+	check(is_equal_approx(c.mult(), 2.0), "Pit Lantern, every placed die in Attack: x2")
+	place(c, 2, 3, CombatScript.Slot.GUARD)
+	check(is_equal_approx(c.mult(), 1.0), "Pit Lantern with a die in Guard: x1")
+
+	c = fresh()
+	c.take_relic("clenched_jaw")
+	c.take_relic("rusted_censer")
+	c.take_relic("gilded_pip")
+	place(c, 0, 8, CombatScript.Slot.ATTACK)
+	check(is_equal_approx(c.mult(), 1.0 + 0.2 + 0.5), "two unplaced dice give Clenched Jaw +0.2; an 8 gives Gilded Pip +0.5")
+	c.dice[0].faces[c.dice[0].side] = 8  # mark_of reads the rolled face
+	c.dice[0].marks[c.dice[0].side] = "ember"
+	check(is_equal_approx(c.mult(), 1.0 + 0.2 + 0.5 + 0.5), "a placed Ember face gives Rusted Censer +0.5")
+
+
+## A fight against three 150 HP rats, all dice unplaced, so many turns of hits leave them standing.
+func _rats() -> CombatScript:
+	var c := fresh(RATS)
+	c.start_group(["rat", "rat", "rat"], 50.0)
+	for d in c.dice:
+		d.slot = CombatScript.Slot.NONE
+	for e in c.enemies:
+		e.intent = {"kind": "attack", "value": 1}
+	return c
+
+
+func _relic_effects() -> void:
+	var c := fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("whetstone")
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [10], "Whetstone: a 5 deals +3")
+	check(c.firing() == [0], "Whetstone fires with a 5 in Attack")
+	c.dice[0].slot = CombatScript.Slot.GUARD
+	check(c.firing().is_empty(), "Whetstone doesn't fire with no 5 or 6 in Attack")
+	c.dice[0].slot = CombatScript.Slot.ATTACK
+	c.enemies[0].intent = {"kind": "guard", "value": 4}
+	check(c.hits_to(0) == [6], "Whetstone adds before enemy Guard")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("cursed_crown")
+	place(c, 0, CombatScript.CURSE, CombatScript.Slot.ATTACK)
+	place(c, 1, 3, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [9], "Cursed Crown: a curse in Attack counts as 6")
+	c = fresh(WARDEN)
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("cursed_crown")
+	place(c, 0, CombatScript.CURSE, CombatScript.Slot.ATTACK)
+	place(c, 1, 5, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [5], "Bone Wall drops the crowned curse as the highest die")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "guard", "value": 9}
+	c.take_relic("miners_ledger")
+	c.shards = 8
+	c.pay_forge()
+	c.pay_forge()
+	check(c.shards == 0 and c.relics[0].n == 8.0, "paying for forges feeds the Ledger")
+	place(c, 0, 3, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [2], "Ledger at 8: +2 after Guard soaks the 3")
+	c.refund_forge()
+	check(c.shards == 4 and c.relics[0].n == 4.0, "a refund takes it back")
+	c.relics[0].n = 7.0
+	check(c.hits_to(0) == [1], "Ledger at 7: +1")
+	c.dice[0].slot = CombatScript.Slot.NONE
+	check(c.hits_to(0).is_empty(), "no die in Attack, no Ledger hit")
+	c.shards = 4
+	c.forge(0, 0)
+	check(c.relics[0].n == 11.0, "a paid forge() feeds the Ledger too")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("ward_icon")
+	c.guard_pool = 5
+	c.end_enemy_phase()
+	check(c.relics[0].f == 5.0, "Ward Icon keeps the Guard left")
+	place(c, 0, 3, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.SKILL)
+	place(c, 2, 2, CombatScript.Slot.SKILL)
+	check(c.hits_to(0) == [8, 3], "Ward Icon adds to the Attack hit, not the Cleave")
+	check(c.skill_share(0) == 3, "skill_share leaves the Attack hit out")
+	c.resolve_player()
+	check(c.relics[0].f == 0.0, "Ward Icon is spent on the Attack")
+	c.relics[0].f = 4.0
+	c.start_group(["rat"])
+	check(c.relics[0].f == 0.0, "Ward Icon's Guard is gone at fight start")
+
+	c = fresh()
+	c.take_relic("gravedigger")
+	for e in c.enemies:
+		e.hp = 0
+	c.claim_fight()
+	check(c.relics[0].n == 2.0 and is_equal_approx(c.mult(), 1.2), "Gravedigger: two kills, +0.2")
+
+	c = _rats()
+	c.take_relic("spare_fuse")
+	place(c, 0, 3, CombatScript.Slot.ATTACK)
+	c.rerolls = 2
+	check(is_equal_approx(c.mult(), 1.0), "Spare Fuse gives nothing the turn it's earned")
+	c.resolve_player()
+	check(is_equal_approx(c.mult(), 1.5), "Spare Fuse: two unused rerolls, +0.5 after")
+
+	c = _rats()
+	c.take_relic("hungry_bell")
+	check(is_equal_approx(c.mult(), 1.0), "Hungry Bell without a skill: +0")
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	var bell: Array = []
+	for t in 3:
+		bell.append(c.mult())
+		c.resolve_player()
+	check(bell == [2.0, 3.0, 4.0], "Hungry Bell: +1, +2, +3 over three skill turns")
+	c.dice[1].slot = CombatScript.Slot.NONE
+	c.resolve_player()
+	c.dice[1].slot = CombatScript.Slot.SKILL
+	check(is_equal_approx(c.mult(), 2.0), "Hungry Bell is back to +1 after a turn without a skill")
+	c.resolve_player()
+	c.start_group(["rat"], 50.0)
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	check(is_equal_approx(c.mult(), 2.0), "Hungry Bell is back to +1 in a new fight")
+
+	c = fresh()
+	c.skills = ["flurry"]
+	c.take_relic("rosary")
+	place(c, 0, 2, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	place(c, 2, 4, CombatScript.Slot.SKILL)
+	check(c.hits_to(c.target) == [18], "Rosary: Flurry 2-3-4 deals 9 + 9")
+
+	c = fresh()
+	c.take_relic("tithe_box")
+	c.shards = 10
+	c.claim_fight()
+	check(c.shards == 12, "Tithe Box: 10 held, +2")
+	c.shards = 30
+	c.claim_fight()
+	check(c.shards == 33, "Tithe Box pays at most +3")
+	c.shards = 10
+	c.claim_fight(false)
+	check(c.shards == 10, "Tithe Box pays nothing for a lost fight")
+	c.relics.clear()
+	c.take_relic("mirror_shard")
+	c.take_relic("tithe_box")
+	c.shards = 10
+	c.claim_fight()
+	check(c.shards == 14, "Mirror + Tithe Box pays twice: 10 +2, then 12 +2")
+
+	c = fresh()
+	c.take_relic("whetstone")
+	c.shards = 0
+	check(c.take_relic("rosary", 0) and c.relics.size() == 2 and c.relic_id(0) == "whetstone" and c.shards == 0,
+		"a belt with room appends and breaks nothing")
+
+
+## A pick offers up to three different relics, none on the belt; a rare pick only rares.
+func _relic_offer() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var rares: Array = Combat.RELICS.keys().filter(func(id): return Combat.RELICS[id].rare)
+	var belt: Array = rares.slice(0, 4).map(func(id): return {"id": id, "n": 0.0, "f": 0.0})
+	var got: Array = RelicPickScreen.offer(belt, true, rng)
+	got.sort()
+	var want: Array = rares.slice(4)
+	want.sort()
+	check(got == want, "a rare pick with 4 rares on the belt offers the other 3 (got %s)" % [got])
+	belt = [{"id": "whetstone"}, {"id": "black_candle"}, {"id": "tithe_box"}, {"id": "mirror_shard"}, {"id": "ward_icon"}]
+	var ok := true
+	var saw_rare := false
+	for i in 200:
+		var o: Array = RelicPickScreen.offer(belt, false, rng)
+		ok = ok and o.size() == 3 and o.all(func(id): return id not in ["whetstone", "black_candle", "tithe_box", "mirror_shard", "ward_icon"])
+		ok = ok and o[0] != o[1] and o[1] != o[2] and o[0] != o[2]
+		saw_rare = saw_rare or o.any(func(id): return Combat.RELICS[id].rare)
+	check(ok, "200 picks each offer 3 different relics, none on the belt")
+	check(saw_rare, "a common pick sometimes offers a rare")

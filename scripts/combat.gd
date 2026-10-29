@@ -41,16 +41,37 @@ const MARKS := {
 	"shard": {"name": "Shard", "text": "Placed anywhere, +1 Shard"},
 }
 const EMBER_HEAL := 2
+## Relics: run-only, on a belt of BELT_SIZE slots, mostly raising the turn's Mult. Every hit is floori(base x Mult);
+## Mult is 1 plus the adds, then times the multipliers (mult()). Breaking one to make room pays BREAK_SHARDS.
+const RELICS := {
+	"whetstone": {"name": "Whetstone", "text": "Attack dice showing 5 or 6 deal +3 each", "rare": false},
+	"twin_saints": {"name": "Twin Saints", "text": "Cleave or Sunder fires: +1 Mult", "rare": false},
+	"rusted_censer": {"name": "Rusted Censer", "text": "+0.5 Mult per Ember face placed this turn", "rare": false},
+	"clenched_jaw": {"name": "Clenched Jaw", "text": "+0.1 Mult per point of Grit this turn", "rare": false},
+	"tithe_box": {"name": "Tithe Box", "text": "After each fight, +1 Shard per 5 held, max +3", "rare": false},
+	"gravedigger": {"name": "Gravedigger's Tally", "text": "+0.1 Mult per kill since taken", "rare": false},
+	"miners_ledger": {"name": "Miner's Ledger", "text": "+1 to the Attack hit per 4 Shards spent at forges since taken", "rare": false},
+	"spare_fuse": {"name": "Spare Fuse", "text": "Each unused reroll at end of turn: +0.25 Mult for the rest of the fight", "rare": false},
+	"ward_icon": {"name": "Ward Icon", "text": "Guard left after the enemy phase adds to next turn's Attack hit", "rare": false},
+	"hungry_bell": {"name": "Hungry Bell", "text": "+1 Mult per turn in a row a skill fires", "rare": true},
+	"cursed_crown": {"name": "Cursed Crown", "text": "Cursed faces count as 6 for damage; they still break patterns", "rare": true},
+	"gilded_pip": {"name": "Gilded Pip", "text": "+0.5 Mult per placed die showing a face above 6", "rare": true},
+	"rosary": {"name": "Rosary of Steps", "text": "Flurry's +3 becomes +9", "rare": true},
+	"black_candle": {"name": "Black Candle", "text": "x1.5 Mult", "rare": true},
+	"pit_lantern": {"name": "Pit Lantern", "text": "x2 Mult when every placed die is in Attack", "rare": true},
+	"mirror_shard": {"name": "Mirror Shard", "text": "Copies the relic to its right", "rare": true},
+}
+const BELT_SIZE := 5
+const BREAK_SHARDS := 2
 
 ## Enemy types. Optional keys:
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
-## "rig_pair_turn": that turn's roll always contains a pair, so the Cleave lesson can happen.
 ## "bone_wall": blocks your highest Attack die aimed at it.
 ## "sprite": file name in assets/sprites/; enemies without one show a placeholder box.
 ## A buried die ("buried" > 0) keeps its value and slot, and can't be rolled, locked or placed, for the next turn.
 ## A "ring" intent turns another enemy's attack this turn unblockable.
 const TYPES := {
-	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5, "rig_pair_turn": 2,
+	"dummy": {"name": "Training Dummy", "hp": 30, "sprite": "dummy", "turns": 5,
 		"phase1": [{"kind": "attack", "value": 3}, {"kind": "attack", "value": 4}, {"kind": "guard", "value": 2}, {"kind": "attack", "value": 3}, {"kind": "unblockable", "value": 5}]},
 	"rat": {"name": "Bone Rat", "hp": 6, "sprite": "bone_rat",
 		"phase1": [{"kind": "attack", "value": 2}]},
@@ -70,7 +91,7 @@ const TYPES := {
 		"phase1": [{"kind": "attack", "value": 7}, {"kind": "guard", "value": 5}, {"kind": "unblockable", "value": 8}]},
 	"archivist": {"name": "Archivist", "hp": 18, "sprite": "archivist",
 		"phase1": [{"kind": "guard", "value": 6}, {"kind": "ring"}, {"kind": "attack", "value": 5}]},
-	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
+	"warden": {"name": "Bone Warden", "hp": 120, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
 	# The Hollow Mine. "pack": each other living one adds that much to its attack. "rallies": adds that much to every other
@@ -88,7 +109,7 @@ const TYPES := {
 	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "sprite": "shaft_foreman", "rallies": 2,
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
 	# Cave-ins bury a die (see bury_one). The Pit King's phase 2 attacks all carry one.
-	"pit_king": {"name": "Pit King", "hp": 110, "sprite": "pit_king", "boss": true,
+	"pit_king": {"name": "Pit King", "hp": 220, "sprite": "pit_king", "boss": true,
 		"phase1": [{"kind": "attack", "value": 7}, {"kind": "cave_in"}, {"kind": "attack", "value": 10}, {"kind": "guard", "value": 6}],
 		"phase2": [{"kind": "attack", "value": 9, "cave_in": true}, {"kind": "attack", "value": 12, "cave_in": true}, {"kind": "attack", "value": 8, "cave_in": true}]},
 }
@@ -96,6 +117,8 @@ const TYPES := {
 ## Set fights for the tutorial (0), the boss (6), tests and the --fight shortcut. A run deals its own groups in game.gd.
 const FIGHTS := [["dummy"], ["rat", "rat", "rat"], ["skeleton", "bell"], ["acolyte", "doctor", "rat"],
 	["treant", "moss"], ["grieve", "archivist"], ["warden"]]
+## The tutorial's dice, by turn: one lesson each (Attack, Guard, a Cleave pair, Grit, a parry); the screen guides each.
+const TUTORIAL_DICE := [[5, 2, 3], [4, 1, 2], [6, 6, 1], [3, 5, 2], [6, 2, 3]]
 
 var rng := RandomNumberGenerator.new()
 var perks: Array = []  # perk ids from Meta.PERKS equipped for this run, plus the bonus one
@@ -118,6 +141,9 @@ var target := 0
 var guard_pool := 0  # Guard left to soak this turn's hits; set when you end your turn
 var turn := 0
 var bonus_embers := 0  # extra embers an event promised for the end of the run
+var relics: Array = []  # the belt, left to right: {"id": RELICS key, "n": run counter, "f": this fight's counter}
+var best_hit := 0  # the biggest single Mult-applied hit this run
+var best_mult := 1.0  # the highest Mult a resolve dealt damage at this run
 
 
 func _init(seed_value := -1) -> void:
@@ -132,9 +158,15 @@ func _init(seed_value := -1) -> void:
 const SAVED := ["max_hp", "player_hp", "shards", "kills", "perks", "bonus_perk", "bonus_embers", "dungeon_turns"]
 
 
+## Fields added after run saves existed: an older save may lack them (they load as these defaults), but not hold the wrong type.
+const SAVED_LATER := {"relics": [], "best_hit": 0, "best_mult": 1.0}
+
+
 func to_dict() -> Dictionary:
 	var d := {"dice": dice.map(func(x): return {"base": x.base, "faces": x.faces, "uncursed": x.uncursed, "marks": x.marks})}
 	for k in SAVED:
+		d[k] = get(k)
+	for k in SAVED_LATER:
 		d[k] = get(k)
 	return d.duplicate(true)
 
@@ -149,13 +181,20 @@ static func valid_dict(d) -> bool:
 	for x in d.dice:
 		if not (x is Dictionary and x.get("base") is Array and x.get("faces") is Array and x.get("uncursed") is Dictionary):
 			return false
-	return SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k)))
+	if not SAVED.all(func(k): return d.has(k) and typeof(d[k]) == typeof(blank.get(k))):
+		return false
+	if d.has("relics") and not (d.relics is Array and d.relics.all(func(r): return r is Dictionary and r.get("id") is String and Combat.RELICS.has(r.id) and r.get("n") is float and r.get("f") is float)):
+		return false
+	return ["best_hit", "best_mult"].all(func(k): return not d.has(k) or typeof(d[k]) in [TYPE_INT, TYPE_FLOAT])
 
 
 static func from_dict(d: Dictionary) -> Combat:
 	var c := Combat.new()
 	for k in SAVED:
 		c.set(k, d[k])
+	c.relics = d.get("relics", []).map(func(r): return {"id": r.id, "n": float(r.n), "f": float(r.f)})
+	c.best_hit = int(d.get("best_hit", 0))
+	c.best_mult = float(d.get("best_mult", 1.0))
 	for i in c.dice.size():
 		c.dice[i].merge(d.dice[i].duplicate(true), true)
 	return c
@@ -196,7 +235,7 @@ func forge(i: int, f: int, no_cost := false, mark := "", step := FORGE_STEP) -> 
 	if not no_cost:
 		if shards < FORGE_COST:
 			return false
-		shards -= FORGE_COST
+		pay_forge()
 	if mark:
 		d.marks[f] = mark
 		if d.base[f] == CURSE:
@@ -263,19 +302,47 @@ func roll_dice(which: Array) -> Array:
 	return out
 
 
-## Call once when a fight ends, won or lost: counts kills and pays Shards for them.
-func claim_fight() -> void:
+## Call once when a fight ends, won or lost: counts kills and pays Shards for them; a won fight pays Tithe Boxes.
+func claim_fight(won := true) -> void:
 	var dead := enemies.filter(func(e): return e.hp == 0).size() + replaced
 	kills += dead
 	if not is_tutorial():
 		shards += dead * (SHARDS_PER_KILL + (1 if "scavenger" in perks else 0))
+	for k in relics.size():
+		match relic_id(k):
+			"gravedigger":
+				relics[k].n += dead
+			"tithe_box":
+				if won:
+					shards += mini(3, shards / 5)
+
+
+## Pays FORGE_COST Shards for a forge throw; every Miner's Ledger counts it.
+func pay_forge() -> void:
+	shards -= FORGE_COST
+	_ledger(FORGE_COST)
+
+
+## Gives back a forge throw's Shards, and takes them off every Ledger again.
+func refund_forge() -> void:
+	shards += FORGE_COST
+	_ledger(-FORGE_COST)
+
+
+func _ledger(amount: int) -> void:
+	for k in relics.size():
+		if relic_id(k) == "miners_ledger":
+			relics[k].n += amount
 
 
 ## How much of the boss's HP you took, 0 to 100. 0 outside a boss fight.
 func boss_damage_pct() -> int:
 	if not is_boss_fight():
 		return 0
-	return 100 * (enemies[0].type.hp - enemies[0].hp) / enemies[0].type.hp
+	return 100 * (enemies[0].max - enemies[0].hp) / enemies[0].max
+
+
+var hp_scale := 1.0  # this fight's enemy HP multiplier, so a Rubble spawns scaled too
 
 
 func start_fight(index: int) -> void:
@@ -283,8 +350,9 @@ func start_fight(index: int) -> void:
 	start_group(FIGHTS[index])
 
 
-## Starts a fight against `keys` (TYPES keys, at most three of one type).
-func start_group(keys: Array) -> void:
+## Starts a fight against `keys` (TYPES keys, at most three of one type); every enemy's HP is multiplied by `scale`.
+func start_group(keys: Array, scale := 1.0) -> void:
+	hp_scale = scale
 	enemies.clear()
 	replaced = 0
 	var seen := {}
@@ -294,11 +362,14 @@ func start_group(keys: Array) -> void:
 		if keys.count(key) > 1:  # Bone Rat A, B, C
 			seen[key] = seen.get(key, 0) + 1
 			name += " " + "ABC"[seen[key] - 1]
-		enemies.append({"type": t, "name": name, "hp": t.hp, "intent": {}})
+		var hp := ceili(t.hp * scale)
+		enemies.append({"type": t, "name": name, "hp": hp, "max": hp, "intent": {}})
 	target = 0
 	turn = 0
 	grit = 0
 	ward_spent = false
+	for r in relics:
+		r.f = 0.0
 	for d in dice:
 		d.faces = d.base.duplicate()  # boss tampering ends with the fight
 		d.buried = 0
@@ -320,13 +391,11 @@ func start_turn() -> void:
 		d.locked = false
 		d.slot = Slot.NONE
 		_roll(d)
-	if rigged_turn():
-		dice[1].value = dice[0].value
-
-
-## This turn's opening roll is fixed to hold a pair (the tutorial's Cleave lesson); the screen steers the dice onto it.
-func rigged_turn() -> bool:
-	return enemies[0].type.get("rig_pair_turn", -1) == turn
+	if is_tutorial():  # no throw: each lesson's dice are set (TUTORIAL_DICE), lying on a side that shows them
+		var set: Array = TUTORIAL_DICE[mini(turn, TUTORIAL_DICE.size() - 1)]
+		for i in dice.size():
+			dice[i].value = set[i]
+			dice[i].side = dice[i].faces.find(set[i])
 
 
 func alive(i: int) -> bool:
@@ -350,7 +419,7 @@ func is_boss_fight() -> bool:
 
 
 func is_phase2(e: Dictionary) -> bool:
-	return e.type.get("boss", false) and e.hp * 2 <= e.type.hp
+	return e.type.get("boss", false) and e.hp * 2 <= e.max
 
 
 func set_target(i: int) -> void:
@@ -463,25 +532,31 @@ func cleave_damage() -> int:
 	return ceili(total * CLEAVE_MULTIPLIER)
 
 
-## What the skills that fire deal enemy i, added up.
+## What the skills that fire deal enemy i before Mult, added up.
 func skill_share(i: int) -> int:
 	if not alive(i):
 		return 0
-	var total := _sum(_values_in(Slot.SKILL))
-	var share := 0
+	var total := 0
 	for id in fired():
-		match id:
-			"sunder":
-				share += ceili(total * SUNDER_MULTIPLIER)
-			"flurry":
-				share += total + FLURRY_BONUS if i == target else 0
-			"oath":
-				share += total if i == target and total % 2 == 1 else 0  # three odd dice sum odd, three even sum even
-			"gambit":
-				share += GAMBIT_DAMAGE if i == target else 0
-			"cleave":
-				share += _cleave_share(i)
-	return share
+		total += _skill_hit(id, i)
+	return total
+
+
+## What skill `id` deals enemy i before Mult, if it fires.
+func _skill_hit(id: String, i: int) -> int:
+	var total := _sum(_values_in(Slot.SKILL))
+	match id:
+		"sunder":
+			return ceili(total * SUNDER_MULTIPLIER)
+		"flurry":
+			return total + (9 if _has_relic("rosary") else FLURRY_BONUS) if i == target else 0
+		"oath":
+			return total if i == target and total % 2 == 1 else 0  # three odd dice sum odd, three even sum even
+		"gambit":
+			return GAMBIT_DAMAGE if i == target else 0
+		"cleave":
+			return _cleave_share(i)
+	return 0
 
 
 ## Cleave's part for enemy i: its leftover points go one each to the target first, then down the row.
@@ -508,24 +583,189 @@ func unplaced_count() -> int:
 	return dice.filter(func(d): return d.slot == Slot.NONE and d.buried == 0).size()  # a buried die gives no Grit
 
 
-## Damage your placed dice would deal to enemy i right now: Attack hits the target, Cleave is shared out.
+## Damage your placed dice would deal to enemy i right now: each hit times Mult, rounded down.
 func damage_to(i: int) -> int:
+	return _sum(_dealt(i))
+
+
+## The hits on enemy i with Mult applied, in hits_to() order.
+func _dealt(i: int) -> Array[int]:
+	var m := mult()
+	var out: Array[int] = []
+	for h in hits_to(i):
+		out.append(floori(h * m + 0.0001))  # float noise can land a whole product a hair under
+	return out
+
+
+## Base hits on enemy i before Mult: the Attack hit first (target only, if a die is in Attack; enemy Guard and Bone
+## Wall already taken off), then one per fired skill that reaches it. Skills ignore Bone Wall and enemy Guard.
+func hits_to(i: int) -> Array[int]:
+	var hits: Array[int] = []
 	if not alive(i):
-		return 0
+		return hits
 	var e := enemies[i]
-	var damage := 0
-	if i == target:
+	if i == target and not _values_in(Slot.ATTACK).is_empty():
+		var damage := 0
 		var attack := _values_in(Slot.ATTACK)
 		var sharp := _values_in(Slot.ATTACK, "sharp")
 		for v in sharp:
 			attack.erase(v)
+		attack.assign(attack.map(_attack_value))  # Crown and Whetstone come before Bone Wall and Guard
+		sharp.assign(sharp.map(_attack_value))
 		if e.type.get("bone_wall", false) and not attack.is_empty():
 			attack.erase(attack.max())  # Bone Wall: the Warden blocks your highest Attack die
 		damage = _sum(attack)
 		if e.intent.get("kind") == "guard":
 			damage = maxi(0, damage - e.intent.value)
 		damage += _sum(sharp)  # Sharp faces cut past Guard and Bone Wall
-	return damage + skill_share(i)  # skills ignore Bone Wall and enemy Guard
+		for k in relics.size():  # Ledger and Ward Icon land after Guard
+			match relic_id(k):
+				"miners_ledger":
+					damage += floori(relics[k].n / 4)
+				"ward_icon":
+					damage += int(relics[k].f)
+		hits.append(damage)
+	for id in fired():
+		var h := _skill_hit(id, i)
+		if h > 0:
+			hits.append(h)
+	return hits
+
+
+## An Attack die's worth: Cursed Crown makes a curse a 6, then each Whetstone adds 3 to a 5 or more.
+func _attack_value(v: int) -> int:
+	for k in relics.size():
+		if relic_id(k) == "cursed_crown" and v == CURSE:
+			v = 6
+	var out := v
+	for k in relics.size():
+		if relic_id(k) == "whetstone" and v >= 5:
+			out += 3
+	return out
+
+
+func _has_relic(id: String) -> bool:
+	return range(relics.size()).any(func(k): return relic_id(k) == id)
+
+
+## Grit this turn's unplaced dice would give.
+func grit_gain() -> int:
+	return unplaced_count() * (2 if "grit_teeth" in perks else 1)
+
+
+## The id belt slot k acts as: a Mirror Shard copies its right neighbour, or nothing at the end or next to a Mirror.
+func relic_id(k: int) -> String:
+	var id: String = relics[k].id
+	if id != "mirror_shard":
+		return id
+	if k + 1 >= relics.size() or relics[k + 1].id == "mirror_shard":
+		return ""
+	return relics[k + 1].id
+
+
+## Puts relic `id` on the belt. Refuses one already on it, or a full belt unless `replace` names the slot to break
+## (only a full belt breaks one; otherwise it appends).
+func take_relic(id: String, replace := -1) -> bool:
+	if relics.any(func(r): return r.id == id):
+		return false
+	var entry := {"id": id, "n": 0.0, "f": 0.0}
+	var before := _acting_ids()
+	if relics.size() < BELT_SIZE:
+		relics.append(entry)
+	elif replace >= 0 and replace < relics.size():
+		relics[replace] = entry
+		shards += BREAK_SHARDS
+	else:
+		return false
+	_reset_changed_mirrors(before)
+	return true
+
+
+func move_relic(from: int, to: int) -> void:
+	var before := _acting_ids()
+	relics.insert(to, relics.pop_at(from))
+	_reset_changed_mirrors(before)
+
+
+## Each Mirror Shard's belt entry with the id it acts as, to see what a belt change did to it.
+func _acting_ids() -> Array:
+	return range(relics.size()).filter(func(k): return relics[k].id == "mirror_shard").map(func(k): return [relics[k], relic_id(k)])
+
+
+## A Mirror Shard's counters belong to what it copies: when that changes, they start over.
+func _reset_changed_mirrors(before: Array) -> void:
+	for pair in before:
+		var k := range(relics.size()).filter(func(i): return is_same(relics[i], pair[0]))  # by identity: two Mirrors can look alike
+		if not k.is_empty() and relic_id(k[0]) != pair[1]:
+			relics[k[0]].n = 0.0
+			relics[k[0]].f = 0.0
+
+
+## This turn's Mult: 1 plus every slot's adds, then times every slot's multipliers.
+func mult() -> float:
+	var add := 0.0
+	var times := 1.0
+	for k in relics.size():
+		add += _relic_add(k)
+		times *= _relic_times(relic_id(k))
+	return (1.0 + add) * times
+
+
+## What belt slot k adds to Mult right now (growing relics read the slot's own counters).
+func _relic_add(k: int) -> float:
+	var r: Dictionary = relics[k]
+	match relic_id(k):
+		"gravedigger":
+			return 0.1 * r.n
+		"spare_fuse":
+			return r.f
+		"hungry_bell":
+			return r.f + 1.0 if not fired().is_empty() else 0.0
+		"twin_saints":
+			return 1.0 if "cleave" in fired() or "sunder" in fired() else 0.0
+		"rusted_censer":
+			return 0.5 * dice.filter(func(d): return d.slot != Slot.NONE and d.buried == 0 and mark_of(d) == "ember").size()
+		"clenched_jaw":
+			return 0.1 * grit_gain()
+		"gilded_pip":
+			return 0.5 * dice.filter(func(d): return d.slot != Slot.NONE and d.value > 6).size()
+	return 0.0
+
+
+## What relic `id` multiplies Mult by right now.
+func _relic_times(id: String) -> float:
+	match id:
+		"black_candle":
+			return 1.5
+		"pit_lantern":
+			var placed := dice.filter(func(d): return d.slot != Slot.NONE)
+			return 2.0 if not placed.is_empty() and placed.all(func(d): return d.slot == Slot.ATTACK) else 1.0
+	return 1.0
+
+
+## Belt slots that change this turn's damage or Mult right now (the screen flashes them): a Mult add or multiplier,
+## Whetstone with a 5 or more in Attack, Cursed Crown with a curse in Attack, Ledger or Ward Icon with a bonus and a
+## die in Attack, Rosary when Flurry fires.
+func firing() -> Array[int]:
+	var attack := _values_in(Slot.ATTACK)
+	var out: Array[int] = []
+	for k in relics.size():
+		var id := relic_id(k)
+		var lit := _relic_add(k) != 0.0 or _relic_times(id) != 1.0
+		match id:
+			"whetstone":
+				lit = attack.any(func(v): return v >= 5 or (v == CURSE and _has_relic("cursed_crown")))
+			"cursed_crown":
+				lit = CURSE in attack
+			"miners_ledger":
+				lit = not attack.is_empty() and floori(relics[k].n / 4) > 0
+			"ward_icon":
+				lit = not attack.is_empty() and relics[k].f > 0
+			"rosary":
+				lit = "flurry" in fired()
+		if lit:
+			out.append(k)
+	return out
 
 
 func preview_damage() -> int:
@@ -538,8 +778,15 @@ func preview_damage() -> int:
 ## Resolves your placed dice. Returns total damage dealt.
 func resolve_player() -> int:
 	var hits: Array[int] = []
+	var m := mult()
 	for i in enemies.size():
-		hits.append(damage_to(i))
+		var dealt := _dealt(i)
+		for h in dealt:
+			best_hit = maxi(best_hit, h)
+		hits.append(_sum(dealt))
+	if _sum(hits) > 0:
+		best_mult = maxf(best_mult, m)
+	var gain := grit_gain()
 	var struck := target  # a Gambit that kills it pays a Shard
 	var fire := fired()
 	var gambit := "gambit" in fire and alive(struck)
@@ -556,7 +803,8 @@ func resolve_player() -> int:
 				var t: Dictionary = TYPES[enemies[i].type.leaves]
 				var old: String = enemies[i].name
 				var tag: String = old.substr(enemies[i].type.name.length())  # a Hulk's " A" stays on its Rubble
-				enemies[i] = {"type": t, "name": t.name + tag, "hp": t.hp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
+				var rhp := ceili(t.hp * hp_scale)
+				enemies[i] = {"type": t, "name": t.name + tag, "hp": rhp, "max": rhp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
 				replaced += 1
 	if gambit and (enemies[struck].hp == 0 or enemies[struck].has("from")):
 		shards += 1
@@ -569,9 +817,16 @@ func resolve_player() -> int:
 					shards += 1
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
-		if d.slot == Slot.NONE and d.buried == 0:
-			grit += 2 if "grit_teeth" in perks else 1
+	grit += gain
 	guard_pool = guard_total()
+	for k in relics.size():  # growing relics count this turn once its damage is dealt
+		match relic_id(k):
+			"spare_fuse":
+				relics[k].f += 0.25 * rerolls
+			"hungry_bell":
+				relics[k].f = relics[k].f + 1.0 if not fire.is_empty() else 0.0
+			"ward_icon":
+				relics[k].f = 0.0
 	if not alive(target):
 		for i in enemies.size():
 			if alive(i):
@@ -641,6 +896,9 @@ func resolve_enemy(i: int, grade: Grade) -> String:
 
 
 func end_enemy_phase() -> void:
+	for k in relics.size():
+		if relic_id(k) == "ward_icon":
+			relics[k].f = float(guard_pool)
 	turn += 1
 	if not is_tutorial() and not is_boss_fight():
 		dungeon_turns += 1

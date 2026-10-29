@@ -28,12 +28,18 @@ func _init() -> void:
 	ChargeBar.auto = true  # nobody here to hold SPACE
 	await _map_moves()
 	await _fair_throws()
+	await _dice_in_hand()
+	await _guided_tutorial()
 	await _gambler_throw()
 	await _play_events()
 	await _hulk_swap()
+	await _relic_picks()
+	await _fight_belt()
 	await _two_floors()
 	await _mine_start()
 	await _fight_menu()
+	await _menu_before_throw()
+	await _map_menu()
 	await _quick_dice()
 	await _campfire_save()
 	await _new_run_asks()
@@ -42,8 +48,9 @@ func _init() -> void:
 	await _camp_board()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"], ["pit_king"]]
-	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
-		await _play(keys)  # every set fight (all enemies are rigged now), plus dealt ones
+	# Every set fight but the tutorial (_guided_tutorial plays that one), plus dealt ones.
+	for keys in Combat.FIGHTS.slice(1) + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
+		await _play(keys)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	RunSave.erase(RUN)
 	print("FAILED: %d" % failures if failures else "All fight-flow checks passed.")
@@ -161,8 +168,7 @@ func _all_drawn(screen: CombatScreen) -> bool:
 
 
 ## Every throw on the real screen is fair: each die's value is the face drawn on its top, a forged and
-## cursed die included, and no steering torque touches the dice, except on the tutorial's pair turn,
-## which still lands its pair.
+## cursed die included.
 func _fair_throws() -> void:
 	var errors_before := errors.count
 	var game: Node = await _new_game()
@@ -177,15 +183,6 @@ func _fair_throws() -> void:
 		while screen.busy:
 			await process_frame
 		check(_all_drawn(screen), "throw %d: every die's value is the face drawn on its top" % throw)
-	check(screen.tray.torques == 0, "fair throws are never steered (got %d pushes)" % screen.tray.torques)
-	screen.combat.start_group(["dummy"])
-	screen.combat.turn = screen.combat.enemies[0].type.rig_pair_turn
-	screen.combat.start_turn()
-	screen._roll_anim(range(screen.combat.dice.size()), screen.combat.rigged_turn())
-	while screen.busy:
-		await process_frame
-	check(screen.combat.dice[0].value == screen.combat.dice[1].value, "the tutorial's pair turn still lands a pair")
-	check(_all_drawn(screen), "and the pair is what the dice show")
 	var lit := func(i): return screen.tray.dice[i].halo.visible
 	screen.combat.skills = ["cleave"]
 	for i in 3:
@@ -197,6 +194,100 @@ func _fair_throws() -> void:
 	screen._refresh()
 	check(not (lit.call(0) or lit.call(1) or lit.call(2)), "no die glows when no skill is in reach")
 	check(errors.count == errors_before, "fair throws run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## A turn's dice stay in the hand until its opening throw: none on the felt, none glowing, no damage
+## shown while the roll waits; a reroll's dice stay where they lie.
+func _dice_in_hand() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	ChargeBar.auto = false
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	await process_frame
+	var shown := func(): return range(3).filter(func(i): return screen.tray.dice[i].body.visible or screen.tray.dice[i].halo.visible)
+	check(shown.call().is_empty() and screen.summary_label.text == "Rolling...", "the fight opens with the dice in hand (showing %s)" % [shown.call()])
+	screen.charge.press(true)
+	screen.charge.press(false)
+	while screen.busy:
+		await process_frame
+	check(range(3).all(func(i): return screen.tray.dice[i].body.visible), "the opening throw puts every die on the felt")
+	screen._on_roll_key(true)  # a reroll winds up from the dice where they lie
+	await process_frame
+	check(range(3).all(func(i): return screen.tray.dice[i].body.visible), "a reroll waiting on the press leaves the dice in view")
+	screen.charge.press(false)
+	while screen.busy:
+		await process_frame
+	screen.combat.enemies[0].hp = 999  # survives the turn so the next one opens
+	screen._on_end_turn()
+	while screen.combat.turn == 0 or not screen.charge.waiting:
+		await process_frame
+	check(shown.call().is_empty(), "the next turn's dice are back in hand until thrown (showing %s)" % [shown.call()])
+	screen.charge.press(true)
+	screen.charge.press(false)
+	while screen.busy:
+		await process_frame
+	ChargeBar.auto = true
+	check(errors.count == errors_before, "dice in hand run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The tutorial throws nothing: each turn's dice lie set on the felt, the screen goes dark but for one
+## spotlit target, only that target answers (other dice, End turn, R and Enter do nothing), and doing
+## each step in turn plays all five lessons through to the run.
+func _guided_tutorial() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.meta.tutorial_done = false
+	game._show_tutorial()
+	var screen: CombatScreen = game.screen
+	for i in 3:
+		await process_frame
+	var values := func(): return screen.combat.dice.map(func(d): return d.value)
+	check(values.call() == [5, 2, 3] and range(3).all(func(i): return screen.tray.dice[i].body.visible), "the first lesson's dice lie on the felt: 5, 2, 3")
+	check(not screen.reroll_button.visible and not screen.busy, "no Roll button and no throw in the tutorial")
+	check(screen.guide.visible and screen._tutorial_step().until == "next", "the first step explains, with a Next button")
+	screen.guide.next_button.pressed.emit()
+	screen.guide.next_button.pressed.emit()
+	var step: Dictionary = screen._tutorial_step()
+	check(step.until == "place" and step.die == 0, "the third step asks for the 5 in Attack")
+	var hole: Rect2 = screen.tray.die_rect(0)
+	check(not screen.guide._has_point(hole.get_center()) and screen.guide._has_point(Vector2(4, 4)), "the spotlit die takes clicks; the dark screen around it doesn't")
+	screen._on_die_clicked(1)
+	screen._on_left_released()
+	screen._on_end_turn()
+	var enter := InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	screen._unhandled_input(enter)
+	check(screen.combat.dice[1].slot == Combat.Slot.NONE and screen.combat.turn == 0 and not screen.busy, "other dice, End turn and Enter do nothing off the step")
+	var timing_steps := 0
+	var guard := 0
+	while game.screen is CombatScreen and guard < 400:
+		guard += 1
+		step = screen._tutorial_step()
+		if screen.guide.visible and screen.guide.panel.visible and step.get("until") == "timing":
+			timing_steps += 1
+			screen.guide.next_button.pressed.emit()  # the bar then runs out unanswered: a miss
+		elif not screen.busy and screen.guide.visible:
+			match step.until:
+				"next":
+					screen.guide.next_button.pressed.emit()
+				"place":
+					if screen.combat.turn == 2 and step.die == 0:
+						check(values.call() == [6, 6, 1], "the Cleave lesson deals a pair of 6s")
+					screen._on_die_clicked(step.die)
+					screen._on_left_released()
+				"end":
+					screen._on_end_turn()
+		await process_frame
+	check(timing_steps == 2, "a block and a parry are each explained before their bar (got %d)" % timing_steps)
+	check(not game.screen is CombatScreen and game.meta.tutorial_done, "doing every step finishes the tutorial")
+	check(errors.count == errors_before, "the guided tutorial runs with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
 
@@ -262,7 +353,13 @@ func _two_floors() -> void:
 	game._show_fight(game._on_fight_finished)
 	game.combat.enemies[0].hp = 1
 	await _fight_out(game, "warden at 1 HP")
-	check(game.screen is PerkPickScreen, "beating the Warden offers a bonus perk")
+	check(game.screen is RelicPickScreen and game.screen.rares and game.screen.title == "The Warden's hoard", "beating the Warden first offers his hoard")
+	if game.screen is RelicPickScreen:
+		check(game.screen.choices.size() == 3 and game.screen.choices.all(func(id): return Combat.RELICS[id].rare), "the hoard is three rares")
+		_button(game.screen, "Skip").pressed.emit()
+		_agree(game)
+		await process_frame
+	check(game.screen is PerkPickScreen, "then a bonus perk")
 	if not game.screen is PerkPickScreen:
 		game.queue_free()
 		return
@@ -303,6 +400,133 @@ func _two_floors() -> void:
 	await process_frame
 
 
+## A won fight offers three relics: Take puts one on the belt, Skip pays Shards, a full belt breaks one for Shards.
+## Then the map's next column. Every way out asks first.
+func _relic_picks() -> void:
+	var errors_before := errors.count
+	var game: Node = await _won_fight()
+	check(game.screen is RelicPickScreen and game.screen.title == "Spoils" and game.screen.choices.size() == 3, "a won fight offers Spoils, three relics")
+	if game.screen is RelicPickScreen:
+		var id: String = game.screen.choices[1]
+		_takes(game.screen)[1].pressed.emit()
+		_agree(game)
+		await process_frame
+		check(game.combat.relics.size() == 1 and game.combat.relics[0].id == id, "Take puts the relic on the belt")
+		check(game.screen is MapScreen and game.layer == 1, "then the map's next column")
+	game.queue_free()
+	game = await _won_fight()
+	var shards: int = game.combat.shards
+	if game.screen is RelicPickScreen:
+		_button(game.screen, "Skip").pressed.emit()
+		_agree(game)
+		await process_frame
+	check(game.combat.shards == shards + RelicPickScreen.SKIP_SHARDS and game.combat.relics.is_empty(), "Skip pays %d Shards" % RelicPickScreen.SKIP_SHARDS)
+	check(game.screen is MapScreen and game.layer == 1, "and goes on to the map")
+	game.queue_free()
+	game = await _won_fight()
+	shards = game.combat.shards
+	if game.screen is RelicPickScreen:
+		var pick: RelicPickScreen = game.screen
+		var fill: Array = Combat.RELICS.keys().filter(func(r): return r not in pick.choices).slice(0, Combat.BELT_SIZE)
+		for r in fill:
+			game.combat.take_relic(r)
+		pick._show_belt()  # redraw the belt with the relics just added
+		check(pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<").size() == 4, "every belt relic but the first has a move-left button")
+		pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<")[0].pressed.emit()
+		check(game.combat.relics[0].id == fill[1] and game.combat.relics[1].id == fill[0], "◀ moves a belt relic left")
+		var id: String = pick.choices[0]
+		_takes(pick)[0].pressed.emit()
+		check(_overlays(game, "ConfirmPanel").is_empty(), "on a full belt Take first asks which relic to break")
+		var breaks: Array = pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Break")
+		check(breaks.size() == Combat.BELT_SIZE, "a Break button under every belt relic")
+		if breaks.size() == Combat.BELT_SIZE:
+			breaks[0].pressed.emit()
+			_agree(game)
+			await process_frame
+		check(game.combat.relics[0].id == id and game.combat.relics.size() == Combat.BELT_SIZE, "the new relic takes the broken one's slot")
+		check(game.combat.shards == shards + Combat.BREAK_SHARDS, "breaking pays %d Shards" % Combat.BREAK_SHARDS)
+		check(game.screen is MapScreen, "then the map")
+	game.queue_free()
+	game = await _new_game()
+	game.floor_id = "mine"
+	game.map = Floor.deal("mine")
+	game.layer = game.map.size() - 1
+	game.combat.start_group(["pit_king"])
+	game._show_fight(game._on_fight_finished)
+	game.combat.enemies[0].hp = 1
+	await _fight_out(game, "pit king at 1 HP")
+	check(game.screen is NoticeScreen and game.screen.title == "The Pit King falls.", "the Pit King gives no pick, only the run's end")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "relic picks run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The fight screen shows the belt, one icon per relic, and the summary shows Mult when it isn't 1. A turn with every
+## relic on the belt, five at a time, plays with no errors.
+func _fight_belt() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	for r in ["whetstone", "gravedigger", "spare_fuse"]:
+		game.combat.take_relic(r)
+	var screen: CombatScreen = await _belt_fight(game)
+	check(screen.belt.get_child_count() == 3, "three relics, three belt icons (got %d)" % screen.belt.get_child_count())
+	check("×" not in screen.summary_label.text, "no Mult on the summary at x1: %s" % screen.summary_label.text)
+	game.queue_free()
+	game = await _new_game()
+	game.combat.take_relic("black_candle")
+	screen = await _belt_fight(game)
+	check("(×1.5)" in screen.summary_label.text, "Black Candle shows x1.5 on the summary: %s" % screen.summary_label.text)
+	game.queue_free()
+	var ids: Array = Combat.RELICS.keys()
+	for start in range(0, ids.size(), Combat.BELT_SIZE):
+		game = await _new_game()
+		for r in ids.slice(start, start + Combat.BELT_SIZE):
+			game.combat.take_relic(r)
+		screen = await _belt_fight(game)
+		for r in game.combat.relics:  # growing relics with something to show
+			r.n = 8.0
+			r.f = 2.0
+		screen._refresh()
+		screen._on_end_turn()
+		var waited := 0
+		while game.screen == screen and screen.busy and waited < 600:
+			await process_frame
+			waited += 1
+		check(waited < 600, "a turn with %s ends" % [ids.slice(start, start + Combat.BELT_SIZE)])
+		game.queue_free()
+	await process_frame
+	check(errors.count == errors_before, "fights with relics run with no errors (got %d)" % (errors.count - errors_before))
+
+
+## A skeleton fight on screen with the dice landed, two in Attack.
+func _belt_fight(game: Node) -> CombatScreen:
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	while screen.busy:
+		await process_frame
+	for i in 2:
+		screen.combat.assign(i, Combat.Slot.ATTACK)
+	screen._refresh()
+	return screen
+
+
+## A new run's entrance fight, won (the enemy left at 1 HP).
+func _won_fight() -> Node:
+	var game: Node = await _new_game()
+	game.path = [0]
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	game.combat.enemies[0].hp = 1
+	await _fight_out(game, "skeleton at 1 HP")
+	return game
+
+
+func _takes(pick: Node) -> Array:
+	return pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Take")
+
+
 ## Once the Mine is unlocked the camp can start a run there, without a bonus perk.
 func _mine_start() -> void:
 	var errors_before := errors.count
@@ -318,6 +542,13 @@ func _mine_start() -> void:
 	var floors: Array = pick[0].find_children("*", "Button", true, false)
 	floors.filter(func(b): return b.text == "The Hollow Mine")[0].pressed.emit()
 	await process_frame
+	check(game.screen is RelicPickScreen and game.screen.rares and game.screen.title == "Into the Mine", "a Mine start opens with a rare pick")
+	if game.screen is RelicPickScreen:
+		var first: String = game.screen.choices[0]
+		_takes(game.screen)[0].pressed.emit()
+		_agree(game)
+		await process_frame
+		check(game.combat.relics[0].id == first, "the rare taken is on the belt")
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
 	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")
 	game.combat.start_group(["miner"])
@@ -593,6 +824,65 @@ func _fight_menu() -> void:
 	await process_frame
 
 
+## The menu opens while a throw waits on the Roll press, R can't throw behind it, and closing it leaves
+## the throw waiting; once the dice are in the air it stays shut.
+func _menu_before_throw() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	ChargeBar.auto = false
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	await process_frame
+	check(screen.charge.waiting and not screen.menu_button.disabled, "the Menu button is on while the throw waits")
+	await _press(KEY_ESCAPE)
+	check(_overlays(game, "FightMenu").size() == 1, "Esc opens the menu before the dice are thrown")
+	screen._on_roll_key(true)
+	screen._on_roll_key(false)
+	await process_frame
+	check(screen.charge.waiting and screen.rolling.size() == 3 and not screen.tray.in_flight, "R throws nothing behind the menu")
+	await _press(KEY_ESCAPE)
+	await process_frame
+	check(_overlays(game, "FightMenu").is_empty() and screen.busy and screen.charge.waiting, "closing it leaves the throw waiting")
+	screen._on_roll_key(true)
+	screen._on_roll_key(false)
+	await process_frame
+	check(screen.tray.in_flight, "the throw goes once the menu is shut")
+	await _press(KEY_ESCAPE)
+	check(_overlays(game, "FightMenu").is_empty(), "the menu stays shut while the dice are in the air")
+	ChargeBar.auto = true
+	while screen.busy:
+		await process_frame
+	check(errors.count == errors_before, "the menu before a throw runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## The map has the fight's menu: its Menu button or Esc opens it, and quitting from it gives up the run.
+func _map_menu() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	var embers: int = game.meta.embers
+	check(game.screen is MapScreen and _button(game.screen, "Menu  [Esc]") != null, "the map has a Menu button")
+	await _press(KEY_ESCAPE)
+	var menu: Array = _overlays(game, "FightMenu")
+	check(menu.size() == 1, "Esc opens the menu on the map")
+	await _press(KEY_ESCAPE)
+	await process_frame
+	check(_overlays(game, "FightMenu").is_empty() and game.screen is MapScreen, "Esc again closes it, back on the map")
+	_button(game.screen, "Menu  [Esc]").pressed.emit()
+	await process_frame
+	_button(_overlays(game, "FightMenu")[0], "Quit to main menu").pressed.emit()
+	await process_frame
+	_agree(game)
+	await process_frame
+	check(game.screen is MenuScreen and not RunSave.exists(RUN), "quitting from the map gives up the run for the main menu")
+	check(game.meta.embers == embers, "quitting from the map pays no Embers")
+	check(errors.count == errors_before, "the map menu runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
 ## A run part way along the Chapel map, standing at a campfire on column 3.
 func _at_campfire(game: Node) -> void:
 	game.path = [0]
@@ -731,10 +1021,15 @@ func _death_clears_save() -> void:
 	await process_frame
 	await _continue(game)
 	game.combat.player_hp = 1
+	game.combat.relics = [{"id": "tithe_box", "n": 0, "f": 0}, {"id": "mirror_shard", "n": 0, "f": 0}]
+	game.combat.best_hit = 41
 	game.combat.start_group(["skeleton"])
 	game._show_fight(game._on_fight_finished)
 	await _fight_out(game, "skeleton at 1 HP")
 	check(game.screen is NoticeScreen and game.screen.title == "You fled.", "the run is lost")
+	var ls: Array = game.screen.lines
+	check("Relics: Tithe Box, Mirror Shard" in ls and "Biggest hit: 41" in ls and ls.any(func(l): return l.begins_with("Highest Mult: ")), "the end notice shows the build")
+	check(ls[game.screen.highlight].begins_with("Embers earned"), "the Embers line stays highlighted")
 	check(not RunSave.exists(RUN), "the saved run is gone after a death")
 	await create_timer(0.3).timeout
 	check(errors.count == errors_before, "a death after continuing runs with no errors (got %d)" % (errors.count - errors_before))
