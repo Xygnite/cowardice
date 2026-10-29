@@ -873,10 +873,15 @@ func _death_clears_save() -> void:
 	await process_frame
 	await _continue(game)
 	game.combat.player_hp = 1
+	game.combat.relics = [{"id": "tithe_box", "n": 0, "f": 0}, {"id": "mirror_shard", "n": 0, "f": 0}]
+	game.combat.best_hit = 41
 	game.combat.start_group(["skeleton"])
 	game._show_fight(game._on_fight_finished)
 	await _fight_out(game, "skeleton at 1 HP")
 	check(game.screen is NoticeScreen and game.screen.title == "You fled.", "the run is lost")
+	var ls: Array = game.screen.lines
+	check("Relics: Tithe Box, Mirror Shard" in ls and "Biggest hit: 41" in ls and ls.any(func(l): return l.begins_with("Highest Mult: ")), "the end notice shows the build")
+	check(ls[game.screen.highlight].begins_with("Embers earned"), "the Embers line stays highlighted")
 	check(not RunSave.exists(RUN), "the saved run is gone after a death")
 	await create_timer(0.3).timeout
 	check(errors.count == errors_before, "a death after continuing runs with no errors (got %d)" % (errors.count - errors_before))

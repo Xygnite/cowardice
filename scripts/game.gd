@@ -371,9 +371,12 @@ func _end_run(won: bool) -> void:
 		"Depth reached: %s, room %d of %d" % [Floor.FLOORS[floor_id].title, mini(layer + 1, map.size()), map.size()],
 		"Enemies slain: %d" % combat.kills,
 		"Boss damage dealt: %d%%" % boss_pct,
+		"Relics: " + (", ".join(combat.relics.map(func(r): return Combat.RELICS[r.id].name)) if not combat.relics.is_empty() else "none"),
+		"Highest Mult: ×%.1f" % combat.best_mult,
+		"Biggest hit: %d" % combat.best_hit,
 		"Embers earned: +%d" % earned,
 		"Embers: %d" % meta.embers,
-	], 4, [["Walk back in", _confirm_new_run.bind(_start_run.bind("chapel" if rooms_before > 0 else floor_id))], ["Return to camp", _show_camp]],
+	], 7, [["Walk back in", _confirm_new_run.bind(_start_run.bind("chapel" if rooms_before > 0 else floor_id))], ["Return to camp", _show_camp]],
 		"victory" if won else "defeat")  # walking back in starts where this run did
 
 
