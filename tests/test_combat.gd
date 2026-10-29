@@ -45,6 +45,7 @@ func _init() -> void:
 	_relic_save()
 	_mult()
 	_relic_effects()
+	_relic_icons()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -855,6 +856,11 @@ func _meta() -> void:
 	back.apply_sound()
 	DirAccess.remove_absolute(path)
 	check(Meta.load_from(path).embers == 0, "a missing save starts fresh")
+
+
+func _relic_icons() -> void:
+	for id in Combat.RELICS:
+		check(ResourceLoader.exists("res://assets/ui/cut/relic_%s.png" % id), "relic %s has its icon" % id)
 
 
 func _event_backdrops() -> void:
