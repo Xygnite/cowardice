@@ -33,4 +33,4 @@ func _ready() -> void:
 		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		text.custom_minimum_size.y = text.get_line_height() * 2 + text.get_theme_constant("line_spacing")
 		text.add_theme_color_override("font_color", UI.QUIET)
-		UI.button(col, "Take", picked.emit.bind(id)).custom_minimum_size.y = 48
+		UI.button(col, "Take", func(): ConfirmPanel.ask(self, "Take %s?" % p.name, "For this run only. The other two are left behind.", "Take it", picked.emit.bind(id))).custom_minimum_size.y = 48

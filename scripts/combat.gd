@@ -3,7 +3,7 @@ extends RefCounted
 ## Combat rules and per-run state (HP, dice, Shards, kills), no UI.
 ## One instance lasts a whole run; combat_screen.gd and game.gd drive it, tests/test_combat.gd checks it.
 
-enum Slot { NONE, ATTACK, GUARD, CLEAVE }
+enum Slot { NONE, ATTACK, GUARD, SKILL }  # SKILL fires every unlocked skill (SKILLS) its dice make
 enum Grade { MISS, GOOD, PERFECT }
 
 const CURSE := 0  # a cursed face rolls as 0 and counts for nothing; a lasting curse is written into `base`
@@ -11,9 +11,25 @@ const REROLLS_PER_TURN := 2
 const PLAYER_MAX_HP := 40
 const GOOD_MS := 250
 const CLEAVE_MULTIPLIER := 1.5
+const SUNDER_MULTIPLIER := 2.5
+const FLURRY_BONUS := 3
+const GAMBIT_DAMAGE := 12
+## Skills: the Skill slot fires every unlocked skill (`skills`) whose pattern ("need") its dice make, all at once;
+## every skill ignores enemy Guard and Bone Wall, and a cursed die breaks any pattern. Cleave is free; the rest are
+## unlocked for good with Embers on the camp board (Meta.skills).
+const SKILLS := {
+	"cleave": {"name": "Cleave", "cost": 0, "dice": ["a", "a"], "need": "Two matching dice", "text": "x1.5 their total, split across every enemy"},
+	"sunder": {"name": "Sunder", "cost": 600, "dice": ["a", "a", "a"], "need": "Three matching dice", "text": "x2.5 their total to every enemy, in full"},
+	"flurry": {"name": "Flurry", "cost": 300, "dice": ["2", "3", "4"], "need": "Three dice in a row, like 2-3-4", "text": "Three hits on the target: their total +3"},
+	"cower": {"name": "Cower", "cost": 450, "dice": ["1", "2", "1"], "need": "Three dice, each a 1 or 2", "text": "Every enemy action this turn misses you"},
+	"oath": {"name": "Oath", "cost": 400, "dice": ["1", "3", "5"], "need": "Three dice, all odd or all even", "text": "Odd: their total to the target. Even: heal half their total"},
+	"gambit": {"name": "Gambit", "cost": 300, "dice": ["1", "6"], "need": "A 1 and a 6", "text": "12 to the target; killing it pays +1 Shard"},
+}
 const SHARDS_PER_KILL := 2
 const FORGE_COST := 4
 const FORGE_STEP := 2  # a forged face goes up by this much
+## A Forge roll (FORGE_COST, a die thrown at the Forge): what it grants by the die's 1 to 6, then put on a face you pick.
+const FORGE_ROLL := [{"step": 1}, {"mark": "sharp"}, {"mark": "ember"}, {"mark": "ward"}, {"mark": "shard"}, {"step": 4}]
 const CAMPFIRE_HEAL := 0.3  # share of max HP
 ## Marks a face can be forged with instead of +FORGE_STEP. A mark works when its face is the one rolled and that die is
 ## placed; a cursed face's mark sleeps until the curse lifts. Kept in each die's "marks", one per face ("" for none).
@@ -94,6 +110,8 @@ var dice: Array[Dictionary] = []
 var rerolls := 0
 var grit := 0
 var ward_spent := false  # Hex Ward already took this fight's first curse
+var skills: Array = ["cleave"]  # unlocked SKILLS ids, from Meta.skills; not saved with a run
+var cowered := false  # Cower went off this turn: every enemy action misses
 var fight := 0
 var enemies: Array[Dictionary] = []  # {type, name, hp, intent}
 var target := 0
@@ -168,11 +186,12 @@ func campfire_heal_amount() -> int:
 	return ceili(max_hp * (0.45 if "bonfire_keeper" in perks else CAMPFIRE_HEAL))
 
 
-## Raises face f of die i by FORGE_STEP for the rest of the run, or with `mark` (a MARKS key) marks it instead.
-## Paid in Shards unless no_cost. A cursed face can't be marked, nor a face marked twice.
-func forge(i: int, f: int, no_cost := false, mark := "") -> bool:
+## Raises face f of die i by `step` for the rest of the run, or with `mark` (a MARKS key) marks it instead.
+## Paid in Shards unless no_cost. A mark replaces the face's old one, and on a cursed face it lifts the curse too;
+## a face can't take the mark it already has.
+func forge(i: int, f: int, no_cost := false, mark := "", step := FORGE_STEP) -> bool:
 	var d: Dictionary = dice[i]
-	if mark and (d.base[f] == CURSE or d.marks[f] != ""):
+	if mark and d.marks[f] == mark:
 		return false
 	if not no_cost:
 		if shards < FORGE_COST:
@@ -180,13 +199,21 @@ func forge(i: int, f: int, no_cost := false, mark := "") -> bool:
 		shards -= FORGE_COST
 	if mark:
 		d.marks[f] = mark
+		if d.base[f] == CURSE:
+			d.base[f] = d.uncursed.get(f, 1)
+			d.uncursed.erase(f)
 	elif d.uncursed.has(f):  # forging a lasting curse lifts it instead
 		d.base[f] = d.uncursed[f]
 		d.uncursed.erase(f)
 	else:
-		d.base[f] += FORGE_STEP
+		d.base[f] += step
 	d.faces = d.base.duplicate()
 	return true
+
+
+## Whether some face doesn't carry `mark` yet, so a rolled one has somewhere to go.
+func can_mark(mark: String) -> bool:
+	return dice.any(func(d): return d.marks.count(mark) < d.marks.size())
 
 
 ## Lasting curse: face f of die i is cursed for the rest of the run, and forging it restores the old face.
@@ -279,6 +306,7 @@ func start_group(keys: Array) -> void:
 
 
 func start_turn() -> void:
+	cowered = false
 	rerolls = REROLLS_PER_TURN + grit + (1 if "steady_hand" in perks else 0)
 	grit = 0
 	for e in enemies:
@@ -360,9 +388,56 @@ func has_guard() -> bool:
 	return not _values_in(Slot.GUARD).is_empty()
 
 
-func cleave_ready() -> bool:
-	var v := _values_in(Slot.CLEAVE)
-	return v.size() == 2 and v[0] == v[1] and v[0] != CURSE
+## The unlocked skills the Skill slot's dice make right now: all of them fire.
+func fired() -> Array:
+	var v := _values_in(Slot.SKILL)
+	return skills.filter(func(id): return makes(id, v))
+
+
+func skill_ready() -> bool:
+	return not fired().is_empty()
+
+
+## Whether `values` are exactly skill `id`'s pattern.
+static func makes(id: String, values: Array) -> bool:
+	if CURSE in values:
+		return false
+	var v := values.duplicate()
+	v.sort()
+	match id:
+		"cleave":
+			return v.size() == 2 and v[0] == v[1]
+		"sunder":
+			return v.size() == 3 and v[0] == v[2]
+		"flurry":
+			return v.size() == 3 and v[1] == v[0] + 1 and v[2] == v[1] + 1
+		"cower":
+			return v.size() == 3 and v[2] <= 2
+		"oath":
+			return v.size() == 3 and v[0] % 2 == v[1] % 2 and v[1] % 2 == v[2] % 2
+		"gambit":
+			return v == [1, 6]
+	return false
+
+
+## Whether some of this roll's free dice could make an unlocked skill's pattern (the screen's hint).
+func skill_in_roll() -> bool:
+	return not skill_dice().is_empty()
+
+
+## Indices of the dice that could, together, make an unlocked skill's pattern; the screen gives them an aura.
+func skill_dice() -> Array:
+	var free: Array = range(dice.size()).filter(func(i): return dice[i].buried == 0 or dice[i].slot == Slot.SKILL)
+	var hit := {}
+	for a in free.size():
+		for b in range(a + 1, free.size()):
+			var pair: Array = [free[a], free[b]]
+			for c in [-1] + range(b + 1, free.size()):  # the pair alone, then with each later die
+				var group: Array = pair + ([free[c]] if c >= 0 else [])
+				if skills.any(func(id): return makes(id, group.map(func(i): return dice[i].value))):
+					for i in group:
+						hit[i] = true
+	return hit.keys()
 
 
 func parry_window_ms() -> int:
@@ -379,23 +454,42 @@ func _nerve_ms() -> int:
 	return 40 if "iron_nerve" in perks else 0
 
 
-## Total Cleave damage, split evenly across living enemies by cleave_share().
+## Total Cleave damage, split evenly across living enemies by skill_share().
 func cleave_damage() -> int:
-	if not cleave_ready():
+	if "cleave" not in fired():
 		return 0
-	var pair := _values_in(Slot.CLEAVE)
+	var pair := _values_in(Slot.SKILL)
 	var total := 12 if pair[0] == 1 and "gamblers_heart" in perks else _sum(pair)  # snake eyes count as 12
 	return ceili(total * CLEAVE_MULTIPLIER)
 
 
-## Enemy i's share of the Cleave. Leftover points go one each to the target first, then down the row.
-func cleave_share(i: int) -> int:
+## What the skills that fire deal enemy i, added up.
+func skill_share(i: int) -> int:
+	if not alive(i):
+		return 0
+	var total := _sum(_values_in(Slot.SKILL))
+	var share := 0
+	for id in fired():
+		match id:
+			"sunder":
+				share += ceili(total * SUNDER_MULTIPLIER)
+			"flurry":
+				share += total + FLURRY_BONUS if i == target else 0
+			"oath":
+				share += total if i == target and total % 2 == 1 else 0  # three odd dice sum odd, three even sum even
+			"gambit":
+				share += GAMBIT_DAMAGE if i == target else 0
+			"cleave":
+				share += _cleave_share(i)
+	return share
+
+
+## Cleave's part for enemy i: its leftover points go one each to the target first, then down the row.
+func _cleave_share(i: int) -> int:
 	var up: Array[int] = []
 	for j in enemies.size():
 		if alive(j):
 			up.append(j)
-	if not alive(i):
-		return 0
 	var total := cleave_damage()
 	var rank := (up.find(i) - up.find(target) + up.size()) % up.size()
 	return total / up.size() + (1 if rank < total % up.size() else 0)
@@ -431,7 +525,7 @@ func damage_to(i: int) -> int:
 		if e.intent.get("kind") == "guard":
 			damage = maxi(0, damage - e.intent.value)
 		damage += _sum(sharp)  # Sharp faces cut past Guard and Bone Wall
-	return damage + cleave_share(i)  # Cleave ignores Bone Wall and enemy Guard
+	return damage + skill_share(i)  # skills ignore Bone Wall and enemy Guard
 
 
 func preview_damage() -> int:
@@ -446,6 +540,14 @@ func resolve_player() -> int:
 	var hits: Array[int] = []
 	for i in enemies.size():
 		hits.append(damage_to(i))
+	var struck := target  # a Gambit that kills it pays a Shard
+	var fire := fired()
+	var gambit := "gambit" in fire and alive(struck)
+	cowered = "cower" in fire
+	if "oath" in fire:
+		var total := _sum(_values_in(Slot.SKILL))
+		if total % 2 == 0:
+			heal(ceili(total / 2.0))
 	var floor_hp := 1 if is_tutorial() else 0
 	for i in enemies.size():
 		if alive(i):
@@ -456,6 +558,8 @@ func resolve_player() -> int:
 				var tag: String = old.substr(enemies[i].type.name.length())  # a Hulk's " A" stays on its Rubble
 				enemies[i] = {"type": t, "name": t.name + tag, "hp": t.hp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
 				replaced += 1
+	if gambit and (enemies[struck].hp == 0 or enemies[struck].has("from")):
+		shards += 1
 	for d in dice:
 		if d.slot != Slot.NONE and d.buried == 0:
 			match mark_of(d):
@@ -478,7 +582,7 @@ func resolve_player() -> int:
 
 ## Timing only happens with a die in Guard, against something you can block or parry.
 func needs_timing(i: int) -> bool:
-	return has_guard() and enemies[i].intent.get("kind") in ["attack", "unblockable", "curse"]
+	return not cowered and has_guard() and enemies[i].intent.get("kind") in ["attack", "unblockable", "curse"]
 
 
 func grade_for(remaining_ms: float, i: int) -> Grade:
@@ -497,6 +601,8 @@ func grade_for(remaining_ms: float, i: int) -> Grade:
 func resolve_enemy(i: int, grade: Grade) -> String:
 	var e := enemies[i]
 	var text := ""
+	if cowered and e.intent.kind in ["attack", "unblockable", "curse", "cave_in"]:
+		return "You cower; %s misses." % e.name
 	match e.intent.kind:
 		"attack":
 			var hit := 0

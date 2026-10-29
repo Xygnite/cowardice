@@ -8,7 +8,9 @@ extends Control
 ## A steered throw (the tutorial's pair turn) instead tips each die onto its given value with a hidden torque.
 ## Each side shows one of the die's faces, on the die art from assets/ui/cut/die_<art>.png.
 
-signal die_clicked(i: int)
+signal die_clicked(i: int)  # a left press on die i
+signal die_right_clicked(i: int)
+signal left_released  # wherever the button comes up, so a hold on a die can end
 signal landed  # once per throw, when its last die is pinned; each die's value is then the face it shows
 
 const PIXEL := 2  # screen pixels per rendered pixel
@@ -27,6 +29,9 @@ const FELT := preload("res://assets/ui/cut/tray_felt.png")  # the tray floor's r
 const GRAVITY_SCALE := 3.0  # a cube width is a metre to the physics; small dice fall faster than that
 const THROW_SPEED := Vector2(8, 11)  # cube widths per second, rightward
 const THROW_SPIN := 15.0  # radians per second, about a random axis
+const TRAY_LAYER := 1  # the floor and walls, on Godot's default layer
+const DIE_LAYER := 2  # a thrown die once it has landed; until then, and while left out of a throw, it is on none
+const LANDED_Y := 0.9  # a cube's centre is below this only when it touches the felt (corner down: 0.87)
 const BOUNCE := 0.3
 const FRICTION := 0.7
 ## Below this speed the die is steered onto its rolled face: torque = error * STEER - spin * DAMP.
@@ -41,10 +46,19 @@ const SETTLED_SPEED := 0.4
 const GIVE_UP := 3.0  # seconds; a die still not settled (wedged on a wall, say) is eased into place
 const EASE_TIME := 0.25
 const SLOW_TIME := 0.25  # seconds a die must stay stopped before a crooked one is settled onto its top face
+const GLYPH_PIXEL := 0.0175  # a mark's glyph (art at 2x), a touch under the digits so it clears the border
+const GLYPH_CORNER := Vector3(-0.25, -0.27, 0)  # where it sits beside a number, in the lower-left corner
 const CLACK := preload("res://assets/audio/dice_clack.wav")  # cut from dice.wav
 const CLACK_MIN := 1.5  # cube widths per second of speed lost or gained in one step; gentler touches are silent
 const CLACK_LOUD := 12.0  # a jolt this hard plays at full volume
 const CLACK_GAP := 0.08  # seconds; one die clacks no more often, so a die chattering on the floor doesn't buzz
+const HALO := 8  # pixels the glow round a firing Skill die spreads past its edge, at the dice's pixel size
+const HALO_PULSE := Vector2(0.45, 1.0)  # the glow's opacity swings between these
+const HALO_SPEED := 5.0  # radians per second of the swing
+const HALO_GROW := 0.08  # and it breathes out this share of its size and back
+const HOLD_QUIET := 0.2  # share of a hold that shows nothing yet, so a quick click doesn't flash
+const HOLD_SHAKE := 0.05  # cube widths a die about to lock or unlock trembles, at most
+const SPARKS := 28  # gold sparks alive round a glowing die at once, drifting up the screen like flames
 
 ## Turns that bring each side to face +Z; faces[k] is drawn on side k.
 const SIDES := [
@@ -165,8 +179,6 @@ func add_die() -> void:
 		glyph.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 		glyph.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 		glyph.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		glyph.pixel_size = 0.0175  # the glyph art is at 2x; a touch under the digits, to clear the border
-		glyph.position = Vector3(-0.25, -0.27, 0)
 		l.add_child(glyph)
 		labels.append(l)
 	var chain := Sprite3D.new()  # wraps a locked die; follows it, but never turns with it (_process)
@@ -187,6 +199,15 @@ func add_die() -> void:
 	rubble.rotation = FACE_UP
 	rubble.hide()
 	camera.get_parent().add_child(rubble)
+	var halo := Sprite3D.new()  # gold on the felt round the die while glow() has it on
+	halo.texture = _halo()
+	halo.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	halo.pixel_size = 1.0 / RUBBLE_SIZE
+	halo.rotation = FACE_UP
+	halo.hide()
+	camera.get_parent().add_child(halo)
+	var sparks := _sparks()
+	camera.get_parent().add_child(sparks)
 	var slot := TextureRect.new()  # the badge disc; its icon sits in the middle
 	slot.texture = _disc()
 	var icon := TextureRect.new()
@@ -200,8 +221,8 @@ func add_die() -> void:
 	clack.stream = CLACK
 	clack.bus = "SFX"
 	add_child(clack)
-	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "rubble": rubble, "slot": slot, "icon": icon,
-		"clack": clack, "faces": [], "value": 0, "rolling": false, "steer": false, "t": 0.0, "slow": 0.0,
+	dice.append({"body": body, "cube": cube, "labels": labels, "chain": chain, "rubble": rubble, "halo": halo, "sparks": sparks, "slot": slot, "icon": icon,
+		"clack": clack, "hold": 0.0, "locked": false, "faces": [], "value": 0, "rolling": false, "steer": false, "t": 0.0, "slow": 0.0,
 		"last_v": Vector3.ZERO, "quiet": 0.0})
 	for i in dice.size():  # the row stays centred as it grows
 		dice[i].body.position = _spot(i)
@@ -210,14 +231,15 @@ func add_die() -> void:
 ## Shows die i's faces in `art` (bone, locked, placed, cursed) with `value` up, and the icon
 ## assets/ui/cut/slot_<slot_icon>.png in its top-right corner, or none if `slot_icon` is empty;
 ## a locked die is wrapped in chains, a buried one heaped with rubble. A face with a mark in `marks` is in its UI.MARK_COLORS.
+## `texts`, if given, is drawn on each side instead of its number; a marked side with "" there shows its glyph alone, large.
 ## Mid-throw it only repaints; the throw lands on whatever face comes up.
-func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false, marks := []) -> void:
+func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, locked: bool, buried := false, marks := [], texts := []) -> void:
 	var d := dice[i]
 	d.faces = faces
 	d.value = value
 	(d.cube.material_override as StandardMaterial3D).albedo_texture = _atlas(art)
 	for k in d.labels.size():
-		d.labels[k].text = "X" if faces[k] == Combat.CURSE else str(faces[k])
+		d.labels[k].text = texts[k] if k < texts.size() else ("X" if faces[k] == Combat.CURSE else str(faces[k]))
 		d.labels[k].modulate = Color(0.16, 0.13, 0.1) if art == "bone" else Color.WHITE
 		var mark: String = marks[k] if k < marks.size() and faces[k] != Combat.CURSE else ""
 		if mark:
@@ -225,22 +247,49 @@ func show_die(i: int, faces: Array, value: int, art: String, slot_icon: String, 
 		var glyph: Sprite3D = d.labels[k].get_child(0)
 		glyph.texture = load(UI.ART % ("mark_" + mark)) if mark else null
 		glyph.modulate = d.labels[k].modulate
+		var alone: bool = d.labels[k].text == ""  # the glyph is the whole face
+		glyph.position = Vector3.ZERO if alone else GLYPH_CORNER
+		glyph.pixel_size = GLYPH_PIXEL * (2 if alone else 1)
 	d.icon.texture = load(UI.ART % ("slot_" + slot_icon)) if slot_icon else null
+	d.locked = locked
 	d.chain.visible = locked
 	d.rubble.visible = buried
 	if not d.rolling:
 		d.body.quaternion = _rest(d, d.body.quaternion)
 
 
+## Die i held down `t` of the way (0 to 1) to locking or unlocking: its chains close in (or slip off) and
+## it trembles harder as `t` grows; 0 puts it back as it was.
+func hold(i: int, t: float) -> void:
+	var d := dice[i]
+	d.hold = t
+	if t == 0.0:
+		d.chain.visible = d.locked
+		d.chain.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+		d.chain.modulate.a = 1.0
+		d.chain.scale = Vector3.ONE
+		d.cube.position = Vector3.ZERO
+
+
+## Die i glows gold on the felt while `on`: it can help make a skill.
+func glow(i: int, on: bool) -> void:
+	dice[i].halo.visible = on
+	dice[i].sparks.emitting = on
+
+
 ## Throws the dice at `which` (indices) in from the left. Each lands on whatever face comes up, its
 ## value once `landed` fires; with `steer`, each is tipped onto its current value instead.
-func throw(which: Array, steer := false) -> void:
+## `power` (0 to 1, from the charge bar) scales how hard they leave the hand.
+func throw(which: Array, steer := false, power := 1.0) -> void:
+	var force := lerpf(0.4, 1.0, power)  # full power is the tuned throw; harder upsets the steered pair
 	if size.x == 0:
 		# The walls need the tray's size, and a new screen resizes it more than once while it lays out:
 		# throwing after the first would spawn dice where the walls then close in and shove them out.
 		await resized
 		await get_tree().process_frame
 	var depth := _half_depth() - 0.7
+	for d in dice:  # dice left out of the throw sit still on no layer, so the throw goes through them
+		d.body.collision_layer = 0
 	for n in which.size():
 		var d := dice[which[n]]
 		var body: RigidBody3D = d.body
@@ -252,9 +301,10 @@ func throw(which: Array, steer := false) -> void:
 		var lane := 0.0 if which.size() == 1 else lerpf(-depth, depth, float(n) / (which.size() - 1))
 		body.position = Vector3(-_half_width() + 0.7 + n * 1.1, 1.5, lane)
 		body.quaternion = Quaternion.from_euler(Vector3(randf(), randf(), randf()) * TAU)
+		body.collision_mask = TRAY_LAYER  # in the air only the tray stops it; _physics_process adds the dice on landing
 		body.freeze = false
-		body.linear_velocity = Vector3(randf_range(THROW_SPEED.x, THROW_SPEED.y), randf_range(0, 2), randf_range(-2, 2))
-		body.angular_velocity = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized() * THROW_SPIN
+		body.linear_velocity = Vector3(randf_range(THROW_SPEED.x, THROW_SPEED.y) * force, randf_range(0, 2), randf_range(-2, 2))
+		body.angular_velocity = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized() * THROW_SPIN * force
 		body.sleeping = false
 		d.last_v = body.linear_velocity  # the throw itself is no bump
 	in_flight = true
@@ -266,6 +316,9 @@ func _physics_process(delta: float) -> void:
 			continue
 		var body: RigidBody3D = d.body
 		d.t += delta
+		if body.collision_layer == 0 and body.position.y < LANDED_Y:  # it has touched the felt
+			body.collision_layer = DIE_LAYER
+			body.collision_mask = TRAY_LAYER | DIE_LAYER
 		_clack(d, delta)
 		if not d.steer:
 			d.value = d.faces[_top(d)]  # the roll is whatever is up; _rest then squares the die on it
@@ -306,7 +359,7 @@ func top_face(i: int) -> int:
 
 func _top(d: Dictionary) -> int:
 	var best := 0
-	var basis: Basis = d.body.global_basis
+	var basis: Basis = d.body.basis  # the dice's parent is untransformed; local works off the tree too
 	for k in SIDES.size():
 		# Side k's outward normal, as the labels are placed: the turn that faces it to +Z, undone.
 		if (basis * (Basis.from_euler(SIDES[k]).inverse() * Vector3.BACK)).y > (basis * (Basis.from_euler(SIDES[best]).inverse() * Vector3.BACK)).y:
@@ -344,9 +397,22 @@ func _pin(d: Dictionary, time: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	var swing := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * HALO_SPEED)
 	for d in dice:
+		d.halo.position = Vector3(d.body.position.x, 0.01, d.body.position.z)  # flat on the felt, under the die
+		d.halo.modulate.a = lerpf(HALO_PULSE.x, HALO_PULSE.y, swing)
+		d.halo.scale = Vector3.ONE * (1 + HALO_GROW * swing)
+		d.sparks.position = d.halo.position
 		var top: Vector3 = d.body.position
 		d.chain.position = top + Vector3(0, 0.53, CHAIN_DROP)  # above the number (at 0.51), so it covers it
+		if d.hold > 0:
+			var k := clampf((d.hold - HOLD_QUIET) / (1 - HOLD_QUIET), 0, 1)
+			d.chain.visible = d.locked or k > 0
+			d.chain.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED  # so it can fade
+			d.chain.modulate.a = lerpf(1, 0.25, k) if d.locked else k
+			d.chain.scale = Vector3.ONE * (lerpf(1, 1.3, k) if d.locked else lerpf(1.4, 1, k))
+			d.cube.position = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)) * HOLD_SHAKE * k
+			d.chain.position += d.cube.position
 		# A badge in the top-right corner of the top face, put away while the die tumbles.
 		d.rubble.position = top + Vector3(0, 0.54, 0)
 		d.slot.position = _screen(top + BADGE) - d.slot.size / 2
@@ -357,11 +423,16 @@ func _process(_delta: float) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		for i in dice.size():
-			if event.position.distance_to(_screen(dice[i].body.position + Vector3.UP / 2)) < CLICK_RADIUS:
-				die_clicked.emit(i)
-				return
+	if not event is InputEventMouseButton or event.button_index not in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		return
+	if not event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			left_released.emit()
+		return
+	for i in dice.size():
+		if event.position.distance_to(_screen(dice[i].body.position + Vector3.UP / 2)) < CLICK_RADIUS:
+			(die_clicked if event.button_index == MOUSE_BUTTON_LEFT else die_right_clicked).emit(i)
+			return
 
 
 ## Die i's top face on screen, in global coordinates (for anchoring its menu).
@@ -404,8 +475,11 @@ func _fit() -> void:
 
 
 ## The turn that puts a side showing the die's value face up and square to the screen; of the sides
-## showing it (forged dice can repeat a value), the one nearest `near`.
+## showing it (forged dice can repeat a value), the one already up, else the one nearest `near`.
 func _rest(d: Dictionary, near := Quaternion.IDENTITY) -> Quaternion:
+	var up := _top(d)
+	if d.faces[up] == d.value:  # nearest by angle counts the spin about the vertical and could tip it onto a twin side
+		return Quaternion.from_euler(FACE_UP) * Quaternion.from_euler(SIDES[up])
 	var best := Quaternion.from_euler(FACE_UP) * Quaternion.from_euler(SIDES[maxi(0, d.faces.find(d.value))])
 	for k in d.faces.size():
 		if d.faces[k] == d.value:
@@ -454,6 +528,54 @@ static func _rubble() -> Texture2D:
 					var lit: bool = x + y < s[0] + s[1] - s[2] * 0.4
 					img.set_pixel(x, y, Color("070e10") if d > s[2] - 1.5 else (Color("8c8a82") if lit else (Color("6a6862") if d < s[2] - 4 else Color("4d4b47"))))
 	return ImageTexture.create_from_image(img)
+
+
+## The glow round a die: gold fading out from its edge in three hard steps, rounded at the corners, in dice pixels.
+static func _halo() -> Texture2D:
+	var n := RUBBLE_SIZE + HALO * 2
+	var img := Image.create_empty(n, n, false, Image.FORMAT_RGBA8)
+	for y in n:
+		for x in n:
+			var out := Vector2(maxf(absf(x + 0.5 - n / 2.0) - RUBBLE_SIZE / 2.0, 0), maxf(absf(y + 0.5 - n / 2.0) - RUBBLE_SIZE / 2.0, 0)).length()
+			var step := ceilf((1 - out / HALO) * 3) / 3
+			if step > 0:
+				img.set_pixel(x, y, Color(UI.GOLD, step * 0.8))
+	return ImageTexture.create_from_image(img)
+
+
+## Gold specks, two dice pixels square, rising off the felt all round a die toward the top of the screen and fading out.
+static func _sparks() -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.emitting = false
+	p.amount = SPARKS
+	p.lifetime = 1.1
+	p.local_coords = false
+	var speck := QuadMesh.new()
+	speck.orientation = PlaneMesh.FACE_Y  # flat, facing the camera overhead
+	speck.size = Vector2.ONE * 2.0 / RUBBLE_SIZE
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	speck.material = mat
+	p.mesh = speck
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING  # round the die's edge, not under it
+	p.emission_ring_axis = Vector3.UP
+	p.emission_ring_radius = 0.62
+	p.emission_ring_inner_radius = 0.5
+	p.emission_ring_height = 0
+	p.direction = Vector3(0, 0, -1)  # up the screen
+	p.spread = 20
+	p.gravity = Vector3(0, 0, -0.6)
+	p.initial_velocity_min = 0.3
+	p.initial_velocity_max = 0.9
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 1.5
+	var fade := Gradient.new()
+	fade.set_color(0, Color(UI.GOLD.lightened(0.4), 1))
+	fade.set_color(1, Color(UI.GOLD, 0))
+	p.color_ramp = fade
+	return p
 
 
 ## The badge disc: a bone coin (like a bone die, so the dark iron icons stand out) with a near-black rim, in game pixels blown up to the dice's 2x.

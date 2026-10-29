@@ -43,7 +43,7 @@ const LIFE := {
 		{"kind": "flame", "art": "candle", "at": Vector2(834, 268), "fps": 8.0},
 		{"kind": "flame", "art": "candle", "at": Vector2(862, 266), "fps": 8.0},
 		# Ends at y 390, along the foot of the step behind the fighters (CombatScreen.LEDGES), so they stand in front of it.
-		{"kind": "fog", "art": "floor", "at": Vector2(0, 366), "width": 1024.0, "period": 96, "step_s": 0.55, "alpha": 0.8},
+		{"kind": "fog", "art": "floor", "at": Vector2(0, 342), "width": 1024.0, "period": 96, "step_s": 0.55, "alpha": 0.8},
 		{"kind": "chain", "art": "chain_fight_0", "at": Vector2(96, 112), "period": 3.2},
 		{"kind": "chain", "art": "chain_fight_1", "at": Vector2(598, 62), "period": 3.8},
 		{"kind": "chain", "art": "chain_fight_2", "at": Vector2(956, 132), "period": 3.5},

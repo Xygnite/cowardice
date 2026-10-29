@@ -28,4 +28,4 @@ func _ready() -> void:
 	if tutorial_done:  # the first Play is the tutorial anyway
 		UI.button(choices, "Tutorial", tutorial.emit).custom_minimum_size = Vector2(280, 48)
 	UI.button(choices, "Settings", SettingsPanel.open.bind(self, meta)).custom_minimum_size = Vector2(280, 48)
-	UI.button(choices, "Quit", get_tree().quit).custom_minimum_size = Vector2(280, 48)
+	UI.button(choices, "Quit", func(): ConfirmPanel.ask(self, "Quit the game?", "Your Embers, perks and any run saved at a campfire are kept.", "Quit", get_tree().quit)).custom_minimum_size = Vector2(280, 48)

@@ -25,6 +25,7 @@ class ErrorCounter extends Logger:
 func _init() -> void:
 	OS.add_logger(errors)
 	Engine.time_scale = SPEED
+	ChargeBar.auto = true  # nobody here to hold SPACE
 	await _map_moves()
 	await _fair_throws()
 	await _gambler_throw()
@@ -33,9 +34,12 @@ func _init() -> void:
 	await _two_floors()
 	await _mine_start()
 	await _fight_menu()
+	await _quick_dice()
 	await _campfire_save()
 	await _new_run_asks()
 	await _death_clears_save()
+	await _choices_ask()
+	await _camp_board()
 	var late: Array = Floor.deal()[7]  # a dealt floor's last fight column, its biggest groups
 	var mine: Array = [["miner"], ["crawler", "crawler", "crawler"], ["hulk", "canary"], ["rubble", "shaft_foreman"], ["shaft_foreman", "hulk", "crawler"], ["pit_king"]]
 	for keys in Combat.FIGHTS + mine + late.filter(func(r): return r.kind == "fight").map(func(r): return r.enemies):
@@ -182,6 +186,16 @@ func _fair_throws() -> void:
 		await process_frame
 	check(screen.combat.dice[0].value == screen.combat.dice[1].value, "the tutorial's pair turn still lands a pair")
 	check(_all_drawn(screen), "and the pair is what the dice show")
+	var lit := func(i): return screen.tray.dice[i].halo.visible
+	screen.combat.skills = ["cleave"]
+	for i in 3:
+		screen.combat.dice[i].value = [4, 6, 4][i]
+		screen.combat.dice[i].slot = Combat.Slot.NONE
+	screen._refresh()
+	check(lit.call(0) and not lit.call(1) and lit.call(2), "unplaced dice that make a pair (Cleave) glow, and only they do")
+	screen.combat.dice[2].value = 5
+	screen._refresh()
+	check(not (lit.call(0) or lit.call(1) or lit.call(2)), "no die glows when no skill is in reach")
 	check(errors.count == errors_before, "fair throws run with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
@@ -260,11 +274,13 @@ func _two_floors() -> void:
 	var id: String = pick.choices.filter(func(p): return p != "thick_skin")[0]
 	var buttons: Array = pick.find_children("*", "Button", true, false)
 	buttons[pick.choices.find(id)].pressed.emit()
+	_agree(game)
 	await process_frame
 	check(game.screen is NoticeScreen and game.screen.title == "Campfire", "after the pick comes a campfire")
 	check(id in game.combat.perks, "the picked perk is active")
 	var heal: int = game.combat.campfire_heal_amount()
 	game.screen.choices[0][1].call()  # Rest
+	_agree(game)
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "then the Mine's map, from its entrance")
 	check(game.combat.player_hp == mini(game.combat.max_hp, hp + heal) and game.combat.shards == shards, "HP and Shards carry down")
@@ -273,7 +289,7 @@ func _two_floors() -> void:
 	game.combat.start_group(["pit_king"])
 	game._show_fight(game._on_fight_finished)
 	check(game.screen.backdrop == "mine", "Mine fights ask for the Mine backdrop")
-	check(game.screen.fight_label.text == "Boss" and game.screen.murmur_label.text == "", "the Pit King's fight says Boss, no murmurs")
+	check(game.screen.fight_label.text == "Boss" and game.screen.murmur_label.get_parsed_text() == "", "the Pit King's fight says Boss, no murmurs")
 	game.combat.enemies[0].hp = 1
 	var embers: int = game.meta.embers
 	await _fight_out(game, "pit king at 1 HP")
@@ -309,7 +325,7 @@ func _mine_start() -> void:
 	await process_frame
 	check(game.screen.crypt.texture.resource_path == "res://assets/ui/bg_mine.webp", "Mine fights show the Mine backdrop")
 	check(game.screen.fight_label.text == "Mine", "a Mine fight is labelled Mine, got %s" % game.screen.fight_label.text)
-	check(game.screen.murmur_label.text == CombatScreen.MURMURS.mine[0], "a Mine fight murmurs the Mine's lines")
+	check(game.screen.murmur_label.get_parsed_text() == CombatScreen.MURMURS.mine[0], "a Mine fight murmurs the Mine's lines")
 	game._show_tutorial()
 	await process_frame
 	check(game.screen.backdrop == "fight", "the replayed tutorial shows the fight backdrop after a Mine run, got %s" % game.screen.backdrop)
@@ -349,11 +365,16 @@ func _play_events() -> void:
 					s.choose(0)
 				else:
 					go[0].pressed.emit()
-			elif s is ForgeScreen:
-				for b: Button in s.face_buttons.reduce(func(a, r): return a + r, []):
-					if not b.disabled:
-						b.pressed.emit()
-						break
+			elif not _overlays(game, "ConfirmPanel").is_empty():
+				_agree(game)  # every face change asks first
+			elif s is ForgeScreen and not s.busy:
+				if not s.owed and s.roll_button and not s.roll_button.disabled:
+					s.roll_button.pressed.emit()  # every upgrade is thrown first
+				else:
+					for b: Button in s.face_buttons.reduce(func(a, r): return a + r, []):
+						if not b.disabled:
+							b.pressed.emit()
+							break
 			steps += 1
 			await process_frame
 		check(game.screen is MapScreen, "event %s goes back to the map" % id)
@@ -390,8 +411,127 @@ func _button(under: Node, text: String) -> Button:
 	return found[0] if found.size() == 1 else null
 
 
+## Choices that can't be taken back ask first, and Back leaves everything as it was.
+func _choices_ask() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	await _at_campfire(game)
+	var hp: int = game.combat.player_hp
+	game.screen.choices[0][1].call()  # Rest
+	var ask: Array = _overlays(game, "ConfirmPanel")
+	check(ask.size() == 1 and ask[0].title == "Rest here?", "Rest asks first")
+	if ask.size() == 1:
+		ask[0].close()
+	await process_frame
+	check(game.screen is NoticeScreen and game.combat.player_hp == hp and _overlays(game, "ConfirmPanel").is_empty(), "Back keeps the campfire, unrested")
+	game._show_menu()
+	await process_frame
+	_button(game.screen, "Quit").pressed.emit()
+	ask = _overlays(game, "ConfirmPanel")
+	check(ask.size() == 1 and ask[0].title == "Quit the game?", "Quit asks first")
+	if ask.size() == 1:
+		ask[0].close()
+	await process_frame
+	check(game.screen is MenuScreen and not game.is_queued_for_deletion(), "Back stays on the main menu")
+	check(errors.count == errors_before, "the confirms run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## Clicking a camp tile unlocks it (after a confirm), or equips or unequips a perk; a full loadout or too few Embers
+## only warn. Skills unlock once and every run gets them all.
+func _camp_board() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.meta.embers = 250
+	game.meta.owned = ["steady_hand", "thick_skin"]
+	game.meta.equipped = ["steady_hand", "thick_skin"]
+	game._show_camp()
+	await process_frame
+	var board: TileBoard = game.screen.board
+	check(board.tiles.size() == Combat.SKILLS.size() + Meta.PERKS.size(), "every skill and perk has a tile")
+	board._click("scavenger")
+	_agree(game)
+	await process_frame  # the confirm closes
+	check("scavenger" in game.meta.owned and game.meta.embers == 175, "clicking a locked perk unlocks it after a confirm")
+	board._click("scavenger")
+	check("scavenger" not in game.meta.equipped and board.state.text.contains("full"), "a full loadout only warns")
+	board._click("thick_skin")
+	board._click("scavenger")
+	check(game.meta.equipped == ["steady_hand", "scavenger"], "clicking equipped unequips; then there's room")
+	board._click("lantern_bearer")
+	check(_overlays(game, "ConfirmPanel").is_empty() and board.state.text.contains("Not enough"), "too few Embers only warns")
+	game.meta.embers = 300  # Flurry's price
+	board._click("flurry")
+	_agree(game)
+	await process_frame
+	var embers: int = game.meta.embers
+	board._click("flurry")
+	check("flurry" in game.meta.skills and game.meta.embers == embers and _overlays(game, "ConfirmPanel").is_empty(), "a skill unlocks once; clicking it again does nothing")
+	game._start_run()
+	check(game.combat.skills == ["cleave", "flurry"], "a run gets every unlocked skill")
+	await _at_campfire(game)
+	check(not game.screen.choices.any(func(c): return c[0].begins_with("Change skill")), "campfires no longer swap skills")
+	await create_timer(0.3).timeout
+	check(errors.count == errors_before, "the boards run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
+## Goes ahead on the confirm open over the screen.
+func _agree(game: Node) -> void:
+	var ask: Array = _overlays(game, "ConfirmPanel")
+	if ask.size() == 1:
+		ask[0]._yes()
+	else:
+		check(false, "one confirm is open to agree to (got %d)" % ask.size())
+
+
 func _overlays(game: Node, type: String) -> Array:
 	return game.screen.find_children("*", type, true, false)
+
+
+## Quick dice control, the default (Settings switches it): a click steps a die through Attack, Guard, Skill and unplaced
+## (a right-click steps back), and holding it down locks it instead. Off, a click opens the die menu.
+func _quick_dice() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	while screen.busy:
+		await process_frame
+	check(game.meta.quick_dice, "dice control starts on Quick")
+	var panel := SettingsPanel.open(screen, game.meta)
+	await process_frame
+	panel._on_dice()
+	check(not game.meta.quick_dice and not Meta.load_from(SAVE).quick_dice, "Settings switches dice control to Menu, and it is saved")
+	panel._on_dice()
+	check(game.meta.quick_dice and Meta.load_from(SAVE).quick_dice, "and back to Quick")
+	panel.close()
+	var steps: Array = []
+	for n in 4:
+		screen._on_die_clicked(0)
+		screen._on_left_released()
+		steps.append(screen.combat.dice[0].slot)
+	check(steps == [Combat.Slot.ATTACK, Combat.Slot.GUARD, Combat.Slot.SKILL, Combat.Slot.NONE], "clicks step through Attack, Guard, Skill, unplaced (got %s)" % [steps])
+	screen._on_die_right_clicked(0)
+	check(screen.combat.dice[0].slot == Combat.Slot.SKILL and not screen.die_menu.visible, "a right-click steps back, and no menu opens")
+	check(not screen.tray.dice[0].chain.visible, "a quick click shows no chains")
+	screen._on_die_clicked(1)
+	await create_timer(CombatScreen.HOLD_LOCK * 0.7).timeout
+	var chain: Sprite3D = screen.tray.dice[1].chain
+	check(chain.visible and chain.modulate.a > 0.2 and chain.modulate.a < 1 and not screen.combat.dice[1].locked, "midway through a hold the chains fade in before it locks")
+	await create_timer(CombatScreen.HOLD_LOCK * 0.8).timeout
+	screen._on_left_released()
+	check(screen.combat.dice[1].locked and screen.combat.dice[1].slot == Combat.Slot.NONE, "holding a die locks it without moving it")
+	game.meta.quick_dice = false
+	screen._on_die_clicked(0)
+	check(screen.die_menu.visible, "with Menu control a click opens the die menu")
+	screen.die_menu.hide()
+	check(errors.count == errors_before, "quick dice control runs with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
 
 
 ## Esc or the Menu button pauses a fight on the player's turn: no keys or clicks reach the fight behind it.
@@ -491,6 +631,7 @@ func _campfire_save() -> void:
 	check(game.screen is NoticeScreen and game.screen.choices.size() == 3 and game.screen.choices[2][0] == "Save and quit", "the campfire offers Save and quit")
 	var was := _snapshot(game)
 	_button(game.screen, "Save and quit").pressed.emit()
+	_agree(game)
 	await process_frame
 	check(game.screen is MenuScreen and RunSave.exists(RUN), "Save and quit saves and goes to the main menu")
 	game.combat = Combat.new()  # forget the run, so only the save can bring it back
@@ -503,26 +644,37 @@ func _campfire_save() -> void:
 	check(_snapshot(game) == was, "HP, Shards, dice, perks, map, layer, path and floor come back as saved")
 	var heal: int = game.combat.campfire_heal_amount()
 	game.screen.choices[0][1].call()  # Rest
+	_agree(game)
 	await process_frame
 	check(game.screen is MapScreen and game.layer == 4 and game.combat.player_hp == 17 + heal, "Rest still heals and moves on")
 	await _continue(game)
 	check(game.combat.player_hp == 17, "the save is from before the rest")
 	game.screen.choices[1][1].call()  # Tend the dice
+	_agree(game)
 	await process_frame
-	check(game.screen is ForgeScreen and game.screen.no_cost, "Tend the dice still gives a free upgrade")
+	check(game.screen is ForgeScreen and game.screen.no_cost, "Tend the dice still gives a free roll")
 	if game.screen is ForgeScreen:
-		game.screen.face_buttons[2][0].pressed.emit()
+		var forge: ForgeScreen = game.screen
+		check(forge.face_buttons[2][0].disabled, "no face takes an upgrade before the die is thrown")
+		forge.roll_button.pressed.emit()
+		while forge.busy:
+			await process_frame
+		forge.face_buttons[2][0].pressed.emit()
+		check(game.screen is ForgeScreen and _overlays(game, "ConfirmPanel").size() == 1, "a face asks before it changes")
+		_agree(game)
 		await process_frame
-	check(game.screen is MapScreen and game.layer == 4 and game.combat.dice[2].base[0] == 1 + Combat.FORGE_STEP, "and moves on, forged")
+	check(game.screen is MapScreen and game.layer == 4 and (game.combat.dice[2].base[0] > 1 or game.combat.dice[2].marks[0] != ""), "and moves on, forged with what the die gave")
 	game.layer = game.map.size() - 1  # the stop between the Warden and the Mine
 	game.rooms_before = game.map.size()
 	game.combat.add_perk("bonfire_keeper")
 	game._show_campfire("mine")
 	await process_frame
 	_button(game.screen, "Save and quit").pressed.emit()
+	_agree(game)
 	await process_frame
 	await _continue(game)
 	game.screen.choices[0][1].call()
+	_agree(game)
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "a save on the way down continues into the Mine")
 	check(game.rooms_before > 0 and game.combat.bonus_perk == "bonfire_keeper", "with the bonus perk and the Chapel's rooms kept")
@@ -542,6 +694,7 @@ func _new_run_asks() -> void:
 	var game: Node = await _new_game()
 	await _at_campfire(game)
 	game.screen.choices[2][1].call()
+	_agree(game)
 	await process_frame
 	_button(game.screen, "Tutorial").pressed.emit()
 	await process_frame
@@ -574,6 +727,7 @@ func _death_clears_save() -> void:
 	var game: Node = await _new_game()
 	await _at_campfire(game)
 	game.screen.choices[2][1].call()
+	_agree(game)
 	await process_frame
 	await _continue(game)
 	game.combat.player_hp = 1

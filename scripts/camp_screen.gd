@@ -1,14 +1,15 @@
 class_name CampScreen
 extends Control
-## The perk board: unlock perks with Embers, equip up to Meta.SLOTS of them, start a run (in the Mine too, once unlocked).
+## The camp board: skills and perks as tiles (TileBoard). Unlock them with Embers (skills for good: every unlocked one
+## fires when the Skill dice fit), equip up to Meta.SLOTS perks for the next run, start a run (in the Mine too, once unlocked).
 
 signal start_run(floor_id: String)
 signal main_menu
 
 var meta: Meta
 var embers_label: Label
-var loadout_label: Label
-var cards := {}  # perk id -> {state: Label, button: Button}
+var loadout: HBoxContainer
+var board: TileBoard
 
 
 func _ready() -> void:
@@ -17,37 +18,25 @@ func _ready() -> void:
 	var top := UI.row(root)
 	UI.image(top, "logo")
 	UI.spacer(top)
-	# In the logo's row rather than its own, so ten perk cards still leave the bottom buttons their margin.
-	UI.heading(top, 32, "Camp: perk board").size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	loadout = UI.row(top, 12)  # the next run's perk slots, filled by _refresh()
+	loadout.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UI.spacer(top)
-	var side := UI.panel(top)  # the Embers purse, framed like the perk cards
+	var side := UI.panel(top)  # the Embers purse
 	side.get_parent().size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var purse := UI.row(side, 8)
 	UI.image(purse, "icon_ember")
 	embers_label = UI.heading(purse, 32)
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(grid)
+	board = TileBoard.new()
+	board.look = _look
+	board.press = _on_tile
+	root.add_child(board)
+	var skills := board.section("Skills: every unlocked one fires when its dice fit")
+	for id in Combat.SKILLS:
+		board.add(skills, id, Combat.SKILLS[id].name, TileBoard.dice(id))
+	var perks := board.section("Perks: equip %d" % Meta.SLOTS)
 	for id in Meta.PERKS:
-		var p: Dictionary = Meta.PERKS[id]
-		var col := UI.panel(grid)
-		col.custom_minimum_size = Vector2(180, 0)  # five columns plus the panel frames fit 1280
-		col.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.get_parent().size_flags_vertical = Control.SIZE_FILL
-		var title := UI.row(col, 10)
-		UI.image(title, "perk_" + id)  # assets/ui/cut/perk_<id>.png, from tools/make_ui.gd or tools/make_perk_badges.gd
-		UI.label(title, 22, p.name).size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var text := UI.label(col, 16, p.text)
-		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		text.custom_minimum_size.y = text.get_line_height() * 2 + text.get_theme_constant("line_spacing")  # room for two lines on every card, so costs and buttons line up
-		text.add_theme_color_override("font_color", UI.QUIET)
-		var state := UI.label(col, 16)
-		var b := UI.button(col, "", _on_card.bind(id))
-		cards[id] = {"state": state, "button": b}
-	loadout_label = UI.label(root, 20)
+		board.add(perks, id, Meta.PERKS[id].name, TileBoard.badge(id))
+	board.shown = "cleave"
 	var bottom := UI.row(root)
 	UI.button(bottom, "Main menu", main_menu.emit).custom_minimum_size = Vector2(200, 48)
 	UI.button(bottom, "Settings", SettingsPanel.open.bind(self, meta)).custom_minimum_size = Vector2(200, 48)
@@ -67,30 +56,70 @@ func _on_start() -> void:
 	add_child(pick)
 
 
-func _on_card(id: String) -> void:
-	if id in meta.owned:
-		meta.toggle_equip(id)
-	else:
-		meta.unlock(id)
+## What the board shows for skill or perk `id`: its state says what a click on it does.
+func _look(id: String) -> Dictionary:
+	var skill := id in Combat.SKILLS
+	var k: Dictionary = Combat.SKILLS[id] if skill else Meta.PERKS[id]
+	var owned: bool = id in (meta.skills if skill else meta.owned)
+	var on: bool = owned if skill else id in meta.equipped  # an unlocked skill is always in play
+	var state := "Owned. Click to equip."
+	if not owned:
+		state = "Locked: %d Embers. Click to unlock." % k.cost
+	elif skill:
+		state = "Unlocked. Fires whenever its dice fit."
+	elif on:
+		state = "Equipped. Click to unequip."
+	return {"locked": not owned, "on": on, "cost": k.cost, "state": state,
+		"text": "Needs: %s\n%s" % [k.need, k.text] if skill else k.text}
+
+
+## A click: unlock (after a confirm), or equip or unequip a perk.
+func _on_tile(id: String) -> void:
+	var skill := id in Combat.SKILLS
+	var k: Dictionary = Combat.SKILLS[id] if skill else Meta.PERKS[id]
+	if id not in (meta.skills if skill else meta.owned):
+		if meta.embers < k.cost:
+			board.warn("Not enough Embers: %d of %d." % [meta.embers, k.cost])
+			return
+		ConfirmPanel.ask(self, "Unlock %s?" % k.name, "Spend %d of your %d Embers." % [k.cost, meta.embers], "Unlock", func() -> void:
+			if skill:
+				meta.unlock_skill(id)
+			else:
+				meta.unlock(id)
+			meta.save()
+			_refresh())
+		return
+	if skill:
+		return  # unlocked for good; nothing to equip
+	if id not in meta.equipped and meta.equipped.size() >= Meta.SLOTS:
+		board.warn("Both perk slots are full. Unequip one first.")
+		return
+	meta.toggle_equip(id)
 	meta.save()
 	_refresh()
 
 
 func _refresh() -> void:
 	embers_label.text = "Embers %d" % meta.embers
-	for id in cards:
-		var c: Dictionary = cards[id]
-		if id in meta.equipped:
-			c.state.text = "Equipped"
-			c.button.text = "Unequip"
-			c.button.disabled = false
-		elif id in meta.owned:
-			c.state.text = "Owned"
-			c.button.text = "Equip"
-			c.button.disabled = meta.equipped.size() >= Meta.SLOTS
+	for c in loadout.get_children():
+		c.queue_free()
+	UI.label(loadout, 16, "Perks").add_theme_color_override("font_color", UI.QUIET)
+	for i in Meta.SLOTS:
+		if i < meta.equipped.size():
+			_slot(TileBoard.badge(meta.equipped[i]), Meta.PERKS[meta.equipped[i]].name)
 		else:
-			c.state.text = "%d Embers" % Meta.PERKS[id].cost
-			c.button.text = "Unlock"
-			c.button.disabled = meta.embers < Meta.PERKS[id].cost
-	var names := meta.equipped.map(func(id): return Meta.PERKS[id].name)
-	loadout_label.text = "Loadout %d/%d: %s" % [meta.equipped.size(), Meta.SLOTS, ", ".join(names) if names else "empty"]
+			_slot(Callable(), "empty")
+	board.refresh()
+
+
+## One loadout slot: its picture (none for an empty slot) and name.
+func _slot(art: Callable, text: String) -> void:
+	var col := VBoxContainer.new()
+	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	loadout.add_child(col)
+	if art.is_valid():
+		art.call(col, 1)
+	var l := UI.label(col, 16, text)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if not art.is_valid():
+		l.add_theme_color_override("font_color", UI.QUIET)

@@ -9,7 +9,7 @@ extends Control
 signal finished(won: bool)
 signal abandoned  # quit from the fight menu
 
-const SLOT_NAMES := ["-", "Attack", "Guard", "Cleave"]
+const SLOT_NAMES := ["-", "Attack", "Guard", "Skill"]
 const SLOT_ICONS := ["", "attack", "guard", "cleave"]  # assets/ui/cut/slot_*.png, by Combat.Slot
 const SPRITE_SCALE := 3  # whole-number scaling keeps every game pixel square
 ## How far down each fight picture (as a fraction) its floor's top edge is, by backdrop.
@@ -25,32 +25,40 @@ const TRAY_INSET := 6  # screen pixels from the box's edge to the felt, which tu
 const LOG_LINES := 4
 const STRIKE_DELAY := 0.2  # seconds into an enemy's attack animation when the blow lands
 const MENU_LOCK := 100  # die menu id for lock/unlock; the other ids are Combat.Slot values
+const HOLD_LOCK := 0.8  # seconds a die is held down, with quick dice control, to lock or unlock it
 const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
 const MARK_SFX := preload("res://assets/audio/confirm.wav")  # an Ember or Shard face paying out
 
-## One lesson per tutorial turn, indexed by Combat.turn.
+## One lesson per tutorial turn, indexed by Combat.turn; the turn's QUICK_LESSONS entry replaces it under
+## Quick dice control (Meta.quick_dice). Turn 2's roll is rigged to hold a pair, so its dice glow.
 const LESSONS := [
-	"Above the dummy is what it will do this turn. Click a die to lock it or place it. Lock the dice you like, reroll the rest, then put a die in Attack and end the turn.",
+	"Above the dummy is what it will do this turn. Hold R or the Roll button, then let go, to throw. Click a die to lock it or place it. Lock the dice you like, reroll the rest, then put a die in Attack and end the turn.",
 	"Put a die in Guard. When the dummy swings, press SPACE as the marker reaches the blue zone. The later you press, the better the block.",
-	"Two of your dice match. Put both in Cleave: a pair strikes harder and slips past any guard.",
+	"Two dice match, so they glow gold: a skill is ready. Put both in Skill to Cleave. A pair strikes harder and slips past any guard.",
 	"Leave one die unplaced. It becomes Grit: one extra reroll next turn.",
 	"Red means no shield will hold. Put a die in Guard and press SPACE inside the red zone to parry. A higher die gives you more time.",
 ]
+const QUICK_LESSONS := {
+	0: "Above the dummy is what it will do this turn. Hold R or the Roll button, then let go, to throw. Click a die to move it to the next slot, right-click to go back, hold it down to lock it. Lock the dice you like, reroll the rest, then put a die in Attack and end the turn.",
+	1: "Click a die twice to put it in Guard. When the dummy swings, press SPACE as the marker reaches the blue zone. The later you press, the better the block.",
+	2: "Two dice match, so they glow gold: a skill is ready. Right-click each one to put it straight in Skill and Cleave. A pair strikes harder and slips past any guard.",
+}
 
+const MURMUR_COLOR := Color(0.62, 0.72, 0.9)  # cold, like the window light
 ## Cryptic hints about the floor's boss (Bone Warden, Pit King), one per turn across the fights before him, by backdrop.
 const MURMURS := {"fight": [
-	"The walls murmur: \"...he keeps the tallest bone for himself...\"",
-	"The walls murmur: \"...two of a kind walk where one cannot...\"",
-	"The walls murmur: \"...when he cracks in half, he writes on your bones...\"",
-	"The walls murmur: \"...hold the stained bone to your shield, and it burns clean...\"",
-	"The walls murmur: \"...at the last, he swings what no shield can hold...\"",
+	"...he keeps the tallest bone for himself...",
+	"...two of a kind walk where one cannot...",
+	"...when he cracks in half, he writes on your bones...",
+	"...hold the stained bone to your shield, and it burns clean...",
+	"...at the last, he swings what no shield can hold...",
 ], "mine": [
-	"The timbers creak: \"...the King keeps what the mountain takes...\"",
-	"The timbers creak: \"...when the roof speaks, one die goes under...\"",
-	"The timbers creak: \"...the rock gives back what it buries, in time...\"",
-	"The timbers creak: \"...he never takes the last one. He wants you digging...\"",
-	"The timbers creak: \"...wounded, he brings the roof down with every swing...\"",
+	"...the King keeps what the mountain takes...",
+	"...when the roof speaks, one die goes under...",
+	"...the rock gives back what it buries, in time...",
+	"...he never takes the last one. He wants you digging...",
+	"...wounded, he brings the roof down with every swing...",
 ]}
 
 var combat: Combat  # set by game.gd before the screen enters the tree
@@ -75,12 +83,16 @@ var tray_height := TRAY_HEIGHT:
 			bottom_row.custom_minimum_size.y = v
 var fight_label: Label
 var enemy_ui: Array[Dictionary] = []
-var murmur_label: Label
+var murmur_label: RichTextLabel
+var murmur_tween: Tween
 var lesson_label: Label
 var tray: DiceTray
 var die_menu: PopupMenu
 var menu_die := 0  # die the open action menu acts on
+var held := -1  # quick dice control: the die under a left press not yet let go or locked
+var hold_tween: Tween  # winds the held die's chains on over HOLD_LOCK, then locks it
 var faces_button: Button
+var skill_button: Button  # names the skills the Skill dice fire; hover or press for what every unlocked one needs
 var faces_popup: PopupPanel
 var faces_label: Label
 var summary_label: Label
@@ -88,6 +100,7 @@ var reroll_button: Button
 var end_button: Button
 var timing_hint: Label
 var timing: TimingBar
+var charge: ChargeBar
 var log_label: Label
 var log_lines: Array[String] = []
 var hero: Node2D
@@ -107,10 +120,12 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey and event.pressed and not event.echo):
+	if not (event is InputEventKey and not event.echo):
 		return
-	if event.keycode == KEY_R:
-		_on_reroll()
+	if event.keycode == KEY_R or event.keycode == KEY_SPACE:
+		_on_roll_key(event.pressed)
+	elif not event.pressed:
+		return
 	elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 		_on_end_turn()
 	elif event.keycode == KEY_ESCAPE:
@@ -132,6 +147,14 @@ func _open_menu() -> void:
 		_refresh())
 	add_child(m)
 	_refresh()
+
+
+## The Roll button and its keys: held to wind up a throw that is waiting, or, with the dice at rest,
+## to start a reroll and wind it up in the same press.
+func _on_roll_key(down: bool) -> void:
+	if down and not charge.waiting:
+		_on_reroll()
+	charge.press(down)
 
 
 func _on_reroll() -> void:
@@ -218,6 +241,8 @@ func _on_end_turn() -> void:
 			_play(hero, "hurt")
 			_slash(at, true)
 			_float(at, "-%d" % (hp_before - combat.player_hp), UI.DANGER)
+		elif combat.cowered and kind in ["attack", "unblockable", "curse", "cave_in"]:
+			_float(at, "Cowered!", UI.GOLD)
 		elif grade != Combat.Grade.MISS:
 			_play(hero, "block")
 			_sfx(BLOCK_SFX)
@@ -281,23 +306,42 @@ func _refresh() -> void:
 		ui.mark.modulate.a = 1.0 if i == acting or (i == combat.target and up) else 0.0
 	lesson_label.visible = combat.is_tutorial() and combat.turn < LESSONS.size()
 	if lesson_label.visible:
-		lesson_label.text = LESSONS[combat.turn]
+		lesson_label.text = QUICK_LESSONS.get(combat.turn, LESSONS[combat.turn]) if meta and meta.quick_dice else LESSONS[combat.turn]
 	# Blank rather than hidden: the murmur label is the gap that pushes the enemies to the right.
 	var murmurs := not combat.is_tutorial() and not combat.is_boss_fight()
 	var lines: Array = MURMURS[backdrop]
-	murmur_label.text = lines[mini(combat.dungeon_turns, lines.size() - 1)] if murmurs else ""
+	var murmur: String = lines[mini(combat.dungeon_turns, lines.size() - 1)] if murmurs else ""
+	if murmur != murmur_label.get_parsed_text():
+		murmur_label.text = "[wave amp=12 freq=1.5]%s[/wave]" % murmur if murmur else ""
+		_whisper()
+	var fired := combat.fired()
+	var ready := combat.skill_dice()  # an aura hints at a skill the dice can make
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
 		var art := "cursed" if d.value == Combat.CURSE and i not in rolling else ("locked" if d.locked else ("placed" if d.slot != Combat.Slot.NONE else "bone"))
 		tray.show_die(i, d.faces, d.value, art, SLOT_ICONS[d.slot], d.locked, d.buried > 0, d.marks)
-	var pair := "   Pair of %ds" % combat.rolled_pair() if combat.rolled_pair() else ""
-	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), pair]
-	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.rolled_pair() and not combat.cleave_ready() and not rolling else Color.WHITE)
-	reroll_button.text = "Reroll (%d)  [R]" % combat.rerolls
-	reroll_button.disabled = busy or combat.rerolls == 0
+		tray.glow(i, i in ready and i not in rolling)
+	var fire := " + ".join(fired.map(func(id): return Combat.SKILLS[id].name))
+	var hint := ("   %s ready" % fire) if fire else ("   Skill in reach" if combat.skill_in_roll() else "")
+	skill_button.text = fire if fire else "Skills"
+	summary_label.text = "Rolling..." if rolling else "Damage %d   Guard %d   Grit +%d%s" % [combat.preview_damage(), combat.guard_total(), combat.unplaced_count(), hint]
+	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.skill_in_roll() and not combat.skill_ready() and not rolling else Color.WHITE)
+	reroll_button.text = "Hold to roll  [R]" if charge.waiting else "Reroll (%d)  [R]" % combat.rerolls
+	reroll_button.disabled = not charge.waiting and (busy or combat.rerolls == 0)
 	end_button.disabled = busy
 	menu_button.disabled = busy
 	log_label.text = "\n".join(log_lines)
+
+
+## A new murmur rises out of the dark, lingers a few seconds, then sinks back.
+func _whisper() -> void:
+	if murmur_tween:
+		murmur_tween.kill()
+	murmur_label.modulate.a = 0.0
+	murmur_tween = create_tween()
+	murmur_tween.tween_property(murmur_label, "modulate:a", 0.85, 1.5)
+	murmur_tween.tween_interval(3.0)
+	murmur_tween.tween_property(murmur_label, "modulate:a", 0.0, 2.5)
 
 
 func _log(line: String) -> void:
@@ -330,12 +374,17 @@ func _build() -> void:
 	player.size_flags_vertical = Control.SIZE_SHRINK_END
 	field.add_child(player)
 	hero = _add_rig(player, "deserter")
-	murmur_label = UI.label(field, 18)
+	murmur_label = RichTextLabel.new()  # rich only for the [wave]
+	murmur_label.bbcode_enabled = true
+	murmur_label.scroll_active = false
+	murmur_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	murmur_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	murmur_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	murmur_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	murmur_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	murmur_label.add_theme_color_override("font_color", UI.QUIET)
+	murmur_label.add_theme_font_size_override("normal_font_size", 16)
+	murmur_label.add_theme_color_override("default_color", MURMUR_COLOR)
+	murmur_label.modulate.a = 0.0
+	field.add_child(murmur_label)
 	var enemy_row := UI.row(field)
 	for i in combat.enemies.size():
 		enemy_ui.append(_build_enemy(enemy_row, i))
@@ -350,8 +399,12 @@ func _build() -> void:
 	var actions := VBoxContainer.new()
 	actions.custom_minimum_size.x = 280
 	bottom_row.add_child(actions)
-	reroll_button = UI.button(actions, "", _on_reroll)
+	reroll_button = UI.button(actions, "", func() -> void: pass)  # held, not clicked: see _on_roll_key
 	reroll_button.custom_minimum_size.y = 56
+	reroll_button.button_down.connect(_on_roll_key.bind(true))
+	reroll_button.button_up.connect(_on_roll_key.bind(false))
+	charge = ChargeBar.new()
+	reroll_button.add_child(charge)
 	end_button = UI.button(actions, "End turn  [Enter]", _on_end_turn)
 	end_button.custom_minimum_size.y = 80  # the main action: biggest, in gold
 	end_button.add_theme_font_size_override("font_size", 32)
@@ -455,6 +508,8 @@ func _build_dice(parent: Node) -> void:
 	tray = DiceTray.new()
 	tray.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_KEEP_SIZE, TRAY_INSET)
 	tray.die_clicked.connect(_on_die_clicked)
+	tray.die_right_clicked.connect(_on_die_right_clicked)
+	tray.left_released.connect(_on_left_released)
 	box.add_child(tray)
 	var frame := Panel.new()  # the panel art with its fill cleared (tools/make_ui.gd), over the felt's edge
 	var outline: StyleBoxTexture = frame.get_theme_stylebox("panel").duplicate()
@@ -465,6 +520,9 @@ func _build_dice(parent: Node) -> void:
 	box.add_child(frame)
 	faces_button = UI.button(box, "Faces", _show_faces)
 	faces_button.position = Vector2(28, 16)  # clear of the frame's corner ornament
+	skill_button = UI.button(box, "Skills", _show_skill)
+	skill_button.tooltip_text = _skill_text()
+	skill_button.position = Vector2(28 + faces_button.get_combined_minimum_size().x + 8, 16)
 	faces_popup = PopupPanel.new()
 	faces_label = UI.label(faces_popup, 16)
 	add_child(faces_popup)
@@ -478,14 +536,22 @@ func _build_dice(parent: Node) -> void:
 func _on_die_clicked(i: int) -> void:
 	if busy or combat.dice[i].buried > 0:
 		return
+	if meta and meta.quick_dice:  # a quick click cycles on release; held long enough, it locks instead
+		held = i
+		hold_tween = create_tween()
+		hold_tween.tween_method(func(t: float) -> void: tray.hold(i, t), 0.0, 1.0, HOLD_LOCK)
+		hold_tween.tween_callback(_on_held.bind(i))
+		return
 	var d: Dictionary = combat.dice[i]
 	menu_die = i
 	die_menu.clear()
 	die_menu.add_item("Unlock" if d.locked else "Lock", MENU_LOCK)
 	die_menu.add_separator()
-	for slot in [Combat.Slot.ATTACK, Combat.Slot.GUARD, Combat.Slot.CLEAVE]:
+	for slot in [Combat.Slot.ATTACK, Combat.Slot.GUARD, Combat.Slot.SKILL]:
 		die_menu.add_radio_check_item(SLOT_NAMES[slot], slot)
 		die_menu.set_item_checked(die_menu.item_count - 1, d.slot == slot)
+		if slot == Combat.Slot.SKILL:
+			die_menu.set_item_tooltip(die_menu.item_count - 1, _skill_text())
 	die_menu.add_item("Unplace", Combat.Slot.NONE)
 	die_menu.set_item_disabled(die_menu.item_count - 1, d.slot == Combat.Slot.NONE)
 	var r := tray.die_rect(i)
@@ -493,11 +559,47 @@ func _on_die_clicked(i: int) -> void:
 	die_menu.popup(Rect2i(Vector2i(r.end.x + 4, r.position.y), die_menu.size))
 
 
+func _on_left_released() -> void:
+	if held >= 0:
+		hold_tween.kill()
+		tray.hold(held, 0.0)
+		_cycle(held, 1)
+		held = -1
+
+
+func _on_held(i: int) -> void:
+	held = -1
+	tray.hold(i, 0.0)
+	_on_lock(i)
+
+
+func _on_die_right_clicked(i: int) -> void:
+	if meta and meta.quick_dice and not busy and combat.dice[i].buried == 0:
+		_cycle(i, -1)
+
+
+## Quick dice control: die i steps to the next (or, with `step` -1, the previous) of Attack, Guard, Skill, unplaced.
+func _cycle(i: int, step: int) -> void:
+	_on_assign(i, posmod(combat.dice[i].slot + step, SLOT_NAMES.size()))
+
+
 func _on_die_menu(id: int) -> void:
 	if id == MENU_LOCK:
 		_on_lock(menu_die)
 	else:
 		_on_assign(menu_die, id)
+
+
+## Every unlocked skill's need and effect, for the Skill button's and die menu item's hover.
+func _skill_text() -> String:
+	var lines: Array = combat.skills.map(func(id): return "%s: %s. %s" % [Combat.SKILLS[id].name, Combat.SKILLS[id].need, Combat.SKILLS[id].text])
+	return "\n".join(lines) + "\nEvery skill the Skill dice fit fires at once.\nSkills ignore enemy Guard and Bone Wall."
+
+
+func _show_skill() -> void:
+	faces_label.text = _skill_text()
+	faces_popup.reset_size()
+	faces_popup.popup(Rect2i(Vector2i(skill_button.get_global_rect().end), faces_popup.size))
 
 
 func _show_faces() -> void:
@@ -514,8 +616,14 @@ func _show_faces() -> void:
 ## screen is busy, so nothing acts on Combat's provisional roll. `steer` lands them on that roll instead.
 func _roll_anim(which: Array, steer := false) -> void:
 	busy = true
+	# No refresh while winding up: it would square the resting dice onto the provisional roll.
+	end_button.disabled = true
+	menu_button.disabled = true
+	reroll_button.text = "Hold to roll  [R]"
+	reroll_button.disabled = false
+	var power: float = await charge.wind_up()
 	rolling = which
-	tray.throw(which, steer)  # first, so the refresh doesn't square resting dice onto the provisional roll
+	tray.throw(which, steer, power)  # first, so the refresh doesn't square resting dice onto the provisional roll
 	_refresh()
 	await tray.landed
 	for i in which:
@@ -526,7 +634,7 @@ func _roll_anim(which: Array, steer := false) -> void:
 	_refresh()
 
 
-## Floats and logs what Ember and Shard faces just paid, over the hero.
+## Floats and logs what Ember and Shard faces, an even Oath or a killing Gambit just paid, over the hero.
 func _mark_payout(healed: int, shards: int) -> void:
 	if healed <= 0 and shards <= 0:
 		return

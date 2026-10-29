@@ -1,6 +1,6 @@
 class_name Meta
 extends RefCounted
-## What survives between runs and launches: Embers, perks, whether the tutorial is done and the Mine unlocked, sound settings.
+## What survives between runs and launches: Embers, perks, skills (Combat.SKILLS), whether the tutorial is done and the Mine unlocked, sound settings.
 
 signal sound_changed  # so on-screen sound controls follow the M key
 
@@ -23,11 +23,13 @@ const PERKS := {
 var embers := 0
 var owned: Array = []
 var equipped: Array = []
+var skills: Array = ["cleave"]  # unlocked Combat.SKILLS ids; Cleave is free
 var tutorial_done := false
 var mine_unlocked := false  # beating the Warden opens the Hollow Mine as a starting floor
 var music := 1.0  # Music bus loudness, 0 to 1
 var sounds := 1.0  # SFX bus loudness, 0 to 1
 var muted := false
+var quick_dice := true  # dice control: true, clicks cycle the slot and a hold locks; false, a click opens the die menu
 var save_path := SAVE_PATH
 
 
@@ -54,6 +56,15 @@ func unlock(id: String) -> bool:
 	return true
 
 
+## Unlocks skill `id` for good, for its Embers.
+func unlock_skill(id: String) -> bool:
+	if id in skills or embers < Combat.SKILLS[id].cost:
+		return false
+	embers -= Combat.SKILLS[id].cost
+	skills.append(id)
+	return true
+
+
 ## Equips an owned perk if a slot is free, or unequips it if it's on.
 func toggle_equip(id: String) -> bool:
 	if id in equipped:
@@ -70,8 +81,9 @@ func save() -> void:
 	if f == null:
 		push_error("Could not save progress to %s" % save_path)
 		return
-	f.store_string(JSON.stringify({"embers": embers, "owned": owned, "equipped": equipped, "tutorial_done": tutorial_done,
-		"mine_unlocked": mine_unlocked, "music": music, "sounds": sounds, "muted": muted}))
+	f.store_string(JSON.stringify({"embers": embers, "owned": owned, "equipped": equipped, "skills": skills, "tutorial_done": tutorial_done,
+		"mine_unlocked": mine_unlocked, "music": music, "sounds": sounds, "muted": muted,
+		"quick_dice": quick_dice}))
 
 
 ## A missing or unreadable save starts fresh rather than crashing.
@@ -85,9 +97,11 @@ static func load_from(path := SAVE_PATH) -> Meta:
 		m.embers = int(data.get("embers", 0))
 		m.owned = data.get("owned", []).filter(func(id): return PERKS.has(id))
 		m.equipped = data.get("equipped", []).filter(func(id): return id in m.owned)
+		m.skills = ["cleave"] + data.get("skills", []).filter(func(id): return Combat.SKILLS.has(id) and id != "cleave")
 		m.tutorial_done = bool(data.get("tutorial_done", false))
 		m.mine_unlocked = bool(data.get("mine_unlocked", false))
 		m.music = clampf(float(data.get("music", 1.0)), 0.0, 1.0)
 		m.sounds = clampf(float(data.get("sounds", 1.0)), 0.0, 1.0)
 		m.muted = bool(data.get("muted", false))
+		m.quick_dice = bool(data.get("quick_dice", true))
 	return m

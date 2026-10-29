@@ -27,6 +27,7 @@ func _init() -> void:
 	_perks()
 	_forge_and_campfire()
 	_face_marks()
+	_skills()
 	_fight_rewards()
 	_meta()
 	_floors()
@@ -251,8 +252,8 @@ func _bone_wall_and_cleave() -> void:
 	place(c, 1, 5, CombatScript.Slot.ATTACK)
 	place(c, 2, 1, CombatScript.Slot.ATTACK)
 	check(c.preview_damage() == 6, "Bone Wall drops the 6, leaving 5 + 1")
-	place(c, 0, 4, CombatScript.Slot.CLEAVE)
-	place(c, 1, 4, CombatScript.Slot.CLEAVE)
+	place(c, 0, 4, CombatScript.Slot.SKILL)
+	place(c, 1, 4, CombatScript.Slot.SKILL)
 	check(c.preview_damage() == 12, "a Cleave pair of 4s deals 12 past Bone Wall; the lone Attack 1 is walled")
 	c.enemies[0].intent = {"kind": "guard", "value": 6}
 	check(c.preview_damage() == 12, "Cleave ignores enemy Guard")
@@ -261,19 +262,19 @@ func _bone_wall_and_cleave() -> void:
 
 func _cleave_hits_every_enemy() -> void:
 	var c := fresh(RATS)
-	place(c, 0, 4, CombatScript.Slot.CLEAVE)
-	place(c, 1, 4, CombatScript.Slot.CLEAVE)
+	place(c, 0, 4, CombatScript.Slot.SKILL)
+	place(c, 1, 4, CombatScript.Slot.SKILL)
 	check(c.preview_damage() == 12, "Cleave 12 is split, not copied, across three rats")
 	c.resolve_player()
 	check(c.enemies.all(func(e): return e.hp == 2), "each rat takes 4 and survives")
 	c.enemies[0].hp = 0
 	c.target = 2
-	place(c, 0, 4, CombatScript.Slot.CLEAVE)
-	place(c, 1, 3, CombatScript.Slot.CLEAVE)
-	check(not c.cleave_ready(), "4 and 3 are not a pair")
-	place(c, 1, 5, CombatScript.Slot.CLEAVE)
-	place(c, 0, 5, CombatScript.Slot.CLEAVE)
-	check(c.cleave_share(2) == 8 and c.cleave_share(1) == 7, "Cleave 15 over two rats: the odd point goes to the target")
+	place(c, 0, 4, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	check(not c.skill_ready(), "4 and 3 are not a pair")
+	place(c, 1, 5, CombatScript.Slot.SKILL)
+	place(c, 0, 5, CombatScript.Slot.SKILL)
+	check(c.skill_share(2) == 8 and c.skill_share(1) == 7, "Cleave 15 over two rats: the odd point goes to the target")
 
 
 func _attack_hits_only_the_target() -> void:
@@ -344,8 +345,8 @@ func _perks() -> void:
 	check(c.max_hp == 50 and c.player_hp == 50, "Thick Skin: 50 max HP")
 	c.start_turn()
 	check(c.rerolls == CombatScript.REROLLS_PER_TURN + 1, "Steady Hand: +1 reroll")
-	place(c, 0, 1, CombatScript.Slot.CLEAVE)
-	place(c, 1, 1, CombatScript.Slot.CLEAVE)
+	place(c, 0, 1, CombatScript.Slot.SKILL)
+	place(c, 1, 1, CombatScript.Slot.SKILL)
 	check(c.cleave_damage() == 3, "a pair of 1s Cleaves for 3 without Gambler's Heart")
 	c.apply_perks(["gamblers_heart"])
 	check(c.cleave_damage() == 18, "Gambler's Heart: a pair of 1s counts as 12, so 18")
@@ -438,13 +439,16 @@ func _forge_and_campfire() -> void:
 
 
 ## Forged marks: Sharp cuts past Guard and Bone Wall, Ward doubles in Guard, Ember heals, Shard pays,
-## each only when its own face is the one rolled; a cursed face can't be marked, and marks survive a save.
+## each only when its own face is the one rolled; a mark replaces another and lifts a curse, and marks survive a save.
 func _face_marks() -> void:
 	var c := fresh(WARDEN)
 	check(c.forge(0, 5, true, "sharp") and c.dice[0].base[5] == 6, "a mark leaves the number alone")
-	check(not c.forge(0, 5, true, "ward"), "one mark per face")
+	check(not c.forge(0, 5, true, "sharp"), "a face can't take the mark it has")
 	c.curse_face(1, 0)
-	check(not c.forge(1, 0, true, "ember"), "a cursed face can't be marked")
+	check(c.forge(1, 0, true, "ember") and c.dice[1].base[0] == 1 and not c.dice[1].uncursed.has(0) and c.dice[1].marks[0] == "ember", "a mark on a cursed face lifts the curse")
+	var swap := fresh()
+	swap.forge(0, 0, true, "ward")
+	check(swap.forge(0, 0, true, "shard") and swap.dice[0].marks[0] == "shard", "a new mark replaces the old one")
 	c.forge(1, 3, true, "ward")
 	c.forge(2, 0, true, "ember")
 	c.forge(2, 1, true, "shard")
@@ -472,12 +476,95 @@ func _face_marks() -> void:
 	c.dice[2].value = 2
 	c.resolve_player()
 	check(c.shards == 1, "a placed Shard face pays a Shard")
+	check(c.forge(1, 4, true, "", 4) and c.dice[1].base[4] == 9, "a rolled 6 raises a face by 4")
+	check(CombatScript.FORGE_ROLL.size() == 6 and CombatScript.FORGE_ROLL.all(func(u): return u.has("step") or CombatScript.MARKS.has(u.mark)), "every Forge roll face grants a real upgrade")
+	var full := fresh()
+	for d in full.dice:
+		d.marks = ["ward", "ward", "ward", "ward", "ward", "ward"]
+	check(not full.can_mark("ward") and full.can_mark("sharp"), "only every face already Ward leaves a rolled Ward nowhere to go")
 	var back := CombatScript.from_dict(c.to_dict())
 	check(back.dice[0].marks[5] == "sharp" and back.dice[2].marks == ["ember", "shard", "", "", "", ""], "marks come back from a save")
 	var old := c.to_dict()
 	for x in old.dice:
 		x.erase("marks")
 	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).dice[0].marks == ["", "", "", "", "", ""], "a save from before marks still loads, unmarked")
+
+
+## Each skill fires only on its pattern in the Skill slot and ignores Guard and Bone Wall; every unlocked one that fits fires.
+func _skills() -> void:
+	var c := fresh(ACOLYTE_RATS)
+	c.enemies[0].intent = {"kind": "guard", "value": 8}
+	var put := func(values: Array) -> void:
+		for i in 3:
+			c.dice[i].slot = CombatScript.Slot.NONE
+		for i in values.size():
+			place(c, i, values[i], CombatScript.Slot.SKILL)
+	c.skills = ["sunder"]
+	put.call([4, 4])
+	check(not c.skill_ready(), "Sunder needs three of a kind, not a pair")
+	put.call([4, 4, 4])
+	check(c.skill_ready() and c.damage_to(0) == 30 and c.damage_to(1) == 30, "Sunder 4-4-4: 30 to every enemy, past the Acolyte's Guard")
+	c.skills = ["cleave"]
+	check(not c.skill_ready(), "Cleave wants exactly two")
+	c.skills = ["flurry"]
+	put.call([5, 3, 4])
+	check(c.skill_ready() and c.damage_to(0) == 15 and c.damage_to(1) == 0, "Flurry 3-4-5: 12 +3 to the target only")
+	put.call([2, 4, 5])
+	check(not c.skill_ready(), "2-4-5 is no run")
+	c.skills = ["oath"]
+	put.call([1, 3, 5])
+	check(c.damage_to(0) == 9, "odd Oath: 9 to the target")
+	put.call([2, 4, 6])
+	c.player_hp = 10
+	check(c.damage_to(0) == 0, "even Oath deals nothing")
+	c.resolve_player()
+	check(c.player_hp == 16, "even Oath 2-4-6 heals 6")
+	c.skills = ["gambit"]
+	c.target = 2
+	c.shards = 0
+	put.call([6, 1])
+	check(c.damage_to(2) == 12, "Gambit 1+6: 12 to the target")
+	c.resolve_player()
+	check(c.shards == 1, "a Gambit that kills pays a Shard")
+	put.call([CombatScript.CURSE, 6])
+	check(not c.skill_ready(), "a cursed die breaks a skill")
+	c.skills = ["flurry"]
+	for i in 3:
+		place(c, i, [5, 3, 4][i], CombatScript.Slot.NONE)
+	check(c.skill_dice().size() == 3, "all three unplaced dice of a 3-4-5 run get the aura")
+	c.skills = ["gambit"]
+	check(c.skill_dice().is_empty(), "and none do when no unlocked skill fits")
+	var w := fresh(WARDEN)
+	w.skills = ["cower"]
+	w.enemies[0].intent = {"kind": "unblockable", "value": 14}
+	for i in 3:
+		place(w, i, [1, 2, 2][i], CombatScript.Slot.SKILL)
+	place(w, 0, 1, CombatScript.Slot.GUARD)
+	check(not w.skill_ready(), "Cower needs all three dice")
+	place(w, 0, 1, CombatScript.Slot.SKILL)
+	w.resolve_player()
+	check(not w.needs_timing(0) and w.resolve_enemy(0, CombatScript.Grade.MISS).begins_with("You cower") and w.player_hp == w.max_hp, "Cower: the unblockable 14 misses")
+	w.end_enemy_phase()
+	w.start_turn()
+	check(not w.cowered, "Cower lasts one turn")
+	var m := Meta.new()
+	check(not m.unlock_skill("sunder"), "no Embers, no Sunder")
+	m.embers = 650
+	check(m.unlock_skill("sunder") and m.embers == 50 and "sunder" in m.skills, "unlocking Sunder costs 600, for good")
+	check(not m.unlock_skill("sunder") and m.embers == 50, "unlocking it again does nothing")
+	var all := fresh(ACOLYTE_RATS)
+	all.skills = CombatScript.SKILLS.keys()
+	for i in 3:
+		place(all, i, 4, CombatScript.Slot.SKILL)
+	check(all.fired() == ["sunder", "oath"] and all.damage_to(0) == 30, "4-4-4 fires Sunder and even Oath at once")
+	for i in 3:
+		place(all, i, 1, CombatScript.Slot.SKILL)
+	check(all.fired() == ["sunder", "cower", "oath"] and all.damage_to(all.target) == 8 + 3, "1-1-1 fires Sunder, Cower and odd Oath together")
+	all.resolve_player()
+	check(all.cowered, "Cower fires alongside the others")
+	var old := w.to_dict()
+	old["skill"] = "flurry"
+	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).skills == ["cleave"], "a save from when one skill was equipped still loads")
 
 
 func _fight_rewards() -> void:
@@ -552,8 +639,8 @@ func _mine_enemies() -> void:
 	c = _mine_group(["hulk", "crawler"], 1)
 	c.enemies[0].hp = 3
 	c.enemies[1].hp = 2
-	place(c, 0, 3, CombatScript.Slot.CLEAVE)
-	place(c, 1, 3, CombatScript.Slot.CLEAVE)
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
 	c.resolve_player()
 	check(c.enemies[0].name == "Rubble" and c.enemies[1].hp == 0 and not c.fight_won(), "a Cleave kills the Hulk and a Crawler: Rubble stands")
 	c = _mine_group(["canary", "miner"])
@@ -565,8 +652,8 @@ func _pit_king() -> void:
 	check(c.is_boss_fight() and c.enemies[0].type.hp == 110, "the Pit King is a 110 HP boss")
 	check(c.enemies[0].intent.kind == "cave_in" and c.intent_text(0) == "Cave-in", "the Pit King's second move is a cave-in")
 	place(c, 0, 4, CombatScript.Slot.GUARD)
-	place(c, 1, 2, CombatScript.Slot.CLEAVE)
-	place(c, 2, 2, CombatScript.Slot.CLEAVE)
+	place(c, 1, 2, CombatScript.Slot.SKILL)
+	place(c, 2, 2, CombatScript.Slot.SKILL)
 	c.resolve_player()
 	var buried := 0
 	c.resolve_enemy(0, CombatScript.Grade.MISS)
@@ -606,13 +693,13 @@ func _pit_king() -> void:
 	c.resolve_player()
 	check(c.guard_pool == 5, "a buried die in Guard guards again with the same value")
 	c = _mine_group(["pit_king"], 1)
-	place(c, 0, 3, CombatScript.Slot.CLEAVE)
-	place(c, 1, 3, CombatScript.Slot.CLEAVE)
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
 	c.dice[1].buried = 2
 	c.start_turn()
-	check(c.dice[1].slot == CombatScript.Slot.CLEAVE and c.dice[1].value == 3, "a buried die keeps its Cleave slot and value")
-	place(c, 0, 3, CombatScript.Slot.CLEAVE)
-	check(c.cleave_ready(), "a buried die in Cleave keeps its pair")
+	check(c.dice[1].slot == CombatScript.Slot.SKILL and c.dice[1].value == 3, "a buried die keeps its Cleave slot and value")
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	check(c.skill_ready(), "a buried die in Cleave keeps its pair")
 	# Unplaced buried dice give no Grit.
 	c = _mine_group(["pit_king"], 1)
 	c.dice[0].buried = 2

@@ -24,6 +24,7 @@ const SHEETS := [
 	{"src": "panel.png", "cell": 10.24, "offset": 0, "names": ["panel"]},
 	{"src": "panel.png", "cell": 10.24, "offset": 0, "names": ["panel_frame"], "hollow": true},
 	{"src": "button.png", "cell": 10.24, "offset": 0, "names": ["button_normal", "button_hover", "button_pressed", "button_disabled"]},
+	{"src": "button.png", "cell": 10.24, "offset": 0, "names": ["button_frame", "button_frame_hover", "button_frame_pressed", "button_frame_disabled"], "hollow": true},
 	{"src": "parry bar.png", "cell": 8.01, "offset": 6, "names": ["bar_frame", "bar_blue", "bar_orange", "bar_marker"]},
 	{"src": "profile.png", "cell": 11.43, "offset": 3, "names": ["frame"]},
 	{"src": "dice.png", "cell": 8.56, "offset": 6, "names": ["die"], "pieces": ["bone", "cursed", "empty", "locked", "placed"],

@@ -36,8 +36,12 @@ func _ready() -> void:
 	parchment.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_KEEP_SIZE, 8)
 	parchment.offset_top = 72  # below the HP and title row
 	move_child(parchment, 1)  # over the page background, under the rooms
-	var top := UI.row(root)
-	UI.label(top, 22, "HP %d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards])
+	var top := UI.row(root, 8)  # the fight screen's HP row
+	UI.image(top, "hp_heart")
+	var hp := UI.hp_bar(top, 240)
+	hp.max_value = combat.max_hp
+	hp.value = combat.player_hp
+	UI.label(top, 22, "%d/%d   Shards %d" % [combat.player_hp, combat.max_hp, combat.shards])
 	UI.spacer(top)
 	UI.heading(top, 32, title)
 	_field = Control.new()

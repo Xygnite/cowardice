@@ -46,6 +46,12 @@ func _ready() -> void:
 	_show_menu()
 
 
+## Players still playing at quit leak their streams (Godot's exit warning), so the music and UI sound stop first.
+func _exit_tree() -> void:
+	music.stop()
+	ui_sfx.stop()
+
+
 func _show_menu() -> void:
 	var s := MenuScreen.new()
 	s.tutorial_done = meta.tutorial_done
@@ -130,6 +136,7 @@ func _start_run(first_floor := "chapel") -> void:
 	RunSave.erase(run_path)  # one run at a time
 	combat = Combat.new()
 	combat.apply_perks(meta.equipped)
+	combat.skills = meta.skills.duplicate()
 	rooms_before = 0
 	seen_events.clear()
 	_enter_floor(first_floor)
@@ -182,11 +189,17 @@ func _on_room_picked(i: int) -> void:
 func _show_campfire(into: String) -> void:
 	var then := _next_room if into == "room" else _enter_floor.bind("mine")
 	var heal := combat.campfire_heal_amount()
-	_show_notice("Campfire", ["HP %d/%d" % [combat.player_hp, combat.max_hp]], -1, [
-		["Rest  (+%d HP)" % heal, _on_rest.bind(then)],
-		["Tend the dice  (one free upgrade)", _show_forge.bind(true, then)],
-		["Save and quit", _save_and_quit.bind(into)],
-	], "campfire")
+	var choices := [
+		["Rest  (+%d HP)" % heal, _ask.bind("Rest here?", "Heal %d HP and move on. The dice stay as they are." % heal, "Rest", _on_rest.bind(then))],
+		["Tend the dice  (one free roll)", _ask.bind("Tend the dice?", "One free throw to upgrade a die face, instead of resting.", "Tend the dice", _show_forge.bind(true, then))],
+		["Save and quit", _ask.bind("Save and quit?", "The run is saved at this campfire. Continue on the main menu picks it up here.", "Save and quit", _save_and_quit.bind(into))],
+	]
+	_show_notice("Campfire", ["HP %d/%d" % [combat.player_hp, combat.max_hp]], -1, choices, "campfire")
+
+
+## Asks over the current screen before `then`.
+func _ask(title: String, text: String, yes: String, then: Callable) -> void:
+	ConfirmPanel.ask(screen, title, text, yes, then)
 
 
 func _save_and_quit(into: String) -> void:
@@ -203,6 +216,7 @@ func _continue_run() -> void:
 		_show_menu()
 		return
 	combat = Combat.from_dict(data.combat)
+	combat.skills = meta.skills.duplicate()  # unlocked for good, so not part of the save
 	floor_id = data.floor_id
 	map = data.map
 	layer = data.layer

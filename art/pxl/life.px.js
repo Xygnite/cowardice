@@ -90,34 +90,35 @@ anim("candle", { w: 3, h: 7, fps: 8 }, grid(0, 2, `
 	frame(grid(1, 1, "R"), grid(0, 4, "wwy")))
 
 // A still fog band two `period`s wide that tiles seamlessly: BackdropLife scrolls it one pxl pixel at a
-// time and wraps at `period`. Keys a/b/c are thin/mid/dense tones (alpha baked in), deepening inwards
-// from its wavy top and bottom edges, with thinner streaks running through the core.
-function fog(name, { period, h, seed }) {
+// time and wraps at `period`. A bank lying on the ground: thickest low down, thinning upward to a soft,
+// billowing top, never a hard line. Keys a/b/c/d are its tones, faint to thick (alpha baked in, kept low
+// so the scene shows through); `foot` rows at the bottom thin out again so it can end above a ledge.
+function fog(name, { period, h, seed, foot = 0 }) {
 	sprite(name, { w: period * 2, h }, (c) => {
 		// Whole cycles per period, evaluated on x mod period, so both halves are bit-identical.
 		const wave = (x, f, ph) => Math.sin((2 * Math.PI * f * (x % period)) / period + ph)
 		for (let x = 0; x < c.w; x++) {
-			const top = Math.round(h * 0.4 + h * 0.16 * wave(x, 1, seed) + h * 0.08 * wave(x, 3, seed * 2))
-			const bot = Math.min(h - 1, Math.round(h * 0.84 + h * 0.1 * wave(x, 2, seed + 1)))
-			for (let y = Math.max(0, top); y <= bot; y++) {
-				const d = Math.min(y - top, bot - y)
-				const streak = wave(x, 2 + (y % 3), seed + y) > 0.6 ? 1 : 0
-				c.px(x, y, "abc"[Math.max(0, Math.min(2, Math.floor(d / 2)) - streak)])
+			const surf = h * (0.3 + 0.18 * wave(x, 1, seed) + 0.1 * wave(x, 3, seed * 2))  // the bank's top
+			for (let y = 0; y < h; y++) {
+				let d = (y - surf) / (h - surf)  // 0 at the top, 1 at the bottom
+				d += 0.12 * wave(x, 2, seed + y * 0.35)  // slow puffs inside, leaning, several rows tall
+				if (foot) d *= Math.min(1, 0.45 + (h - 1 - y) / foot / 2)
+				const lvl = Math.floor(d * 4.5)
+				if (lvl > 0) c.px(x, y, "abcd"[Math.min(3, lvl - 1)])
 			}
-			if (wave(x, 5, seed * 3) > 0.7 && top >= 3) c.px(x, top - 2, "a")  // a stray wisp above
 		}
 	})
 }
 
-// Menu: across the moat (2 image px a pixel).
-pal({ a: "#4f7a8640", b: "#6f97a370", c: "#9cc0cc98" })
+// Menu: across the moat (2 image px a pixel), moonlit.
+pal({ a: "#6a828c2c", b: "#7189934a", c: "#7a929c68", d: "#86a0aa84" })
 fog("moat", { period: 96, h: 28, seed: 1 })
 
 // Camp: low ground fog in the strip between the perk board and the buttons.
-pal({ a: "#4c627340", b: "#5f758570", c: "#7a8e9c98" })
+pal({ a: "#5f758520", b: "#667c8c34", c: "#6f85954a", d: "#7a8e9c60" })
 fog("ground", { period: 128, h: 22, seed: 2 })
 
 // Fight: mist along the foot of the back wall, ending above the floor ledge (2 image px a pixel); paler
 // than the others, as the floor there is already the fog's grey.
-pal({ a: "#6f8a9840", b: "#8aa4b270", c: "#a8bfcb98" })
-fog("floor", { period: 96, h: 12, seed: 3 })
+pal({ a: "#7f97a420", b: "#869eab34", c: "#90a8b44a", d: "#9cb3bf60" })
+fog("floor", { period: 96, h: 24, seed: 3, foot: 4 })

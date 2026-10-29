@@ -108,6 +108,10 @@ func _show_choices() -> void:
 
 
 func _on_choice(c: int) -> void:
+	ConfirmPanel.ask(self, "Are you sure?", Events.EVENTS[id].choices[c].label, "Do it", _take_choice.bind(c))
+
+
+func _take_choice(c: int) -> void:
 	if Events.EVENTS[id].choices[c].dice == 1:
 		_clear_choices()
 		text.text = "Pick a die to throw."
