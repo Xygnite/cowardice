@@ -31,6 +31,7 @@ func _init() -> void:
 	_fight_rewards()
 	_meta()
 	_floors()
+	_hp_scaling()
 	_mine_enemies()
 	_mine_sprites()
 	_pit_king()
@@ -574,8 +575,8 @@ func _fight_rewards() -> void:
 	c.claim_fight()
 	check(c.kills == 2 and c.shards == 4, "two dead rats: 2 kills, 4 Shards")
 	c.start_fight(WARDEN)
-	c.enemies[0].hp = 30
-	check(c.boss_damage_pct() == 60, "Warden at 30/75 took 60%")
+	c.enemies[0].hp = 48
+	check(c.boss_damage_pct() == 60, "Warden at 48/120 took 60%")
 	c.start_fight(RATS)
 	c.end_enemy_phase()
 	c.start_fight(WARDEN)
@@ -647,9 +648,34 @@ func _mine_enemies() -> void:
 	check(c.enemies[1].intent.kind == "unblockable" and c.enemies[1].intent.value == 5, "a Canary's ring makes another's attack unblockable")
 
 
+func _hp_scaling() -> void:
+	var c := fresh(RATS)
+	c.start_group(["skeleton"], 1.5)
+	check(c.enemies[0].hp == 30 and c.enemies[0].max == 30, "a 1.5x Skeleton has 30 HP")
+	c = fresh()
+	c.start_group(["hulk"], 1.5)
+	c.turn = 1
+	c.start_turn()
+	c.enemies[0].hp = 3
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	c.resolve_player()
+	check(c.enemies[0].name == "Rubble" and c.enemies[0].hp == ceili(8 * 1.5) and c.enemies[0].max == 12, "a scaled Hulk leaves a scaled Rubble")
+	c.start_fight(WARDEN)
+	check(c.enemies[0].max == 120, "the Warden has 120 HP")
+	c.enemies[0].hp = 60
+	check(c.is_phase2(c.enemies[0]) and c.boss_damage_pct() == 50, "the Warden enters phase 2 and has taken 50% at 60/120")
+	var map := Floor.deal("chapel")
+	var ok := true
+	for col in map.size():
+		for room in map[col]:
+			if room.kind == "fight":
+				ok = ok and room.scale == (1.5 if col >= 5 and col <= 7 else 1.0)
+	check(ok, "only columns 5-7 fights are dealt a 1.5 scale")
+
+
 func _pit_king() -> void:
 	var c := _mine_group(["pit_king"], 1)  # turn 1 is the cave-in
-	check(c.is_boss_fight() and c.enemies[0].type.hp == 110, "the Pit King is a 110 HP boss")
+	check(c.is_boss_fight() and c.enemies[0].max == 220, "the Pit King is a 220 HP boss")
 	check(c.enemies[0].intent.kind == "cave_in" and c.intent_text(0) == "Cave-in", "the Pit King's second move is a cave-in")
 	place(c, 0, 4, CombatScript.Slot.GUARD)
 	place(c, 1, 2, CombatScript.Slot.SKILL)

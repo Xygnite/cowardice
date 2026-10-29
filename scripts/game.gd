@@ -170,7 +170,7 @@ func _on_room_picked(i: int) -> void:
 	var room: Dictionary = map[layer][i]
 	match room.kind:
 		"fight":
-			combat.start_group(room.enemies)
+			combat.start_group(room.enemies, room.get("scale", 1.0))
 			_show_fight(_on_fight_finished)
 		"unknown":
 			var id: String = Events.pick(seen_events)

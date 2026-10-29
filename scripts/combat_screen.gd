@@ -300,7 +300,7 @@ func _refresh() -> void:
 			ui.body.text = e.name
 		ui.body.disabled = not up
 		ui.body.modulate = Color(1, 1, 1, 1 if up else 0.3)
-		ui.hp.text = "%s  %d/%d" % [e.name, e.hp, e.type.hp] if up else e.name + "  down"
+		ui.hp.text = "%s  %d/%d" % [e.name, e.hp, e.max] if up else e.name + "  down"
 		ui.bar.value = e.hp
 		ui.mark.texture = ACTING_ARROW if i == acting else TARGET_ARROW
 		ui.mark.modulate.a = 1.0 if i == acting or (i == combat.target and up) else 0.0
@@ -453,7 +453,7 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 	# Name and HP go above the sprite, so every fighter's feet end on the same line as the hero's,
 	# written on the bar itself to keep the header short.
 	var bar := UI.hp_bar(col, 0)
-	bar.max_value = combat.enemies[i].type.hp
+	bar.max_value = combat.enemies[i].max
 	bar.custom_minimum_size.x = 150
 	var hp := UI.label(bar, 16)
 	hp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -476,7 +476,7 @@ func _build_enemy(parent: Node, i: int) -> Dictionary:
 ## The slot's Rubble replaces its Hulk: new HP bar max, and a new rig if the new type has a sprite.
 func _swap_body(i: int) -> void:
 	var ui: Dictionary = enemy_ui[i]
-	ui.bar.max_value = combat.enemies[i].type.hp
+	ui.bar.max_value = combat.enemies[i].max
 	if ui.rig:
 		ui.rig.queue_free()
 		ui.rig = null

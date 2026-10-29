@@ -70,7 +70,7 @@ const TYPES := {
 		"phase1": [{"kind": "attack", "value": 7}, {"kind": "guard", "value": 5}, {"kind": "unblockable", "value": 8}]},
 	"archivist": {"name": "Archivist", "hp": 18, "sprite": "archivist",
 		"phase1": [{"kind": "guard", "value": 6}, {"kind": "ring"}, {"kind": "attack", "value": 5}]},
-	"warden": {"name": "Bone Warden", "hp": 75, "boss": true, "bone_wall": true, "sprite": "bone_warden",
+	"warden": {"name": "Bone Warden", "hp": 120, "boss": true, "bone_wall": true, "sprite": "bone_warden",
 		"phase1": [{"kind": "attack", "value": 8}, {"kind": "guard", "value": 6}, {"kind": "attack", "value": 10}],
 		"phase2": [{"kind": "curse"}, {"kind": "unblockable", "value": 14}, {"kind": "attack", "value": 9}]},
 	# The Hollow Mine. "pack": each other living one adds that much to its attack. "rallies": adds that much to every other
@@ -88,7 +88,7 @@ const TYPES := {
 	"shaft_foreman": {"name": "Shaft Foreman", "hp": 26, "sprite": "shaft_foreman", "rallies": 2,
 		"phase1": [{"kind": "attack", "value": 5}, {"kind": "guard", "value": 4}, {"kind": "attack", "value": 7}]},
 	# Cave-ins bury a die (see bury_one). The Pit King's phase 2 attacks all carry one.
-	"pit_king": {"name": "Pit King", "hp": 110, "sprite": "pit_king", "boss": true,
+	"pit_king": {"name": "Pit King", "hp": 220, "sprite": "pit_king", "boss": true,
 		"phase1": [{"kind": "attack", "value": 7}, {"kind": "cave_in"}, {"kind": "attack", "value": 10}, {"kind": "guard", "value": 6}],
 		"phase2": [{"kind": "attack", "value": 9, "cave_in": true}, {"kind": "attack", "value": 12, "cave_in": true}, {"kind": "attack", "value": 8, "cave_in": true}]},
 }
@@ -275,7 +275,10 @@ func claim_fight() -> void:
 func boss_damage_pct() -> int:
 	if not is_boss_fight():
 		return 0
-	return 100 * (enemies[0].type.hp - enemies[0].hp) / enemies[0].type.hp
+	return 100 * (enemies[0].max - enemies[0].hp) / enemies[0].max
+
+
+var hp_scale := 1.0  # this fight's enemy HP multiplier, so a Rubble spawns scaled too
 
 
 func start_fight(index: int) -> void:
@@ -283,8 +286,9 @@ func start_fight(index: int) -> void:
 	start_group(FIGHTS[index])
 
 
-## Starts a fight against `keys` (TYPES keys, at most three of one type).
-func start_group(keys: Array) -> void:
+## Starts a fight against `keys` (TYPES keys, at most three of one type); every enemy's HP is multiplied by `scale`.
+func start_group(keys: Array, scale := 1.0) -> void:
+	hp_scale = scale
 	enemies.clear()
 	replaced = 0
 	var seen := {}
@@ -294,7 +298,8 @@ func start_group(keys: Array) -> void:
 		if keys.count(key) > 1:  # Bone Rat A, B, C
 			seen[key] = seen.get(key, 0) + 1
 			name += " " + "ABC"[seen[key] - 1]
-		enemies.append({"type": t, "name": name, "hp": t.hp, "intent": {}})
+		var hp := ceili(t.hp * scale)
+		enemies.append({"type": t, "name": name, "hp": hp, "max": hp, "intent": {}})
 	target = 0
 	turn = 0
 	grit = 0
@@ -350,7 +355,7 @@ func is_boss_fight() -> bool:
 
 
 func is_phase2(e: Dictionary) -> bool:
-	return e.type.get("boss", false) and e.hp * 2 <= e.type.hp
+	return e.type.get("boss", false) and e.hp * 2 <= e.max
 
 
 func set_target(i: int) -> void:
@@ -556,7 +561,8 @@ func resolve_player() -> int:
 				var t: Dictionary = TYPES[enemies[i].type.leaves]
 				var old: String = enemies[i].name
 				var tag: String = old.substr(enemies[i].type.name.length())  # a Hulk's " A" stays on its Rubble
-				enemies[i] = {"type": t, "name": t.name + tag, "hp": t.hp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
+				var rhp := ceili(t.hp * hp_scale)
+				enemies[i] = {"type": t, "name": t.name + tag, "hp": rhp, "max": rhp, "intent": {}, "from": old}  # acts from next turn; "from" lets the screen show the swap
 				replaced += 1
 	if gambit and (enemies[struck].hp == 0 or enemies[struck].has("from")):
 		shards += 1
