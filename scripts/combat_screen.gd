@@ -118,7 +118,7 @@ func _ready() -> void:
 	if combat.is_boss_fight():
 		_log("Something large stirs below.")
 	_refresh()
-	_roll_anim(range(combat.dice.size()), combat.rigged_turn())
+	_roll_anim(range(combat.dice.size()), combat.rigged_turn(), true)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -263,7 +263,7 @@ func _on_end_turn() -> void:
 		_end(true)
 	else:
 		combat.start_turn()
-		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), combat.rigged_turn())
+		_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), combat.rigged_turn(), true)
 
 
 ## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
@@ -676,8 +676,13 @@ func _show_faces() -> void:
 
 ## Throws the dice at `which` (indices); the faces they land on become their values. Until then the
 ## screen is busy, so nothing acts on Combat's provisional roll. `steer` lands them on that roll instead.
-func _roll_anim(which: Array, steer := false) -> void:
+## `stow` (a turn's opening throw) keeps them in the hand, off the felt, until the throw.
+func _roll_anim(which: Array, steer := false, stow := false) -> void:
 	busy = true
+	if stow:
+		rolling = which  # so the refresh shows "Rolling..." rather than the provisional roll's damage
+		tray.stow(which)
+		_refresh()
 	# No refresh while winding up: it would square the resting dice onto the provisional roll.
 	end_button.disabled = true
 	menu_button.disabled = true

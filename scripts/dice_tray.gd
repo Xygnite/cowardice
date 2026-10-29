@@ -271,10 +271,18 @@ func hold(i: int, t: float) -> void:
 		d.cube.position = Vector3.ZERO
 
 
-## Die i glows gold on the felt while `on`: it can help make a skill.
+## Die i glows gold on the felt while `on`: it can help make a skill. A die in the hand never glows.
 func glow(i: int, on: bool) -> void:
+	on = on and dice[i].body.visible
 	dice[i].halo.visible = on
 	dice[i].sparks.emitting = on
+
+
+## Takes the dice at `which` off the felt into the hand until throw() brings them back: not rolled yet.
+func stow(which: Array) -> void:
+	for i in which:
+		dice[i].body.hide()
+		glow(i, false)
 
 
 ## Throws the dice at `which` (indices) in from the left. Each lands on whatever face comes up, its
@@ -293,6 +301,7 @@ func throw(which: Array, steer := false, power := 1.0) -> void:
 	for n in which.size():
 		var d := dice[which[n]]
 		var body: RigidBody3D = d.body
+		body.show()
 		d.rolling = true
 		d.steer = steer
 		d.t = 0.0

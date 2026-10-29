@@ -28,6 +28,7 @@ func _init() -> void:
 	ChargeBar.auto = true  # nobody here to hold SPACE
 	await _map_moves()
 	await _fair_throws()
+	await _dice_in_hand()
 	await _gambler_throw()
 	await _play_events()
 	await _hulk_swap()
@@ -203,6 +204,44 @@ func _fair_throws() -> void:
 	await process_frame
 
 
+## A turn's dice stay in the hand until its opening throw: none on the felt, none glowing, no damage
+## shown while the roll waits; a reroll's dice stay where they lie.
+func _dice_in_hand() -> void:
+	var errors_before := errors.count
+	var game: Node = await _new_game()
+	ChargeBar.auto = false
+	game.combat.start_group(["skeleton"])
+	game._show_fight(game._on_fight_finished)
+	var screen: CombatScreen = game.screen
+	await process_frame
+	var shown := func(): return range(3).filter(func(i): return screen.tray.dice[i].body.visible or screen.tray.dice[i].halo.visible)
+	check(shown.call().is_empty() and screen.summary_label.text == "Rolling...", "the fight opens with the dice in hand (showing %s)" % [shown.call()])
+	screen.charge.press(true)
+	screen.charge.press(false)
+	while screen.busy:
+		await process_frame
+	check(range(3).all(func(i): return screen.tray.dice[i].body.visible), "the opening throw puts every die on the felt")
+	screen._on_roll_key(true)  # a reroll winds up from the dice where they lie
+	await process_frame
+	check(range(3).all(func(i): return screen.tray.dice[i].body.visible), "a reroll waiting on the press leaves the dice in view")
+	screen.charge.press(false)
+	while screen.busy:
+		await process_frame
+	screen.combat.enemies[0].hp = 999  # survives the turn so the next one opens
+	screen._on_end_turn()
+	while screen.combat.turn == 0 or not screen.charge.waiting:
+		await process_frame
+	check(shown.call().is_empty(), "the next turn's dice are back in hand until thrown (showing %s)" % [shown.call()])
+	screen.charge.press(true)
+	screen.charge.press(false)
+	while screen.busy:
+		await process_frame
+	ChargeBar.auto = true
+	check(errors.count == errors_before, "dice in hand run with no errors (got %d)" % (errors.count - errors_before))
+	game.queue_free()
+	await process_frame
+
+
 ## The gambler's throw: the totals it pays on are the faces drawn on top, the skull's three dice included.
 func _gambler_throw() -> void:
 	var errors_before := errors.count
@@ -322,7 +361,7 @@ func _relic_picks() -> void:
 		_takes(game.screen)[1].pressed.emit()
 		_agree(game)
 		await process_frame
-		check(game.combat.relics.size() == 1 and game.combat.relic_id(0) == id, "Take puts the relic on the belt")
+		check(game.combat.relics.size() == 1 and game.combat.relics[0].id == id, "Take puts the relic on the belt")
 		check(game.screen is MapScreen and game.layer == 1, "then the map's next column")
 	game.queue_free()
 	game = await _won_fight()
@@ -344,7 +383,7 @@ func _relic_picks() -> void:
 		pick._show_belt()  # redraw the belt with the relics just added
 		check(pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<").size() == 4, "every belt relic but the first has a move-left button")
 		pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<")[0].pressed.emit()
-		check(game.combat.relic_id(0) == fill[1] and game.combat.relic_id(1) == fill[0], "◀ moves a belt relic left")
+		check(game.combat.relics[0].id == fill[1] and game.combat.relics[1].id == fill[0], "◀ moves a belt relic left")
 		var id: String = pick.choices[0]
 		_takes(pick)[0].pressed.emit()
 		check(_overlays(game, "ConfirmPanel").is_empty(), "on a full belt Take first asks which relic to break")
@@ -354,7 +393,7 @@ func _relic_picks() -> void:
 			breaks[0].pressed.emit()
 			_agree(game)
 			await process_frame
-		check(game.combat.relic_id(0) == id and game.combat.relics.size() == Combat.BELT_SIZE, "the new relic takes the broken one's slot")
+		check(game.combat.relics[0].id == id and game.combat.relics.size() == Combat.BELT_SIZE, "the new relic takes the broken one's slot")
 		check(game.combat.shards == shards + Combat.BREAK_SHARDS, "breaking pays %d Shards" % Combat.BREAK_SHARDS)
 		check(game.screen is MapScreen, "then the map")
 	game.queue_free()
@@ -459,7 +498,7 @@ func _mine_start() -> void:
 		_takes(game.screen)[0].pressed.emit()
 		_agree(game)
 		await process_frame
-		check(game.combat.relic_id(0) == first, "the rare taken is on the belt")
+		check(game.combat.relics[0].id == first, "the rare taken is on the belt")
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
 	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")
 	game.combat.start_group(["miner"])
