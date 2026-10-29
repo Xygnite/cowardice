@@ -139,7 +139,10 @@ func _start_run(first_floor := "chapel") -> void:
 	combat.skills = meta.skills.duplicate()
 	rooms_before = 0
 	seen_events.clear()
-	_enter_floor(first_floor)
+	if first_floor == "mine":  # a Mine start opens with a rare pick
+		_show_relic_pick("Into the Mine", true, _enter_floor.bind("mine"))
+	else:
+		_enter_floor(first_floor)
 
 
 ## A fresh map of floor `id`, from its entrance. HP, Shards, dice, perks and seen events stay as they are; the murmurs start over.
@@ -252,23 +255,42 @@ func _on_fight_finished(won: bool) -> void:
 	if not won:
 		_end_run(false)
 	elif layer < map.size() - 1:
-		_next_room()
+		_show_relic_pick("Spoils", false, _next_room)
 	elif floor_id == "chapel":  # the Warden always leads on down
 		_on_warden_beaten()
 	else:
 		_end_run(true)
 
 
-## The Mine opens for good; this run takes a bonus perk, a campfire, then the way down.
+## The Mine opens for good; this run takes a rare relic, a bonus perk, a campfire, then the way down.
 func _on_warden_beaten() -> void:
 	meta.mine_unlocked = true
 	meta.save()
 	rooms_before += map.size()
+	_show_relic_pick("The Warden's hoard", true, _show_perk_pick)
+
+
+func _show_perk_pick() -> void:
 	var s := PerkPickScreen.new()
 	s.choices = PerkPickScreen.offer(combat.perks)
 	s.picked.connect(func(id: String) -> void:
 		combat.add_perk(id)
 		_show_campfire("mine"))
+	_show(s)
+
+
+## A pick of relics for the belt (only rares if `rares`), then `then`; straight to `then` if there are none to offer.
+func _show_relic_pick(title: String, rares: bool, then: Callable) -> void:
+	var choices := RelicPickScreen.offer(combat.relics, rares, combat.rng)
+	if choices.is_empty():
+		then.call()
+		return
+	var s := RelicPickScreen.new()
+	s.combat = combat
+	s.choices = choices
+	s.rares = rares
+	s.title = title
+	s.done.connect(then)
 	_show(s)
 
 

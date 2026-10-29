@@ -46,6 +46,7 @@ func _init() -> void:
 	_mult()
 	_relic_effects()
 	_relic_icons()
+	_relic_offer()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -1290,3 +1291,26 @@ func _relic_effects() -> void:
 	c.shards = 0
 	check(c.take_relic("rosary", 0) and c.relics.size() == 2 and c.relic_id(0) == "whetstone" and c.shards == 0,
 		"a belt with room appends and breaks nothing")
+
+
+## A pick offers up to three different relics, none on the belt; a rare pick only rares.
+func _relic_offer() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var rares: Array = Combat.RELICS.keys().filter(func(id): return Combat.RELICS[id].rare)
+	var belt: Array = rares.slice(0, 4).map(func(id): return {"id": id, "n": 0.0, "f": 0.0})
+	var got: Array = RelicPickScreen.offer(belt, true, rng)
+	got.sort()
+	var want: Array = rares.slice(4)
+	want.sort()
+	check(got == want, "a rare pick with 4 rares on the belt offers the other 3 (got %s)" % [got])
+	belt = [{"id": "whetstone"}, {"id": "black_candle"}, {"id": "tithe_box"}, {"id": "mirror_shard"}, {"id": "ward_icon"}]
+	var ok := true
+	var saw_rare := false
+	for i in 200:
+		var o: Array = RelicPickScreen.offer(belt, false, rng)
+		ok = ok and o.size() == 3 and o.all(func(id): return id not in ["whetstone", "black_candle", "tithe_box", "mirror_shard", "ward_icon"])
+		ok = ok and o[0] != o[1] and o[1] != o[2] and o[0] != o[2]
+		saw_rare = saw_rare or o.any(func(id): return Combat.RELICS[id].rare)
+	check(ok, "200 picks each offer 3 different relics, none on the belt")
+	check(saw_rare, "a common pick sometimes offers a rare")
