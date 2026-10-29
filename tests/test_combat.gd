@@ -41,6 +41,8 @@ func _init() -> void:
 	_event_backdrops()
 	_backdrop_life()
 	_run_save()
+	_relic_belt()
+	_mult()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
 	quit(1 if failures else 0)
 
@@ -1011,3 +1013,88 @@ func _run_save() -> void:
 	check(RunSave.read(PATH).get("layer") == 3, "a save left only as its temp file is recovered")
 	RunSave.erase(PATH)
 	check(not FileAccess.file_exists(PATH) and not FileAccess.file_exists(PATH + ".tmp") and RunSave.read(PATH).is_empty(), "an erased save is gone")
+
+
+func _relic_belt() -> void:
+	var c := fresh()
+	check(c.take_relic("black_candle"), "a relic goes on the belt")
+	check(not c.take_relic("black_candle"), "the same relic can't go on twice")
+	for id in ["whetstone", "twin_saints", "tithe_box", "ward_icon"]:
+		c.take_relic(id)
+	check(c.relics.size() == CombatScript.BELT_SIZE, "the belt holds five")
+	check(not c.take_relic("rosary"), "a full belt refuses a new relic without a slot to break")
+	var shards := c.shards
+	check(c.take_relic("rosary", 2) and c.relic_id(2) == "rosary" and c.shards == shards + CombatScript.BREAK_SHARDS,
+		"breaking slot 2 puts the Rosary there and pays 2 Shards")
+	check(c.relics.size() == CombatScript.BELT_SIZE, "breaking keeps the belt at five")
+	c.move_relic(2, 0)
+	check(c.relic_id(0) == "rosary" and c.relic_id(1) == "black_candle", "a relic can move along the belt")
+	for id in CombatScript.RELICS:
+		var r: Dictionary = CombatScript.RELICS[id]
+		check(r.name != "" and r.text != "" and r.has("rare"), "relic %s has a name, text and rarity" % id)
+	c.relics.clear()
+	c.take_relic("mirror_shard")
+	check(c.relic_id(0) == "", "a Mirror at the end of the belt copies nothing")
+	c.relics = [{"id": "mirror_shard", "n": 0.0, "f": 0.0}, {"id": "mirror_shard", "n": 0.0, "f": 0.0}]
+	check(c.relic_id(0) == "" and is_equal_approx(c.mult(), 1.0), "a Mirror before a Mirror copies nothing")
+	c.relics.clear()
+	c.take_relic("mirror_shard")
+	c.take_relic("black_candle")
+	check(c.relic_id(0) == "black_candle" and is_equal_approx(c.mult(), 2.25), "a Mirror before Black Candle: x1.5 twice")
+	c.relics[0].f = 3.0
+	c.start_group(["rat"])
+	check(c.relics[0].f == 0.0, "a new fight zeroes each relic's fight counter")
+
+
+func _mult() -> void:
+	var c := fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("twin_saints")
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	check(is_equal_approx(c.mult(), 2.0) and c.firing() == [0], "Twin Saints with a Cleave pair: x2")
+	c.dice[1].slot = CombatScript.Slot.NONE
+	check(is_equal_approx(c.mult(), 1.0) and c.firing().is_empty(), "no pattern, no Twin Saints")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 5}
+	c.take_relic("black_candle")
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	place(c, 1, 4, CombatScript.Slot.ATTACK)
+	check(c.hits_to(0) == [9] and c.damage_to(0) == 13, "Black Candle: Attack 9 deals floor(13.5) = 13")
+
+	c = fresh(RATS)
+	c.start_group(["rat", "rat", "rat"], 5.0)  # 30 HP rats, so nobody dies and every hit lands in full
+	for d in c.dice:
+		d.slot = CombatScript.Slot.NONE
+	c.take_relic("black_candle")
+	c.enemies[2].hp = 0  # two rats left, so Cleave 15 splits unevenly: 8 to the target, 7 to the other
+	place(c, 0, 5, CombatScript.Slot.SKILL)
+	place(c, 1, 5, CombatScript.Slot.SKILL)
+	var each: Array[int] = []
+	for i in 3:
+		each.append(c.damage_to(i))
+	var preview := c.preview_damage()
+	check(each == [12, 10, 0], "Cleave 8 and 7, times 1.5, floor to 12 and 10")
+	check(c.resolve_player() == preview, "resolve deals exactly the preview")
+	check(range(3).all(func(i): return c.enemies[i].hp == (30 - each[i] if i < 2 else 0)), "each rat lost what damage_to said")
+	check(c.best_hit == 12 and is_equal_approx(c.best_mult, 1.5), "best hit and best Mult are recorded")
+
+	c = fresh()
+	c.take_relic("pit_lantern")
+	check(is_equal_approx(c.mult(), 1.0), "Pit Lantern with no die placed: x1")
+	place(c, 0, 4, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.ATTACK)
+	check(is_equal_approx(c.mult(), 2.0), "Pit Lantern, every placed die in Attack: x2")
+	place(c, 2, 3, CombatScript.Slot.GUARD)
+	check(is_equal_approx(c.mult(), 1.0), "Pit Lantern with a die in Guard: x1")
+
+	c = fresh()
+	c.take_relic("clenched_jaw")
+	c.take_relic("rusted_censer")
+	c.take_relic("gilded_pip")
+	place(c, 0, 8, CombatScript.Slot.ATTACK)
+	check(is_equal_approx(c.mult(), 1.0 + 0.2 + 0.5), "two unplaced dice give Clenched Jaw +0.2; an 8 gives Gilded Pip +0.5")
+	c.dice[0].faces[c.dice[0].side] = 8  # mark_of reads the rolled face
+	c.dice[0].marks[c.dice[0].side] = "ember"
+	check(is_equal_approx(c.mult(), 1.0 + 0.2 + 0.5 + 0.5), "a placed Ember face gives Rusted Censer +0.5")

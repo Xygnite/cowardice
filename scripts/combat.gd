@@ -41,6 +41,28 @@ const MARKS := {
 	"shard": {"name": "Shard", "text": "Placed anywhere, +1 Shard"},
 }
 const EMBER_HEAL := 2
+## Relics: run-only, on a belt of BELT_SIZE slots, mostly raising the turn's Mult. Every hit is floori(base x Mult);
+## Mult is 1 plus the adds, then times the multipliers (mult()). Breaking one to make room pays BREAK_SHARDS.
+const RELICS := {
+	"whetstone": {"name": "Whetstone", "text": "Attack dice showing 5 or 6 deal +3 each", "rare": false},
+	"twin_saints": {"name": "Twin Saints", "text": "Cleave or Sunder fires: +1 Mult", "rare": false},
+	"rusted_censer": {"name": "Rusted Censer", "text": "+0.5 Mult per Ember face placed this turn", "rare": false},
+	"clenched_jaw": {"name": "Clenched Jaw", "text": "+0.1 Mult per point of Grit this turn", "rare": false},
+	"tithe_box": {"name": "Tithe Box", "text": "After each fight, +1 Shard per 5 held, max +3", "rare": false},
+	"gravedigger": {"name": "Gravedigger's Tally", "text": "+0.1 Mult per kill since taken", "rare": false},
+	"miners_ledger": {"name": "Miner's Ledger", "text": "+1 to the Attack hit per 4 Shards spent at forges since taken", "rare": false},
+	"spare_fuse": {"name": "Spare Fuse", "text": "Each unused reroll at end of turn: +0.25 Mult for the rest of the fight", "rare": false},
+	"ward_icon": {"name": "Ward Icon", "text": "Guard left after the enemy phase adds to next turn's Attack hit", "rare": false},
+	"hungry_bell": {"name": "Hungry Bell", "text": "+1 Mult per turn in a row a skill fires", "rare": true},
+	"cursed_crown": {"name": "Cursed Crown", "text": "Cursed faces count as 6 for damage; they still break patterns", "rare": true},
+	"gilded_pip": {"name": "Gilded Pip", "text": "+0.5 Mult per placed die showing a face above 6", "rare": true},
+	"rosary": {"name": "Rosary of Steps", "text": "Flurry's +3 becomes +9", "rare": true},
+	"black_candle": {"name": "Black Candle", "text": "x1.5 Mult", "rare": true},
+	"pit_lantern": {"name": "Pit Lantern", "text": "x2 Mult when every placed die is in Attack", "rare": true},
+	"mirror_shard": {"name": "Mirror Shard", "text": "Copies the relic to its right", "rare": true},
+}
+const BELT_SIZE := 5
+const BREAK_SHARDS := 2
 
 ## Enemy types. Optional keys:
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
@@ -118,6 +140,9 @@ var target := 0
 var guard_pool := 0  # Guard left to soak this turn's hits; set when you end your turn
 var turn := 0
 var bonus_embers := 0  # extra embers an event promised for the end of the run
+var relics: Array = []  # the belt, left to right: {"id": RELICS key, "n": run counter, "f": this fight's counter}
+var best_hit := 0  # the biggest single Mult-applied hit this run
+var best_mult := 1.0  # the highest Mult a resolve dealt damage at this run
 
 
 func _init(seed_value := -1) -> void:
@@ -304,6 +329,8 @@ func start_group(keys: Array, scale := 1.0) -> void:
 	turn = 0
 	grit = 0
 	ward_spent = false
+	for r in relics:
+		r.f = 0.0
 	for d in dice:
 		d.faces = d.base.duplicate()  # boss tampering ends with the fight
 		d.buried = 0
@@ -468,25 +495,29 @@ func cleave_damage() -> int:
 	return ceili(total * CLEAVE_MULTIPLIER)
 
 
-## What the skills that fire deal enemy i, added up.
+## What the skills that fire deal enemy i before Mult, added up.
 func skill_share(i: int) -> int:
-	if not alive(i):
-		return 0
+	var hits := hits_to(i)
+	if i == target and not hits.is_empty() and not _values_in(Slot.ATTACK).is_empty():
+		hits.remove_at(0)  # the Attack hit
+	return _sum(hits)
+
+
+## What skill `id` deals enemy i before Mult, if it fires.
+func _skill_hit(id: String, i: int) -> int:
 	var total := _sum(_values_in(Slot.SKILL))
-	var share := 0
-	for id in fired():
-		match id:
-			"sunder":
-				share += ceili(total * SUNDER_MULTIPLIER)
-			"flurry":
-				share += total + FLURRY_BONUS if i == target else 0
-			"oath":
-				share += total if i == target and total % 2 == 1 else 0  # three odd dice sum odd, three even sum even
-			"gambit":
-				share += GAMBIT_DAMAGE if i == target else 0
-			"cleave":
-				share += _cleave_share(i)
-	return share
+	match id:
+		"sunder":
+			return ceili(total * SUNDER_MULTIPLIER)
+		"flurry":
+			return total + FLURRY_BONUS if i == target else 0
+		"oath":
+			return total if i == target and total % 2 == 1 else 0  # three odd dice sum odd, three even sum even
+		"gambit":
+			return GAMBIT_DAMAGE if i == target else 0
+		"cleave":
+			return _cleave_share(i)
+	return 0
 
 
 ## Cleave's part for enemy i: its leftover points go one each to the target first, then down the row.
@@ -513,13 +544,29 @@ func unplaced_count() -> int:
 	return dice.filter(func(d): return d.slot == Slot.NONE and d.buried == 0).size()  # a buried die gives no Grit
 
 
-## Damage your placed dice would deal to enemy i right now: Attack hits the target, Cleave is shared out.
+## Damage your placed dice would deal to enemy i right now: each hit times Mult, rounded down.
 func damage_to(i: int) -> int:
+	return _sum(_dealt(i))
+
+
+## The hits on enemy i with Mult applied, in hits_to() order.
+func _dealt(i: int) -> Array[int]:
+	var m := mult()
+	var out: Array[int] = []
+	for h in hits_to(i):
+		out.append(floori(h * m + 0.0001))  # float noise can land a whole product a hair under
+	return out
+
+
+## Base hits on enemy i before Mult: the Attack hit first (target only, if a die is in Attack; enemy Guard and Bone
+## Wall already taken off), then one per fired skill that reaches it. Skills ignore Bone Wall and enemy Guard.
+func hits_to(i: int) -> Array[int]:
+	var hits: Array[int] = []
 	if not alive(i):
-		return 0
+		return hits
 	var e := enemies[i]
-	var damage := 0
-	if i == target:
+	if i == target and not _values_in(Slot.ATTACK).is_empty():
+		var damage := 0
 		var attack := _values_in(Slot.ATTACK)
 		var sharp := _values_in(Slot.ATTACK, "sharp")
 		for v in sharp:
@@ -530,7 +577,90 @@ func damage_to(i: int) -> int:
 		if e.intent.get("kind") == "guard":
 			damage = maxi(0, damage - e.intent.value)
 		damage += _sum(sharp)  # Sharp faces cut past Guard and Bone Wall
-	return damage + skill_share(i)  # skills ignore Bone Wall and enemy Guard
+		hits.append(damage)
+	for id in fired():
+		var h := _skill_hit(id, i)
+		if h > 0:
+			hits.append(h)
+	return hits
+
+
+## Grit this turn's unplaced dice would give.
+func grit_gain() -> int:
+	return unplaced_count() * (2 if "grit_teeth" in perks else 1)
+
+
+## The id belt slot k acts as: a Mirror Shard copies its right neighbour, or nothing at the end or next to a Mirror.
+func relic_id(k: int) -> String:
+	var id: String = relics[k].id
+	if id != "mirror_shard":
+		return id
+	if k + 1 >= relics.size() or relics[k + 1].id == "mirror_shard":
+		return ""
+	return relics[k + 1].id
+
+
+## Puts relic `id` on the belt. Refuses one already on it, or a full belt unless `replace` names the slot to break.
+func take_relic(id: String, replace := -1) -> bool:
+	if relics.any(func(r): return r.id == id):
+		return false
+	var entry := {"id": id, "n": 0.0, "f": 0.0}
+	if replace >= 0 and replace < relics.size():
+		relics[replace] = entry
+		shards += BREAK_SHARDS
+	elif relics.size() < BELT_SIZE:
+		relics.append(entry)
+	else:
+		return false
+	return true
+
+
+func move_relic(from: int, to: int) -> void:
+	relics.insert(to, relics.pop_at(from))
+
+
+## This turn's Mult: 1 plus every slot's adds, then times every slot's multipliers.
+func mult() -> float:
+	var add := 0.0
+	var times := 1.0
+	for k in relics.size():
+		add += _relic_add(relic_id(k))
+		times *= _relic_times(relic_id(k))
+	return (1.0 + add) * times
+
+
+## What relic `id` adds to Mult right now.
+func _relic_add(id: String) -> float:
+	match id:
+		"twin_saints":
+			return 1.0 if "cleave" in fired() or "sunder" in fired() else 0.0
+		"rusted_censer":
+			return 0.5 * dice.filter(func(d): return d.slot != Slot.NONE and d.buried == 0 and mark_of(d) == "ember").size()
+		"clenched_jaw":
+			return 0.1 * grit_gain()
+		"gilded_pip":
+			return 0.5 * dice.filter(func(d): return d.slot != Slot.NONE and d.value > 6).size()
+	return 0.0
+
+
+## What relic `id` multiplies Mult by right now.
+func _relic_times(id: String) -> float:
+	match id:
+		"black_candle":
+			return 1.5
+		"pit_lantern":
+			var placed := dice.filter(func(d): return d.slot != Slot.NONE)
+			return 2.0 if not placed.is_empty() and placed.all(func(d): return d.slot == Slot.ATTACK) else 1.0
+	return 1.0
+
+
+## Belt slots whose effect changes this turn's damage or Mult right now (the screen flashes them).
+func firing() -> Array[int]:
+	var out: Array[int] = []
+	for k in relics.size():
+		if _relic_add(relic_id(k)) != 0.0 or _relic_times(relic_id(k)) != 1.0:
+			out.append(k)
+	return out
 
 
 func preview_damage() -> int:
@@ -543,8 +673,15 @@ func preview_damage() -> int:
 ## Resolves your placed dice. Returns total damage dealt.
 func resolve_player() -> int:
 	var hits: Array[int] = []
+	var m := mult()
 	for i in enemies.size():
-		hits.append(damage_to(i))
+		var dealt := _dealt(i)
+		for h in dealt:
+			best_hit = maxi(best_hit, h)
+		hits.append(_sum(dealt))
+	if _sum(hits) > 0:
+		best_mult = maxf(best_mult, m)
+	var gain := grit_gain()
 	var struck := target  # a Gambit that kills it pays a Shard
 	var fire := fired()
 	var gambit := "gambit" in fire and alive(struck)
@@ -575,8 +712,7 @@ func resolve_player() -> int:
 					shards += 1
 		if d.slot == Slot.GUARD and d.value == CURSE:
 			d.faces = d.base.duplicate()  # a cursed face placed in Guard burns off
-		if d.slot == Slot.NONE and d.buried == 0:
-			grit += 2 if "grit_teeth" in perks else 1
+	grit += gain
 	guard_pool = guard_total()
 	if not alive(target):
 		for i in enemies.size():
