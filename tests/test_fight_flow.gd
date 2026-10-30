@@ -35,6 +35,7 @@ func _init() -> void:
 	await _hulk_swap()
 	await _relic_picks()
 	await _fight_belt()
+	await _belt_row()
 	await _two_floors()
 	await _mine_start()
 	await _fight_menu()
@@ -498,6 +499,46 @@ func _fight_belt() -> void:
 		game.queue_free()
 	await process_frame
 	check(errors.count == errors_before, "fights with relics run with no errors (got %d)" % (errors.count - errors_before))
+
+
+## BeltRow: five slots, a drop reorders the belt, can_drag shuts dragging, Destroy buttons report their slot.
+func _belt_row() -> void:
+	var errors_before := errors.count
+	var c := Combat.new()
+	for id in ["rosary", "whetstone", "mirror_shard"]:
+		c.take_relic(id)
+	var row := BeltRow.new()
+	row.combat = c
+	root.add_child(row)
+	row.rebuild()
+	await process_frame
+	check(row.get_child_count() == Combat.BELT_SIZE and row.find_children("*", "RelicIcon", true, false).size() == 3, "the belt row has 5 slots, 3 with an icon")
+	check(row.icon(2).tooltip_text.contains("Copying: nothing"), "a Mirror Shard's icon tooltip still names what it copies")
+	var moves := [0]
+	row.moved.connect(func(): moves[0] += 1)
+	var drag: Variant = row.icon(0)._get_drag_data(Vector2.ZERO)
+	check(drag is Dictionary and drag.belt_k == 0 and row._can_drop_data(Vector2.ZERO, drag), "an icon hands out its slot and the row takes it")
+	row._drop_data(Vector2(row.get_child(2).position.x + 1, 0), {"belt_k": 0})
+	check(c.relics[2].id == "rosary" and moves[0] == 1, "dropping on slot 2 moves the first relic there and says so")
+	await process_frame  # the rebuilt slots lay out
+	row.icon(0)._drop_data(Vector2(1, 1), {"belt_k": 0})  # an icon forwards a drop to its row: onto itself, nothing moves
+	check(c.relics[2].id == "rosary" and moves[0] == 1, "dropping a relic where it already is changes nothing")
+	row._drop_data(Vector2(row.size.x - 1, 0), {"belt_k": 0})  # past the last relic: the last relic slot
+	check(c.relics[2].id == "whetstone" and moves[0] == 2, "dropping on an empty slot goes to the last relic slot")
+	row.can_drag = func() -> bool: return false
+	check(row.icon(0)._get_drag_data(Vector2.ZERO) == null and not row._can_drop_data(Vector2.ZERO, {"belt_k": 0}), "nothing drags while can_drag says no")
+	row.show_destroy = true
+	row.rebuild()
+	var buttons := row.find_children("*", "Button", true, false)
+	var hit := [-1]
+	row.destroy_pressed.connect(func(k: int): hit[0] = k)
+	check(buttons.size() == 3 and buttons.all(func(b): return b.text == "Destroy"), "show_destroy puts a Destroy button under each relic")
+	buttons[1].pressed.emit()
+	check(hit[0] == 1, "pressing the second reports slot 1")
+	row.icon(0).fire()
+	await create_timer(0.1).timeout
+	check(errors.count == errors_before, "the belt row runs with no errors (got %d)" % (errors.count - errors_before))
+	row.queue_free()
 
 
 ## A skeleton fight on screen with the dice landed, two in Attack.

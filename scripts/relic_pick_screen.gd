@@ -81,15 +81,10 @@ func _show_belt() -> void:
 			UI.button(col, "Break", _ask_break.bind(k))
 
 
-## Belt slot k's icon, its name and text on hover; a Mirror Shard also names what it copies.
-static func belt_icon(parent: Node, combat: Combat, k: int) -> TextureRect:
-	var id: String = combat.relics[k].id
-	var r: Dictionary = Combat.RELICS[id]
-	var icon := UI.image(parent, "relic_" + id)
-	icon.tooltip_text = "%s\n%s" % [r.name, r.text]
-	if id == "mirror_shard":
-		var copy := combat.relic_id(k)
-		icon.tooltip_text += "\nCopying: " + (Combat.RELICS[copy].name if copy else "nothing")
+## Belt slot k's icon (a RelicIcon: tooltip with a Mirror Shard's copy, animation) added to `parent`.
+static func belt_icon(parent: Node, combat: Combat, k: int) -> RelicIcon:
+	var icon := RelicIcon.make(combat, k)
+	parent.add_child(icon)
 	return icon
 
 

@@ -564,15 +564,7 @@ func _build() -> void:
 	belt.visible = not combat.relics.is_empty()
 	bottom_row.add_child(belt)
 	for k in combat.relics.size():
-		var value := UI.label(RelicPickScreen.belt_icon(belt, combat, k), 16)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		value.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		value.offset_bottom = 8  # hangs a little under the icon, clear of its glyph
-		value.offset_right = 6
-		value.add_theme_color_override("font_color", UI.GOLD)
-		value.add_theme_constant_override("outline_size", 6)
-		value.add_theme_color_override("font_outline_color", Color("070e10"))
-		belt_values.append(value)
+		belt_values.append(RelicPickScreen.belt_icon(belt, combat, k).value_label)
 	var actions := VBoxContainer.new()
 	actions.custom_minimum_size.x = 280
 	bottom_row.add_child(actions)
