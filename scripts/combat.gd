@@ -42,7 +42,7 @@ const MARKS := {
 }
 const EMBER_HEAL := 2
 ## Relics: run-only, on a belt of BELT_SIZE slots, mostly raising the turn's Mult. Every hit is floori(base x Mult);
-## Mult is 1 plus the adds, then times the multipliers (mult()). Breaking one to make room pays BREAK_SHARDS.
+## Mult builds left to right along the belt: each slot adds, then multiplies (mult()). Breaking one to make room pays BREAK_SHARDS.
 const RELICS := {
 	"whetstone": {"name": "Whetstone", "text": "Attack dice showing 5 or 6 deal +3 each", "rare": false},
 	"twin_saints": {"name": "Twin Saints", "text": "Cleave or Sunder fires: +1 Mult", "rare": false},
@@ -701,14 +701,12 @@ func _reset_changed_mirrors(before: Array) -> void:
 			relics[k[0]].f = 0.0
 
 
-## This turn's Mult: 1 plus every slot's adds, then times every slot's multipliers.
+## This turn's Mult, folded left to right along the belt: each slot adds to it, then multiplies it.
 func mult() -> float:
-	var add := 0.0
-	var times := 1.0
+	var m := 1.0
 	for k in relics.size():
-		add += _relic_add(k)
-		times *= _relic_times(relic_id(k))
-	return (1.0 + add) * times
+		m = (m + _relic_add(k)) * _relic_times(relic_id(k))
+	return m
 
 
 ## What belt slot k adds to Mult right now (growing relics read the slot's own counters).

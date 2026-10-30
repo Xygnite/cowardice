@@ -1152,6 +1152,15 @@ func _mult() -> void:
 	check(c.best_hit == 12 and is_equal_approx(c.best_mult, 1.5), "best hit and best Mult are recorded")
 
 	c = fresh()
+	c.take_relic("twin_saints")
+	c.take_relic("black_candle")
+	place(c, 0, 3, CombatScript.Slot.SKILL)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	check(is_equal_approx(c.mult(), 3.0), "+1 then x1.5: (1 + 1) x 1.5 = 3")
+	c.move_relic(1, 0)
+	check(is_equal_approx(c.mult(), 2.5), "x1.5 then +1: 1 x 1.5 + 1 = 2.5")
+
+	c = fresh()
 	c.take_relic("pit_lantern")
 	check(is_equal_approx(c.mult(), 1.0), "Pit Lantern with no die placed: x1")
 	place(c, 0, 4, CombatScript.Slot.ATTACK)
