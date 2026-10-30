@@ -479,21 +479,89 @@ func _relic_picks() -> void:
 	await process_frame
 
 
-## The fight screen shows the belt, one icon per relic, and the summary shows Mult when it isn't 1. A turn with every
-## relic on the belt, five at a time, plays with no errors.
+## The fight screen's belt is a 5-slot BeltRow along the tray's top edge, right of the Skills button, hidden in the
+## tutorial, and the summary counts Hit × Mult = Damage. End turn plays the count, ending on the damage the preview
+## showed; Space skips it and goes no further. The belt drags only on the player's turn and fades under the timing bar.
+## A turn with every relic on the belt, five at a time, plays with no errors.
 func _fight_belt() -> void:
 	var errors_before := errors.count
+	check(CombatScreen.mult_text(1.95) == "1.95" and CombatScreen.mult_text(2.5) == "2.5" and CombatScreen.mult_text(2.0) == "2",
+		"Mult reads 1.95, 2.5, 2 (got %s, %s, %s)" % [CombatScreen.mult_text(1.95), CombatScreen.mult_text(2.5), CombatScreen.mult_text(2.0)])
 	var game: Node = await _new_game()
 	for r in ["whetstone", "gravedigger", "spare_fuse"]:
 		game.combat.take_relic(r)
 	var screen: CombatScreen = await _belt_fight(game)
-	check(screen.belt.get_child_count() == 3, "three relics, three belt icons (got %d)" % screen.belt.get_child_count())
-	check("×" not in screen.summary_label.text, "no Mult on the summary at x1: %s" % screen.summary_label.text)
+	var belt: BeltRow = screen.belt
+	check(belt.get_parent() == screen.dice_box and belt.get_child_count() == Combat.BELT_SIZE, "the belt is a 5-slot row on the dice tray")
+	check(belt.position.x >= screen.skill_button.position.x + screen.skill_button.size.x and belt.position.y == 8,
+		"the belt sits right of the Skills button, at the tray's top (at %s)" % belt.position)
+	check(screen.tray.top_inset > 0, "the tray's top wall sits below the belt")
+	check(belt.can_drag.call(), "the belt drags on the player's turn")
+	await _press(KEY_ESCAPE)
+	check(screen.paused and not belt.can_drag.call(), "no dragging behind the fight menu")
+	await _press(KEY_ESCAPE)
+	await process_frame
 	game.queue_free()
 	game = await _new_game()
 	game.combat.take_relic("black_candle")
 	screen = await _belt_fight(game)
-	check("(×1.5)" in screen.summary_label.text, "Black Candle shows x1.5 on the summary: %s" % screen.summary_label.text)
+	for i in 2:
+		screen.combat.dice[i].value = [4, 5][i]
+	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}  # no enemy Guard to cut the hit
+	screen.combat.enemies[0].hp = 999  # lives through the turns below
+	belt = screen.belt
+	screen._refresh()
+	check("Hit 9 × Mult 1.5 = 13" in screen.summary_label.text, "Black Candle on Attack 9 reads Hit 9 × Mult 1.5 = 13: %s" % screen.summary_label.text)
+	var preview := screen.combat.preview_damage()
+	screen._on_end_turn()
+	check(screen.counting and not belt.can_drag.call(), "End turn starts the count, and the belt can't drag while busy")
+	var asked := false
+	while screen.counting:
+		asked = asked or screen.summary_label.text.ends_with("= ?")
+		await process_frame
+	check(asked, "the count shows Hit × Mult = ? before the damage")
+	check(999 - screen.combat.enemies[0].hp == preview, "the turn deals the %d the preview showed (dealt %d)" % [preview, 999 - screen.combat.enemies[0].hp])
+	check(screen.busy and not belt.can_drag.call(), "no dragging while the turn resolves")
+	while screen.busy:
+		await process_frame
+	for i in 2:
+		screen.combat.assign(i, Combat.Slot.ATTACK)
+	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}
+	screen._refresh()
+	var rerolls: int = screen.combat.rerolls
+	Engine.time_scale = 1.0  # so the count is still going when Space comes
+	screen._on_end_turn()
+	await process_frame
+	var space := InputEventKey.new()
+	space.keycode = KEY_SPACE
+	space.pressed = true
+	check(screen.counting, "the count is under way")
+	root.push_input(space)
+	check(root.is_input_handled(), "the skipping Space is consumed")
+	await process_frame
+	Engine.time_scale = SPEED
+	check(not screen.counting and screen.combat.rerolls == rerolls, "Space ends the count at once and rerolls nothing")
+	while screen.busy:
+		await process_frame
+	screen.combat.assign(0, Combat.Slot.ATTACK)
+	screen.combat.assign(1, Combat.Slot.GUARD)
+	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}
+	screen._refresh()
+	screen._on_end_turn()
+	while not screen.timing.running:
+		await process_frame
+	while screen.timing.running and belt.modulate.a >= 0.5:
+		await process_frame
+	check(screen.timing.running and belt.modulate.a < 0.5, "the belt fades under the timing bar (alpha %.2f)" % belt.modulate.a)
+	while screen.timing_hint.visible:
+		await process_frame
+	await create_timer(0.3).timeout
+	check(belt.modulate.a == 1.0, "and comes back after it (alpha %.2f)" % belt.modulate.a)
+	game.queue_free()
+	game = await _new_game()
+	game._show_tutorial()
+	await process_frame
+	check(not game.screen.belt.visible, "the tutorial hides the belt")
 	game.queue_free()
 	var ids: Array = Combat.RELICS.keys()
 	for start in range(0, ids.size(), Combat.BELT_SIZE):

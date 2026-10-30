@@ -75,13 +75,6 @@ func _ready() -> void:
 	_refresh()
 
 
-## Belt slot k's icon (a RelicIcon: tooltip with a Mirror Shard's copy, animation) added to `parent`.
-static func belt_icon(parent: Node, combat: Combat, k: int) -> RelicIcon:
-	var icon := RelicIcon.make(combat, k)
-	parent.add_child(icon)
-	return icon
-
-
 ## Redraws the Shards line, the belt and which cards can still be bought.
 func _refresh() -> void:
 	subtitle.text = "Shards %d. Buy what you can afford and fit on the belt." % combat.shards

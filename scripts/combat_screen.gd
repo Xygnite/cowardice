@@ -29,6 +29,10 @@ const HOLD_LOCK := 0.8  # seconds a die is held down, with quick dice control, t
 const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
 const MARK_SFX := preload("res://assets/audio/confirm.wav")  # an Ember or Shard face paying out
+const COUNT_STEP := 0.3  # seconds the End turn count's first step shows
+const COUNT_SPEEDUP := 0.9  # each later step takes this share of the one before
+const COUNT_FASTEST := 0.12  # seconds, the shortest a step gets
+const BELT_FADE := 0.15  # seconds the belt takes to fade out under the timing bar, or back
 
 ## The tutorial, step by step, over its set dice (Combat.TUTORIAL_DICE). Each step spotlights one target
 ## ("at": intent, dice, die (with "die"), end, timing) and waits ("until") for Next, for "die" to reach
@@ -92,6 +96,7 @@ var backdrop := "fight"  # the floor's fight picture, assets/ui/bg_<backdrop>.we
 var meta: Meta  # for the fight menu's settings; set by game.gd
 var busy := false  # true while the dice are in the air or the enemies act, and after the fight ends
 var paused := false  # the fight menu is open
+var counting := false  # End turn's count is playing; a click, Space or Enter jumps to its end
 var rolling: Array = []  # indices of the dice in the air; their values aren't known until they land
 var acting := -1  # enemy currently acting, highlighted
 
@@ -124,8 +129,7 @@ var skill_button: Button  # names the skills the Skill dice fire; hover or press
 var faces_popup: PopupPanel
 var faces_label: Label
 var summary_label: Label  # hover: each enemy's hits before and after Mult
-var belt: VBoxContainer  # the relic belt, one icon per slot, beside the dice tray
-var belt_values: Array[Label] = []  # a growing relic's current worth, over its icon
+var belt: BeltRow  # the relic belt, along the dice tray's top edge
 var reroll_button: Button
 var end_button: Button
 var timing_hint: Label
@@ -151,6 +155,16 @@ func _ready() -> void:
 		_guide_show()
 	else:
 		_roll_anim(range(combat.dice.size()), true)
+
+
+## A click, Space or Enter during the count skips it, and goes no further: not to the tray, a reroll or End turn.
+func _input(event: InputEvent) -> void:
+	if not counting or not event.is_pressed() or event.is_echo():
+		return
+	var key: bool = event is InputEventKey and event.keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]
+	if key or (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT):
+		get_viewport().set_input_as_handled()
+		_skip_count()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -246,14 +260,16 @@ func _on_end_turn() -> void:
 	var hp_was := combat.player_hp
 	var shards_was := combat.shards
 	var lit := combat.firing()  # before resolving: growing relics count the turn up as it resolves
+	var steps := combat.count_steps()
+	await _play_count(steps)
 	var dealt := combat.resolve_player()
 	_log("You deal %d." % dealt)
 	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
-	if dealt > 0:
-		for k in lit:
-			_flash(belt.get_child(k))
+		for k in lit:  # the count fired the rest; a relic with no step of its own (Rosary) lights as the blow lands
+			if not steps.any(func(s): return s.slot == k):
+				_flash(belt.icon(k))
 	for i in combat.enemies.size():
 		var swapped: bool = combat.enemies[i].has("from")  # a Hulk died and Rubble stands in its slot
 		if swapped or combat.enemies[i].hp < enemy_hp_before[i]:
@@ -280,6 +296,7 @@ func _on_end_turn() -> void:
 			var lesson: bool = combat.is_tutorial() and _tutorial_step().get("until") == "timing"
 			timing_hint.text = ("BLOCK!  " if combat.enemies[i].intent.kind == "attack" else "PARRY!  ") + combat.enemies[i].name
 			timing_hint.show()
+			belt.create_tween().tween_property(belt, "modulate:a", 0.25, BELT_FADE)  # out from under the bar
 			timing.start(combat, i)
 			if lesson:  # the bar waits, shown, while the guide explains it; it runs on Next, the panel out of its way
 				timing.running = false
@@ -289,6 +306,7 @@ func _on_end_turn() -> void:
 				timing.running = true
 			grade = await timing.finished
 			timing_hint.hide()
+			belt.create_tween().tween_property(belt, "modulate:a", 1.0, BELT_FADE)
 			if lesson:
 				_guide_done()
 		var kind: String = combat.enemies[i].intent.get("kind", "")
@@ -327,6 +345,37 @@ func _on_end_turn() -> void:
 			_guide_show()
 		else:
 			_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), true)
+
+
+## Plays End turn's count, Combat.count_steps(), quicker step by step: an Attack die pops, a relic that adds fires,
+## a Guard's cut floats up as a minus, the summary ticking Hit and Mult with the damage still "?". Ends on the summary.
+func _play_count(steps: Array[Dictionary]) -> void:
+	counting = not steps.is_empty()
+	var wait := COUNT_STEP
+	for s in steps:
+		if not counting:
+			break
+		match s.kind:
+			"die":
+				tray.pop(s.die)
+			"relic_die", "flat", "mult":
+				belt.icon(s.slot).fire()
+			"guard":
+				_float(summary_label, "%d" % s.amount, UI.DANGER)
+		summary_label.text = "Hit %d × Mult %s = ?" % [s.hit, mult_text(s.mult)]
+		var left := wait
+		while counting and left > 0:  # by frames, not a timer, so a skip leaves nothing to fire later
+			await get_tree().process_frame
+			left -= get_process_delta_time()
+		wait = maxf(wait * COUNT_SPEEDUP, COUNT_FASTEST)
+	counting = false
+	_refresh()
+
+
+## Ends the count at once, on the summary it ends on.
+func _skip_count() -> void:
+	counting = false
+	_refresh()
 
 
 ## Plays one move of a rig from scenes/, then falls back to idle; await it to wait for the move to land.
@@ -391,12 +440,16 @@ func _refresh() -> void:
 	var hint := ("   %s ready" % fire) if fire else ("   Skill in reach" if combat.skill_in_roll() else "")
 	skill_button.text = fire if fire else "Skills"
 	var m := combat.mult()
-	var times := not is_equal_approx(m, 1.0)
-	var damage := "Damage %d" % combat.preview_damage() + (" (×%.1f)" % m if times else "")
+	var hit := 0
+	for i in combat.enemies.size():
+		for h in combat.hits_to(i):
+			hit += h
+	var damage := "Hit %d × Mult %s = %d" % [hit, mult_text(m), combat.preview_damage()]
 	summary_label.text = "Rolling..." if rolling else "%s   Guard %d   Grit +%d%s" % [damage, combat.guard_total(), combat.unplaced_count(), hint]
-	summary_label.tooltip_text = _mult_text(m) if times and not rolling else ""
-	for k in belt_values.size():
-		belt_values[k].text = _relic_value(k)
+	summary_label.tooltip_text = _mult_tooltip(m) if not is_equal_approx(m, 1.0) and not rolling else ""
+	belt.position.x = skill_button.position.x + skill_button.get_combined_minimum_size().x + 16  # a fired skill's name widens it
+	for k in combat.relics.size():
+		belt.icon(k).value_label.text = _relic_value(k)
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.skill_in_roll() and not combat.skill_ready() and not rolling else Color.WHITE)
 	reroll_button.text = "Hold to roll  [R]" if charge.waiting else "Reroll (%d)  [R]" % combat.rerolls
 	reroll_button.disabled = not charge.waiting and (busy or combat.rerolls == 0)
@@ -460,16 +513,20 @@ func _guide_allows(i: int) -> bool:
 	return not combat.is_tutorial() or (step.get("until") == "place" and step.die == i)
 
 
+## Mult as the summary shows it: up to two decimals, no trailing zeros (1.95, 2.5, 2).
+static func mult_text(m: float) -> String:
+	return ("%.2f" % m).rstrip("0").rstrip(".")
+
+
 ## Each enemy's base hits times Mult, then the Mult, for the summary's hover.
-func _mult_text(m: float) -> String:
+func _mult_tooltip(m: float) -> String:
 	var lines := []
 	for i in combat.enemies.size():
 		var hits := combat.hits_to(i)
 		if not hits.is_empty():
-			lines.append("%s: %s  × %.1f = %d" % [combat.enemies[i].name, ("(" + " + ".join(hits.map(str)) + ")") if hits.size() > 1 else str(hits[0]), m, combat.damage_to(i)])
-	lines.append("Mult ×%.1f" % m)
-	return "
-".join(lines)
+			lines.append("%s: %s  × %s = %d" % [combat.enemies[i].name, ("(" + " + ".join(hits.map(str)) + ")") if hits.size() > 1 else str(hits[0]), mult_text(m), combat.damage_to(i)])
+	lines.append("Mult ×" + mult_text(m))
+	return "\n".join(lines)
 
 
 ## What a growing relic in belt slot k is worth now, from the slot's own counters; blank at 0 or for the rest.
@@ -559,12 +616,6 @@ func _build() -> void:
 	bottom_row = UI.row(root, 24)
 	bottom_row.custom_minimum_size.y = tray_height
 	_build_dice(bottom_row)
-	belt = VBoxContainer.new()
-	belt.alignment = BoxContainer.ALIGNMENT_CENTER
-	belt.visible = not combat.relics.is_empty()
-	bottom_row.add_child(belt)
-	for k in combat.relics.size():
-		belt_values.append(RelicPickScreen.belt_icon(belt, combat, k).value_label)
 	var actions := VBoxContainer.new()
 	actions.custom_minimum_size.x = 280
 	bottom_row.add_child(actions)
@@ -663,7 +714,8 @@ func _add_rig(holder: Control, sprite: String) -> Node2D:
 
 
 ## The dice tray: the 3D dice on felt that fills the whole box out to its frame, the frame drawn over
-## the felt's edge, and a Faces button floating in its top-left corner. Clicking a die opens its menu.
+## the felt's edge, the Faces and Skills buttons floating in its top-left corner and the belt beside them. Clicking a
+## die opens its menu.
 func _build_dice(parent: Node) -> void:
 	var box := Control.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -688,6 +740,15 @@ func _build_dice(parent: Node) -> void:
 	skill_button = UI.button(box, "Skills", _show_skill)
 	skill_button.tooltip_text = _skill_text()
 	skill_button.position = Vector2(28 + faces_button.get_combined_minimum_size().x + 8, 16)
+	belt = BeltRow.new()  # along the top edge, right of the buttons (_refresh keeps it clear of Skills)
+	belt.combat = combat
+	belt.can_drag = func() -> bool: return not busy and not paused and not counting
+	belt.moved.connect(_refresh)
+	belt.position.y = 8
+	belt.visible = not combat.is_tutorial()
+	belt.rebuild()
+	box.add_child(belt)
+	tray.top_inset = belt.get_combined_minimum_size().y + 8
 	faces_popup = PopupPanel.new()
 	faces_label = UI.label(faces_popup, 16)
 	add_child(faces_popup)

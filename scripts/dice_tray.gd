@@ -75,6 +75,12 @@ var walls: Array[CollisionShape3D] = []  # left, right, top, bottom; moved to th
 ## slow (seconds it has been stopped), last_v (velocity a step ago) and quiet (seconds until it may clack).
 var dice: Array[Dictionary] = []
 var in_flight := false  # a throw has dice still rolling; landed fires when none are
+## Screen pixels the top wall sits below the felt's top edge, so no die comes to rest under what floats there.
+var top_inset := 0.0:
+	set(v):
+		top_inset = v
+		if size.y > 0:  # unsized, the camera can't take a zero size; the first resize fits it
+			_fit()
 
 
 func _init() -> void:
@@ -264,6 +270,13 @@ func hold(i: int, t: float) -> void:
 		d.cube.position = Vector3.ZERO
 
 
+## Die i swells and settles back: the End turn count reaching it.
+func pop(i: int) -> void:
+	var cube: MeshInstance3D = dice[i].cube
+	cube.scale = Vector3.ONE * 1.25
+	create_tween().tween_property(cube, "scale", Vector3.ONE, 0.2)
+
+
 ## Die i glows gold on the felt while `on`: it can help make a skill. A die in the hand never glows.
 func glow(i: int, on: bool) -> void:
 	on = on and dice[i].body.visible
@@ -288,7 +301,8 @@ func throw(which: Array, power := 1.0) -> void:
 		# throwing after the first would spawn dice where the walls then close in and shove them out.
 		await resized
 		await get_tree().process_frame
-	var depth := _half_depth() - 0.7
+	var top := top_inset / UNIT
+	var depth := _half_depth() - top / 2 - 0.7  # the lanes span the felt below the inset
 	for d in dice:  # dice left out of the throw sit still on no layer, so the throw goes through them
 		d.body.collision_layer = 0
 	for n in which.size():
@@ -299,7 +313,7 @@ func throw(which: Array, power := 1.0) -> void:
 		d.t = 0.0
 		d.slow = 0.0
 		# Out of the hand in a loose line, so no two start inside each other.
-		var lane := 0.0 if which.size() == 1 else lerpf(-depth, depth, float(n) / (which.size() - 1))
+		var lane := top / 2 + (0.0 if which.size() == 1 else lerpf(-depth, depth, float(n) / (which.size() - 1)))
 		body.position = Vector3(-_half_width() + 0.7 + n * 1.1, 1.5, lane)
 		body.quaternion = Quaternion.from_euler(Vector3(randf(), randf(), randf()) * TAU)
 		body.collision_mask = TRAY_LAYER  # in the air only the tray stops it; _physics_process adds the dice on landing
@@ -379,7 +393,7 @@ func _pin(d: Dictionary, time: float) -> void:
 			to.x = at.x + (1.0 if to.x >= at.x else -1.0)
 		else:
 			to.z = at.z + (1.0 if to.z >= at.z else -1.0)
-	to = Vector3(clampf(to.x, -_half_width() + 0.5, _half_width() - 0.5), 0.5, clampf(to.z, -_half_depth() + 0.5, _half_depth() - 0.5))
+	to = Vector3(clampf(to.x, -_half_width() + 0.5, _half_width() - 0.5), 0.5, clampf(to.z, -_half_depth() + top_inset / UNIT + 0.5, _half_depth() - 0.5))
 	var rest := _rest(d, body.quaternion)
 	if time == 0.0:
 		body.quaternion = rest
@@ -455,19 +469,20 @@ func _half_depth() -> float:
 	return size.y / UNIT / 2
 
 
-## Keeps a cube UNIT pixels wide on the floor whatever the tray's size, and the walls on its edges.
+## Keeps a cube UNIT pixels wide on the floor whatever the tray's size, and the walls on its edges (the top one top_inset in).
 func _fit() -> void:
 	camera.size = size.y / UNIT
 	var hw := _half_width()
 	var hd := _half_depth()
+	var top := top_inset / UNIT
 	var spans := [Vector3(1, 10, hd * 2 + 2), Vector3(1, 10, hd * 2 + 2), Vector3(hw * 2 + 2, 10, 1), Vector3(hw * 2 + 2, 10, 1)]
-	var centres := [Vector3(-hw - 0.5, 5, 0), Vector3(hw + 0.5, 5, 0), Vector3(0, 5, -hd - 0.5), Vector3(0, 5, hd + 0.5)]
+	var centres := [Vector3(-hw - 0.5, 5, 0), Vector3(hw + 0.5, 5, 0), Vector3(0, 5, -hd + top - 0.5), Vector3(0, 5, hd + 0.5)]
 	for i in 4:
 		walls[i].shape.size = spans[i]
 		walls[i].position = centres[i]
 	for d in dice:  # a die the walls just closed in on goes back inside, not out through them
 		var p: Vector3 = d.body.position
-		d.body.position = Vector3(clampf(p.x, -hw + 0.5, hw - 0.5), p.y, clampf(p.z, -hd + 0.5, hd - 0.5))
+		d.body.position = Vector3(clampf(p.x, -hw + 0.5, hw - 0.5), p.y, clampf(p.z, -hd + top + 0.5, hd - 0.5))
 
 
 ## The turn that puts a side showing the die's value face up and square to the screen; of the sides
