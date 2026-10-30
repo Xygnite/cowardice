@@ -140,7 +140,7 @@ func _start_run(first_floor := "chapel") -> void:
 	rooms_before = 0
 	seen_events.clear()
 	if first_floor == "mine":  # a Mine start opens with a rare pick
-		_show_relic_pick("Into the Mine", true, _enter_floor.bind("mine"))
+		_show_relic_pick("Into the Mine", "rare", _enter_floor.bind("mine"))
 	else:
 		_enter_floor(first_floor)
 
@@ -257,7 +257,8 @@ func _on_fight_finished(won: bool) -> void:
 	if not won:
 		_end_run(false)
 	elif layer < map.size() - 1:
-		_show_relic_pick("Spoils", false, _next_room)
+		_show_relic_pick("Spoils", "any" if combat.shopped else "common", _next_room)
+		combat.shopped = true
 	elif floor_id == "chapel":  # the Warden always leads on down
 		_on_warden_beaten()
 	else:
@@ -269,7 +270,7 @@ func _on_warden_beaten() -> void:
 	meta.mine_unlocked = true
 	meta.save()
 	rooms_before += map.size()
-	_show_relic_pick("The Warden's hoard", true, _show_perk_pick)
+	_show_relic_pick("The Warden's hoard", "rare", _show_perk_pick)
 
 
 func _show_perk_pick() -> void:
@@ -281,16 +282,16 @@ func _show_perk_pick() -> void:
 	_show(s)
 
 
-## A pick of relics for the belt (only rares if `rares`), then `then`; straight to `then` if there are none to offer.
-func _show_relic_pick(title: String, rares: bool, then: Callable) -> void:
-	var choices := RelicPickScreen.offer(combat.relics, "rare" if rares else "any", combat.rng)
+## A pick of relics for the belt (of `rarity`, see RelicPickScreen.offer), then `then`; straight to `then` if there are none to offer.
+func _show_relic_pick(title: String, rarity: String, then: Callable) -> void:
+	var choices := RelicPickScreen.offer(combat.relics, rarity, combat.rng)
 	if choices.is_empty():
 		then.call()
 		return
 	var s := RelicPickScreen.new()
 	s.combat = combat
 	s.choices = choices
-	s.rares = rares
+	s.rares = rarity == "rare"
 	s.title = title
 	s.done.connect(then)
 	_show(s)

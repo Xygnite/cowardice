@@ -439,12 +439,13 @@ func _relic_picks() -> void:
 		check(_overlays(game, "ConfirmPanel").is_empty(), "on a full belt Take first asks which relic to break")
 		var breaks: Array = pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Break")
 		check(breaks.size() == Combat.BELT_SIZE, "a Break button under every belt relic")
+		var destroyed: String = game.combat.relics[0].id
 		if breaks.size() == Combat.BELT_SIZE:
 			breaks[0].pressed.emit()
 			_agree(game)
 			await process_frame
-		check(game.combat.relics[0].id == id and game.combat.relics.size() == Combat.BELT_SIZE, "the new relic takes the broken one's slot")
-		check(game.combat.shards == shards + Combat.BREAK_SHARDS, "breaking pays %d Shards" % Combat.BREAK_SHARDS)
+		check(game.combat.relics[Combat.BELT_SIZE - 1].id == id and game.combat.relics.size() == Combat.BELT_SIZE, "the new relic goes on the end of the belt")
+		check(game.combat.shards == shards + Combat.sell_value(destroyed), "destroying pays %d Shards" % Combat.sell_value(destroyed))
 		check(game.screen is MapScreen, "then the map")
 	game.queue_free()
 	game = await _new_game()
