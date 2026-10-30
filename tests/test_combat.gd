@@ -1057,7 +1057,11 @@ func _relic_save() -> void:
 	var old := c.to_dict()
 	for k in ["relics", "best_hit", "best_mult", "shopped"]:
 		old.erase(k)
-	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).relics.is_empty() and not CombatScript.from_dict(old).shopped, "a save from before relics loads with an empty belt and not shopped")
+	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).relics.is_empty(), "a save from before relics loads with an empty belt")
+	old.kills = 0
+	check(not CombatScript.from_dict(old).shopped, "a save from before shopping, at no kills, loads not shopped")
+	old.kills = 3
+	check(CombatScript.from_dict(old).shopped, "and one with kills loads shopped (its first Spoils has passed)")
 	var bad := c.to_dict()
 	bad.relics = "x"
 	check(not CombatScript.valid_dict(bad), "a belt of the wrong type is refused")
@@ -1222,6 +1226,7 @@ func _count_steps() -> void:
 	var s := c.count_steps()
 	check(s.map(func(x): return x.kind) == ["die", "relic_die", "die", "guard", "mult"], "dice, Whetstone on the 5, Guard, then Candle (got %s)" % [s.map(func(x): return x.kind)])
 	check(s[3].amount == -4 and s[3].hit == 6, "Guard 4 takes 10 down to 6")
+	check(s[1].amount == 3, "Whetstone's step adds 3 (got %d)" % s[1].amount)
 	check(s[-1].slot == 2 and is_equal_approx(s[-1].mult, 1.5), "Twin Saints doesn't fire, Candle does")
 	check(c.preview_damage() == 9, "6 x 1.5 = 9")
 	c.enemies[0].intent = {"kind": "guard", "value": 20}
@@ -1252,6 +1257,15 @@ func _count_steps() -> void:
 	place(c, 1, 6, CombatScript.Slot.ATTACK)
 	place(c, 2, 2, CombatScript.Slot.ATTACK)
 	_count_matches(c, "Bone Wall takes the highest die, Ledger adds 2")
+
+	c = fresh()
+	c.enemies[0].intent = {"kind": "attack", "value": 4}
+	c.take_relic("cursed_crown")
+	place(c, 0, CombatScript.CURSE, CombatScript.Slot.ATTACK)
+	s = c.count_steps()
+	var crown := s.filter(func(x): return x.kind == "relic_die")
+	check(crown.size() == 1 and crown[0].amount == 6 and not s.any(func(x): return x.kind == "guard"), "Cursed Crown on a cursed Attack die adds 6, with no guard step (got %s)" % [s])
+	_count_matches(c, "Cursed Crown on a cursed die")
 
 
 ## A fight against three 150 HP rats, all dice unplaced, so many turns of hits leave them standing.

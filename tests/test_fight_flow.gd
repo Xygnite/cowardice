@@ -527,8 +527,15 @@ func _fight_belt() -> void:
 	check(dimmed.call().is_empty(), "the count's end undims them (dim: %s)" % [dimmed.call()])
 	check(999 - screen.combat.enemies[0].hp == preview, "the turn deals the %d the preview showed (dealt %d)" % [preview, 999 - screen.combat.enemies[0].hp])
 	check(screen.busy and not belt.can_drag.call(), "no dragging while the turn resolves")
+	var held := true
+	var enemy_phase := false
 	while screen.busy:
+		if screen.acting >= 0:
+			enemy_phase = true
+			held = held and screen.summary_label.text.begins_with("Hit 9 × Mult 1.5 = %d" % preview)
 		await process_frame
+	check(enemy_phase and held, "the summary keeps what was dealt through the enemy phase (now: %s)" % screen.summary_label.text)
+	check(screen.summary_label.text.begins_with("Hit 0 "), "and shows the new preview once the next turn starts (now: %s)" % screen.summary_label.text)
 	for i in 3:
 		screen.combat.dice[i].value = 3
 		screen.combat.assign(i, Combat.Slot.ATTACK)

@@ -199,7 +199,7 @@ static func from_dict(d: Dictionary) -> Combat:
 	c.relics = d.get("relics", []).map(func(r): return {"id": r.id, "n": float(r.n), "f": float(r.f)})
 	c.best_hit = int(d.get("best_hit", 0))
 	c.best_mult = float(d.get("best_mult", 1.0))
-	c.shopped = bool(d.get("shopped", false))
+	c.shopped = bool(d.get("shopped", c.kills > 0))  # an older save mid-run has already seen its first Spoils
 	for i in c.dice.size():
 		c.dice[i].merge(d.dice[i].duplicate(true), true)
 	return c

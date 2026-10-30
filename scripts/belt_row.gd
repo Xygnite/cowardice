@@ -23,7 +23,8 @@ func rebuild() -> void:
 		if k < combat.relics.size():
 			slot.add_child(RelicIcon.make(combat, k))
 			if show_destroy:
-				UI.button(slot, "Destroy", func() -> void: destroy_pressed.emit(k))
+				# PASS: still clickable, but a relic dropped on it reaches the row
+				UI.button(slot, "Destroy", func() -> void: destroy_pressed.emit(k)).mouse_filter = Control.MOUSE_FILTER_PASS
 		else:
 			var empty := Control.new()
 			empty.custom_minimum_size = Vector2(32, 32)

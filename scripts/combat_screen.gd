@@ -130,6 +130,7 @@ var skill_button: Button  # names the skills the Skill dice fire; hover or press
 var faces_popup: PopupPanel
 var faces_label: Label
 var summary_label: Label  # hover: each enemy's hits before and after Mult
+var dealt_line := ""  # the count's last line, kept on the summary through the enemy phase until the next turn starts
 var belt: BeltRow  # the relic belt, along the dice tray's top edge
 var reroll_button: Button
 var end_button: Button
@@ -265,6 +266,8 @@ func _on_end_turn() -> void:
 	await _play_count(steps)
 	var dealt := combat.resolve_player()
 	_log("You deal %d." % dealt)
+	if not steps.is_empty():
+		dealt_line = "Hit %d × Mult %s = %d" % [steps[-1].hit, mult_text(steps[-1].mult), dealt]
 	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
@@ -339,6 +342,7 @@ func _on_end_turn() -> void:
 	elif combat.tutorial_done():
 		_end(true)
 	else:
+		dealt_line = ""
 		combat.start_turn()
 		if combat.is_tutorial():
 			busy = false
@@ -454,7 +458,7 @@ func _refresh() -> void:
 	for i in combat.enemies.size():
 		for h in combat.hits_to(i):
 			hit += h
-	var damage := "Hit %d × Mult %s = %d" % [hit, mult_text(m), combat.preview_damage()]
+	var damage := dealt_line if dealt_line else "Hit %d × Mult %s = %d" % [hit, mult_text(m), combat.preview_damage()]
 	summary_label.text = "Rolling..." if rolling else "%s   Guard %d   Grit +%d%s" % [damage, combat.guard_total(), combat.unplaced_count(), hint]
 	summary_label.tooltip_text = _mult_tooltip(m) if not is_equal_approx(m, 1.0) and not rolling else ""
 	belt.position.x = skill_button.position.x + skill_button.get_combined_minimum_size().x + 16  # a fired skill's name widens it
@@ -544,9 +548,9 @@ func _relic_value(k: int) -> String:
 	var r: Dictionary = combat.relics[k]
 	match combat.relic_id(k):
 		"gravedigger":
-			return "+%.1f" % (0.1 * r.n) if r.n > 0 else ""
+			return "+" + mult_text(0.1 * r.n) if r.n > 0 else ""
 		"spare_fuse":
-			return "+%.1f" % r.f if r.f > 0 else ""
+			return "+" + mult_text(r.f) if r.f > 0 else ""
 		"hungry_bell":
 			return "+%d" % (r.f + 1) if r.f > 0 else ""  # the streak's next firing turn adds one more
 		"ward_icon":
