@@ -68,6 +68,9 @@ from the count why the new order hit harder.
   the Faces and Skills buttons, 5 slots with empty ones drawn dashed. The tray takes the column's old width.
 - The summary line above the tray (today "Damage 26 (×2.5) Guard 3 Grit +1") becomes the counter:
   **Hit × Mult = Damage**, then Guard and Grit as now.
+  Later: the counter sits big on the tray's top edge, Faces, Skills, Guard and Grit above the tray, and the Damage
+  reads "?" until End turn's count lands on it. Before End turn, Hit and Mult show the dice and skills alone (Mult 1);
+  the count adds every relic's part.
 - While the block/parry hint and timing bar are up across the top of the tray, the belt fades out.
 - The tray's top wall moves down by an icon's height so thrown dice never come to rest under the belt.
 

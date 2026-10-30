@@ -29,7 +29,11 @@ const HOLD_LOCK := 0.8  # seconds a die is held down, with quick dice control, t
 const HIT_SFX := preload("res://assets/audio/hit.wav")
 const BLOCK_SFX := preload("res://assets/audio/block.wav")
 const MARK_SFX := preload("res://assets/audio/confirm.wav")  # an Ember or Shard face paying out
-const COUNT_STEP := 0.3  # seconds the End turn count's first step shows
+const COUNT_SFX := preload("res://assets/audio/dice_clack.wav")  # each step of the count, pitched up as it climbs
+const BONE := Color(0.93, 0.89, 0.8)  # the counter at rest; a step flashes it and it settles back
+const COUNT_STEP := 0.3  # seconds the End turn count's first step shows, on a big hit
+const COUNT_SLOW := 0.6  # ...and on a small one, so a few points still get their moment
+const COUNT_FAST_AT := 40  # damage from which the count runs at COUNT_STEP
 const COUNT_SPEEDUP := 0.9  # each later step takes this share of the one before
 const COUNT_FASTEST := 0.12  # seconds, the shortest a step gets
 const COUNT_DIM := 0.4  # a relic with no part in the count shows this faint while it plays
@@ -127,10 +131,12 @@ var held := -1  # quick dice control: the die under a left press not yet let go 
 var hold_tween: Tween  # winds the held die's chains on over HOLD_LOCK, then locks it
 var faces_button: Button
 var skill_button: Button  # names the skills the Skill dice fire; hover or press for what every unlocked one needs
-var faces_popup: PopupPanel
-var faces_label: Label
-var summary_label: Label  # hover: each enemy's hits before and after Mult
-var dealt_line := ""  # the count's last line, kept on the summary through the enemy phase until the next turn starts
+var faces_popup: PopupPanel  # the Faces and Skills buttons' window, filled on each press
+var perk_row: HBoxContainer  # the run's perks as badges along the tray's top-right; hover for what each does
+var summary_label: Label  # above the tray: Guard, Grit and a skill in reach, or "Rolling..."
+var counter_label: Label  # big on the tray's top edge: Hit × Mult = Damage; hover: each enemy's hits before and after Mult
+var beat_tween: Tween  # the counter's last beat settling; a new beat cuts it short
+var dealt_line := ""  # the count's last line, kept on the counter through the enemy phase until the next turn starts
 var belt: BeltRow  # the relic belt, along the dice tray's top edge
 var reroll_button: Button
 var end_button: Button
@@ -141,6 +147,7 @@ var log_label: Label
 var log_lines: Array[String] = []
 var hero: Node2D
 var sfx := AudioStreamPlayer.new()
+var count_sfx := AudioStreamPlayer.new()  # the count's quiet bone clicks, apart from sfx so a hit never cuts them
 
 
 func _ready() -> void:
@@ -148,6 +155,10 @@ func _ready() -> void:
 	sfx.max_polyphony = 4  # a cleave hits several enemies at once
 	sfx.bus = "SFX"
 	add_child(sfx)  # after _build: it expects page()'s background as child 0
+	count_sfx.stream = COUNT_SFX
+	count_sfx.volume_db = -12.0
+	count_sfx.bus = "SFX"
+	add_child(count_sfx)
 	_log(", ".join(combat.enemies.map(func(e): return e.name)) + ".")
 	if combat.is_boss_fight():
 		_log("Something large stirs below.")
@@ -266,8 +277,6 @@ func _on_end_turn() -> void:
 	await _play_count(steps)
 	var dealt := combat.resolve_player()
 	_log("You deal %d." % dealt)
-	if not steps.is_empty():
-		dealt_line = "Hit %d × Mult %s = %d" % [steps[-1].hit, mult_text(steps[-1].mult), dealt]
 	_mark_payout(combat.player_hp - hp_was, combat.shards - shards_was)
 	if dealt > 0:
 		await _play(hero, "attack")
@@ -300,7 +309,8 @@ func _on_end_turn() -> void:
 			var lesson: bool = combat.is_tutorial() and _tutorial_step().get("until") == "timing"
 			timing_hint.text = ("BLOCK!  " if combat.enemies[i].intent.kind == "attack" else "PARRY!  ") + combat.enemies[i].name
 			timing_hint.show()
-			belt.create_tween().tween_property(belt, "modulate:a", 0.25, BELT_FADE)  # out from under the bar
+			for c: Control in [belt, counter_label]:  # out from under the bar
+				c.create_tween().tween_property(c, "modulate:a", 0.25, BELT_FADE)
 			timing.start(combat, i)
 			if lesson:  # the bar waits, shown, while the guide explains it; it runs on Next, the panel out of its way
 				timing.running = false
@@ -310,7 +320,8 @@ func _on_end_turn() -> void:
 				timing.running = true
 			grade = await timing.finished
 			timing_hint.hide()
-			belt.create_tween().tween_property(belt, "modulate:a", 1.0, BELT_FADE)
+			for c: Control in [belt, counter_label]:
+				c.create_tween().tween_property(c, "modulate:a", 1.0, BELT_FADE)
 			if lesson:
 				_guide_done()
 		var kind: String = combat.enemies[i].intent.get("kind", "")
@@ -352,15 +363,18 @@ func _on_end_turn() -> void:
 			_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), true)
 
 
-## Plays End turn's count, Combat.count_steps(), quicker step by step: an Attack die pops, a relic that adds fires
-## and floats its part up, a Guard's cut floats up as a minus, the summary ticking Hit and Mult with the damage still
-## "?"; relics with no step stay dim throughout. Ends on the summary.
+## Plays End turn's count, Combat.count_steps(), quicker step by step and slower overall for a small hit: an Attack
+## die pops, a relic that adds fires and floats its part up, a Guard's cut floats up as a minus, the counter ticking
+## Hit and Mult with the damage still "?", a click a step; relics with no step stay dim throughout. Ends on the
+## damage landing on the counter.
 func _play_count(steps: Array[Dictionary]) -> void:
 	counting = not steps.is_empty()
 	for k in combat.relics.size():
 		if counting and not steps.any(func(s): return s.slot == k):
 			belt.icon(k).modulate.a = COUNT_DIM
-	var wait := COUNT_STEP
+	var damage := combat.preview_damage()
+	var wait := lerpf(COUNT_SLOW, COUNT_STEP, clampf(float(damage) / COUNT_FAST_AT, 0.0, 1.0))
+	var n := 0
 	for s in steps:
 		if not counting:
 			break
@@ -373,8 +387,10 @@ func _play_count(steps: Array[Dictionary]) -> void:
 			"mult":
 				belt.icon(s.slot).fire()
 			"guard":
-				_float(summary_label, "%d" % s.amount, UI.DANGER)
-		summary_label.text = "Hit %d × Mult %s = ?" % [s.hit, mult_text(s.mult)]
+				_float(counter_label, "%d" % s.amount, UI.DANGER)
+		counter_label.text = "Hit %d × Mult %s = ?" % [s.hit, mult_text(s.mult)]
+		_count_beat(1.1, UI.MARK_COLORS.ember if s.kind == "mult" else Color.WHITE, 1.0 + 0.05 * mini(n, 10))
+		n += 1
 		var left := wait
 		while counting and left > 0:  # by frames, not a timer, so a skip leaves nothing to fire later
 			await get_tree().process_frame
@@ -383,7 +399,53 @@ func _play_count(steps: Array[Dictionary]) -> void:
 	counting = false
 	for k in combat.relics.size():
 		belt.icon(k).modulate.a = 1.0
+	if not steps.is_empty():  # the damage, hidden until now
+		dealt_line = "Hit %d × Mult %s = %d" % [steps[-1].hit, mult_text(steps[-1].mult), damage]
 	_refresh()
+	if not steps.is_empty():  # the damage lands: a heavier click, a bigger pop, a few embers, more for a big hit
+		_count_beat(1.3 if damage >= COUNT_FAST_AT else 1.2, UI.GOLD, 0.7)
+		_embers(counter_label, clampi(damage / 4, 3, 16))
+
+
+## One beat of the count on the counter: it swells to `swell` and settles, flashes `flash` back to BONE, and clicks
+## at `pitch`.
+func _count_beat(swell: float, flash: Color, pitch: float) -> void:
+	count_sfx.pitch_scale = pitch
+	count_sfx.play()
+	counter_label.pivot_offset = counter_label.size / 2
+	counter_label.scale = Vector2.ONE * swell
+	counter_label.add_theme_color_override("font_color", flash)
+	if beat_tween:
+		beat_tween.kill()
+	beat_tween = counter_label.create_tween().set_parallel()
+	beat_tween.tween_property(counter_label, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	beat_tween.tween_property(counter_label, "theme_override_colors/font_color", BONE, 0.35)
+
+
+## A few pixel embers drift up off `at` and die out, like sparks off a struck torch.
+func _embers(at: Control, amount: int) -> void:
+	var p := CPUParticles2D.new()
+	p.position = at.size / 2
+	p.amount = amount
+	p.one_shot = true
+	p.explosiveness = 0.8
+	p.lifetime = 0.9
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(at.size.x / 2, 4)
+	p.direction = Vector2.UP
+	p.spread = 25.0
+	p.gravity = Vector2(0, -30)
+	p.initial_velocity_min = 20.0
+	p.initial_velocity_max = 60.0
+	p.scale_amount_min = 3.0  # the sprites' pixel size
+	p.scale_amount_max = 4.0
+	var fade := Gradient.new()
+	fade.set_color(0, UI.MARK_COLORS.ember)
+	fade.set_color(1, Color(UI.MARK_COLORS.ember, 0.0))
+	p.color_ramp = fade
+	p.finished.connect(p.queue_free)
+	at.add_child(p)
+	p.emitting = true
 
 
 ## Ends the count at once, on the summary it ends on.
@@ -454,14 +516,13 @@ func _refresh() -> void:
 	var hint := ("   %s ready" % fire) if fire else ("   Skill in reach" if combat.skill_in_roll() else "")
 	skill_button.text = fire if fire else "Skills"
 	var m := combat.mult()
-	var hit := 0
-	for i in combat.enemies.size():
-		for h in combat.hits_to(i):
-			hit += h
-	var damage := dealt_line if dealt_line else "Hit %d × Mult %s = %d" % [hit, mult_text(m), combat.preview_damage()]
-	summary_label.text = "Rolling..." if rolling else "%s   Guard %d   Grit +%d%s" % [damage, combat.guard_total(), combat.unplaced_count(), hint]
-	summary_label.tooltip_text = _mult_tooltip(m) if not is_equal_approx(m, 1.0) and not rolling else ""
-	belt.position.x = skill_button.position.x + skill_button.get_combined_minimum_size().x + 16  # a fired skill's name widens it
+	var hit := 0  # the dice and skills alone, before any relic: the count adds the relics' parts
+	for s in combat.count_steps():
+		if s.kind in ["die", "guard", "skill"]:
+			hit += int(s.amount)
+	counter_label.text = "" if rolling else (dealt_line if dealt_line else "Hit %d × Mult 1 = %s" % [maxi(hit, 0), "?" if combat.preview_damage() > 0 else "0"])  # the count reveals it
+	counter_label.tooltip_text = _mult_tooltip(m) if not is_equal_approx(m, 1.0) and not rolling else ""
+	summary_label.text = "Rolling..." if rolling else "Guard %d   Grit +%d%s" % [combat.guard_total(), combat.unplaced_count(), hint]
 	for k in combat.relics.size():
 		belt.icon(k).value_label.text = _relic_value(k)
 	summary_label.add_theme_color_override("font_color", UI.GOLD if combat.skill_in_roll() and not combat.skill_ready() and not rolling else Color.WHITE)
@@ -538,7 +599,7 @@ func _mult_tooltip(m: float) -> String:
 	for i in combat.enemies.size():
 		var hits := combat.hits_to(i)
 		if not hits.is_empty():
-			lines.append("%s: %s  × %s = %d" % [combat.enemies[i].name, ("(" + " + ".join(hits.map(str)) + ")") if hits.size() > 1 else str(hits[0]), mult_text(m), combat.damage_to(i)])
+			lines.append("%s: %s  × %s" % [combat.enemies[i].name, ("(" + " + ".join(hits.map(str)) + ")") if hits.size() > 1 else str(hits[0]), mult_text(m)])
 	lines.append("Mult ×" + mult_text(m))
 	return "\n".join(lines)
 
@@ -622,8 +683,12 @@ func _build() -> void:
 	for i in combat.enemies.size():
 		enemy_ui.append(_build_enemy(enemy_row, i))
 
-	summary_label = UI.label(root, 18)
-	summary_label.mouse_filter = Control.MOUSE_FILTER_PASS  # for its Mult hover
+	var above := UI.row(root, 8)  # over the tray's left end: the tray's buttons and the summary
+	faces_button = UI.button(above, "Faces", _show_faces)
+	skill_button = UI.button(above, "Skills", _show_skill)
+	skill_button.tooltip_text = _skill_text()
+	summary_label = UI.label(above, 16)
+	summary_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
 	# The dice row has a set height (tray_height) and the fight row above takes what is left, so the
 	# dice box, which the throw's walls are sized to, is the same in every fight.
@@ -649,7 +714,7 @@ func _build() -> void:
 
 	# Floating over the layout, not in it, so showing them never moves anything.
 	timing_hint = UI.label(dice_box, 20)  # the block/parry bar, over the top of the dice tray: no dice are
-	timing_hint.position = Vector2(132, 20)  # used while the enemies act; right of the Faces button
+	timing_hint.position = Vector2(28, 20)  # used while the enemies act; clear of the frame's corner ornament
 	timing_hint.hide()
 	timing = TimingBar.new()
 	timing.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
@@ -728,7 +793,7 @@ func _add_rig(holder: Control, sprite: String) -> Node2D:
 
 
 ## The dice tray: the 3D dice on felt that fills the whole box out to its frame, the frame drawn over
-## the felt's edge, the Faces and Skills buttons floating in its top-left corner and the belt beside them. Clicking a
+## the felt's edge, the belt along its top-left and the counter centred beside it. Clicking a
 ## die opens its menu.
 func _build_dice(parent: Node) -> void:
 	var box := Control.new()
@@ -749,22 +814,34 @@ func _build_dice(parent: Node) -> void:
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	box.add_child(frame)
-	faces_button = UI.button(box, "Faces", _show_faces)
-	faces_button.position = Vector2(28, 16)  # clear of the frame's corner ornament
-	skill_button = UI.button(box, "Skills", _show_skill)
-	skill_button.tooltip_text = _skill_text()
-	skill_button.position = Vector2(28 + faces_button.get_combined_minimum_size().x + 8, 16)
-	belt = BeltRow.new()  # along the top edge, right of the buttons (_refresh keeps it clear of Skills)
+	counter_label = UI.label(box, 32)  # before the belt, so the belt stays on top for drags
+	counter_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
+	counter_label.grow_horizontal = Control.GROW_DIRECTION_BOTH  # stays centred as its text changes
+	counter_label.offset_top = 12
+	counter_label.mouse_filter = Control.MOUSE_FILTER_PASS  # for its Mult hover
+	counter_label.add_theme_color_override("font_color", BONE)
+	counter_label.add_theme_color_override("font_outline_color", Color("070e10"))
+	counter_label.add_theme_constant_override("outline_size", 8)
+	belt = BeltRow.new()  # along the top edge, left of the counter
 	belt.combat = combat
+	belt.position.x = 28  # clear of the frame's corner ornament
 	belt.can_drag = func() -> bool: return not busy and not paused and not counting
 	belt.moved.connect(_refresh)
 	belt.position.y = 8
 	belt.visible = not combat.is_tutorial()
 	belt.rebuild()
 	box.add_child(belt)
-	tray.top_inset = belt.get_combined_minimum_size().y + 8
+	perk_row = UI.row(box, 8)  # mirrors the belt on the right; for show only
+	perk_row.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE)
+	perk_row.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	perk_row.offset_right = -28  # clear of the frame's corner ornament
+	perk_row.offset_top = 8
+	perk_row.visible = belt.visible
+	for id: String in combat.perks:
+		UI.image(perk_row, "perk_" + id, Vector2(32, 32)).tooltip_text = "%s
+%s" % [Meta.PERKS[id].name, Meta.PERKS[id].text]
+	tray.top_inset = maxf(maxf(belt.get_combined_minimum_size().y, perk_row.get_combined_minimum_size().y), counter_label.offset_top + counter_label.get_combined_minimum_size().y) + 8
 	faces_popup = PopupPanel.new()
-	faces_label = UI.label(faces_popup, 16)
 	add_child(faces_popup)
 	die_menu = PopupMenu.new()
 	die_menu.id_pressed.connect(_on_die_menu)
@@ -836,20 +913,60 @@ func _skill_text() -> String:
 	return "\n".join(lines) + "\nEvery skill the Skill dice fit fires at once.\nSkills ignore enemy Guard and Bone Wall."
 
 
+## Every unlocked skill as on the camp board: the dice it needs, its name, what it needs and does.
 func _show_skill() -> void:
-	faces_label.text = _skill_text()
-	faces_popup.reset_size()
-	faces_popup.popup(Rect2i(Vector2i(skill_button.get_global_rect().end), faces_popup.size))
+	var col := _popup_column()
+	for id: String in combat.skills:
+		var r := UI.row(col, 12)
+		var art := VBoxContainer.new()
+		art.custom_minimum_size.x = 112
+		r.add_child(art)
+		TileBoard.dice(id).call(art, 1)
+		var words := VBoxContainer.new()
+		r.add_child(words)
+		UI.heading(words, 16, Combat.SKILLS[id].name)
+		UI.label(words, 16, "Needs: %s
+%s" % [Combat.SKILLS[id].need, Combat.SKILLS[id].text]).add_theme_color_override("font_color", UI.QUIET)
+	UI.label(col, 16, "Every skill the Skill dice fit fires at once.
+Skills ignore enemy Guard and Bone Wall.").add_theme_color_override("font_color", UI.QUIET)
+	_popup_at(skill_button)
 
 
+## Each die's six faces as at the campfire: bone faces, cursed ones dark, a mark's glyph in the corner.
 func _show_faces() -> void:
-	var lines := []
+	var col := _popup_column()
 	for i in combat.dice.size():
 		var d: Dictionary = combat.dice[i]
-		lines.append("Die %d:  %s" % [i + 1, "  ".join(range(d.faces.size()).map(func(k): return _face_text(d.faces[k]) + (" " + Combat.MARKS[d.marks[k]].name if d.marks[k] else "")))])
-	faces_label.text = "\n".join(lines)
+		var r := UI.row(col, 8)
+		UI.label(r, 16, "Die %d" % (i + 1)).size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		for k in d.faces.size():
+			var has: String = d.marks[k]
+			var cursed: bool = d.faces[k] == Combat.CURSE
+			var face := UI.image(r, "die_cursed" if cursed else "die_bone", Vector2(48, 48))
+			var l := UI.label(face, 32, _face_text(d.faces[k]))
+			l.add_theme_color_override("font_color", Color.WHITE if cursed else (UI.MARK_COLORS[has] if has else ForgeScreen.BONE_INK))
+			if has:
+				face.tooltip_text = "%s: %s" % [Combat.MARKS[has].name, Combat.MARKS[has].text]
+				var glyph := UI.image(face, "mark_" + has)
+				glyph.modulate = UI.MARK_COLORS[has]
+				glyph.position = Vector2(4, 48 - 4 - 14)  # the lower-left corner, as on the dice
+	_popup_at(faces_button)
+
+
+## Empties the popup and gives it a fresh column to fill.
+func _popup_column() -> VBoxContainer:
+	for c in faces_popup.get_children():
+		faces_popup.remove_child(c)  # now, so reset_size measures only the new column
+		c.queue_free()
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	faces_popup.add_child(col)
+	return col
+
+
+func _popup_at(button: Button) -> void:
 	faces_popup.reset_size()
-	faces_popup.popup(Rect2i(Vector2i(faces_button.get_global_rect().end), faces_popup.size))
+	faces_popup.popup(Rect2i(Vector2i(button.get_global_rect().end), faces_popup.size))
 
 
 ## Throws the dice at `which` (indices); the faces they land on become their values. Until then the

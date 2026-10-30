@@ -490,12 +490,25 @@ func _fight_belt() -> void:
 	var game: Node = await _new_game()
 	for r in ["whetstone", "gravedigger", "spare_fuse"]:
 		game.combat.take_relic(r)
+	game.combat.apply_perks(["steady_hand", "scavenger"])
 	var screen: CombatScreen = await _belt_fight(game)
 	var belt: BeltRow = screen.belt
+	check(screen.perk_row.get_child_count() == 2 and screen.perk_row.get_child(0).tooltip_text.begins_with("Steady Hand"),
+		"the run's perks show as badges on the tray, with their text on hover")
+	await process_frame
+	check(screen.perk_row.position.x > screen.counter_label.position.x + screen.counter_label.size.x, "the perks sit right of the counter")
+	screen._show_faces()
+	await process_frame
+	check(screen.faces_popup.visible and screen.faces_popup.get_child(0).get_child_count() == screen.combat.dice.size(), "Faces shows a row per die")
+	screen._show_skill()
+	await process_frame
+	check(screen.faces_popup.get_child_count() == 1 and screen.faces_popup.get_child(0).get_child_count() == screen.combat.skills.size() + 1, "Skills shows a row per skill and the rule")
+	screen.faces_popup.hide()
 	check(belt.get_parent() == screen.dice_box and belt.get_child_count() == Combat.BELT_SIZE, "the belt is a 5-slot row on the dice tray")
-	check(belt.position.x >= screen.skill_button.position.x + screen.skill_button.size.x and belt.position.y == 8,
-		"the belt sits right of the Skills button, at the tray's top (at %s)" % belt.position)
+	check(belt.position == Vector2(28, 8) and screen.faces_button.get_parent() != screen.dice_box and screen.counter_label.get_parent() == screen.dice_box,
+		"the belt sits at the tray's top-left, the counter on the tray and Faces above it (belt at %s)" % belt.position)
 	check(screen.tray.top_inset > 0, "the tray's top wall sits below the belt")
+	check(screen.counter_label.position.x > belt.position.x + belt.size.x, "the counter clears the belt (counter at %.0f, belt ends at %.0f)" % [screen.counter_label.position.x, belt.position.x + belt.size.x])
 	check(belt.can_drag.call(), "the belt drags on the player's turn")
 	await _press(KEY_ESCAPE)
 	check(screen.paused and not belt.can_drag.call(), "no dragging behind the fight menu")
@@ -514,16 +527,18 @@ func _fight_belt() -> void:
 	belt = screen.belt
 	var dimmed := func() -> Array: return range(3).filter(func(k): return belt.icon(k).modulate.a < 1.0)
 	screen._refresh()
-	check("Hit 9 × Mult 1.5 = 13" in screen.summary_label.text, "Black Candle on Attack 9 reads Hit 9 × Mult 1.5 = 13: %s" % screen.summary_label.text)
+	check(screen.counter_label.text == "Hit 9 × Mult 1 = ?" and screen.combat.preview_damage() == 13,
+		"Attack 9 under a Black Candle reads Hit 9 × Mult 1 = ?, the Candle and the 13 kept for the count: %s" % screen.counter_label.text)
 	var preview := screen.combat.preview_damage()
 	screen._on_end_turn()
 	check(screen.counting and not belt.can_drag.call(), "End turn starts the count, and the belt can't drag while busy")
 	check(dimmed.call() == [1, 2], "relics with no step in the count stay dim (dim: %s)" % [dimmed.call()])
 	var asked := false
 	while screen.counting:
-		asked = asked or screen.summary_label.text.ends_with("= ?")
+		asked = asked or screen.counter_label.text.ends_with("= ?")
 		await process_frame
 	check(asked, "the count shows Hit × Mult = ? before the damage")
+	check(screen.counter_label.text == "Hit 9 × Mult 1.5 = 13", "and ends on the damage: %s" % screen.counter_label.text)
 	check(dimmed.call().is_empty(), "the count's end undims them (dim: %s)" % [dimmed.call()])
 	check(999 - screen.combat.enemies[0].hp == preview, "the turn deals the %d the preview showed (dealt %d)" % [preview, 999 - screen.combat.enemies[0].hp])
 	check(screen.busy and not belt.can_drag.call(), "no dragging while the turn resolves")
@@ -532,10 +547,10 @@ func _fight_belt() -> void:
 	while screen.busy:
 		if screen.acting >= 0:
 			enemy_phase = true
-			held = held and screen.summary_label.text.begins_with("Hit 9 × Mult 1.5 = %d" % preview)
+			held = held and screen.counter_label.text.begins_with("Hit 9 × Mult 1.5 = %d" % preview)
 		await process_frame
-	check(enemy_phase and held, "the summary keeps what was dealt through the enemy phase (now: %s)" % screen.summary_label.text)
-	check(screen.summary_label.text.begins_with("Hit 0 "), "and shows the new preview once the next turn starts (now: %s)" % screen.summary_label.text)
+	check(enemy_phase and held, "the summary keeps what was dealt through the enemy phase (now: %s)" % screen.counter_label.text)
+	check(screen.counter_label.text.begins_with("Hit 0 "), "and shows the new preview once the next turn starts (now: %s)" % screen.counter_label.text)
 	for i in 3:
 		screen.combat.dice[i].value = 3
 		screen.combat.assign(i, Combat.Slot.ATTACK)
@@ -562,6 +577,7 @@ func _fight_belt() -> void:
 		screen.combat.assign(i, Combat.Slot.ATTACK)
 	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}
 	screen._refresh()
+	check(screen.counter_label.text == "Hit 9 × Mult 1 = ?", "Attack 5 + 4 reads Hit 9, Whetstone's +3 kept for the count: %s" % screen.counter_label.text)
 	screen._on_end_turn()
 	var plus := false
 	while screen.counting:
