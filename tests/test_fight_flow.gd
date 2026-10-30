@@ -354,10 +354,10 @@ func _two_floors() -> void:
 	game._show_fight(game._on_fight_finished)
 	game.combat.enemies[0].hp = 1
 	await _fight_out(game, "warden at 1 HP")
-	check(game.screen is RelicPickScreen and game.screen.rares and game.screen.title == "The Warden's hoard", "beating the Warden first offers his hoard")
+	check(game.screen is RelicPickScreen and game.screen.rarity == "rare" and game.screen.title == "The Warden's hoard", "beating the Warden first offers his hoard")
 	if game.screen is RelicPickScreen:
 		check(game.screen.choices.size() == 3 and game.screen.choices.all(func(id): return Combat.RELICS[id].rare), "the hoard is three rares")
-		_button(game.screen, "Skip").pressed.emit()
+		_button(game.screen, "Leave").pressed.emit()
 		_agree(game)
 		await process_frame
 	check(game.screen is PerkPickScreen, "then a bonus perk")
@@ -401,53 +401,68 @@ func _two_floors() -> void:
 	await process_frame
 
 
-## A won fight offers three relics: Take puts one on the belt, Skip pays Shards, a full belt breaks one for Shards.
-## Then the map's next column. Every way out asks first.
+## A won fight opens the Spoils shop: Buy puts a card on the belt for Shards, Destroy sells a belt relic back, Leave
+## goes on to the map. Every buy, destroy and leave asks first.
 func _relic_picks() -> void:
 	var errors_before := errors.count
 	var game: Node = await _won_fight()
-	check(game.screen is RelicPickScreen and game.screen.title == "Spoils" and game.screen.choices.size() == 3, "a won fight offers Spoils, three relics")
-	if game.screen is RelicPickScreen:
-		var id: String = game.screen.choices[1]
-		_takes(game.screen)[1].pressed.emit()
+	var pick: RelicPickScreen = game.screen if game.screen is RelicPickScreen else null
+	check(pick != null and pick.title == "Spoils" and pick.choices.size() == 3, "a won fight opens the Spoils shop, three relics")
+	if pick:
+		check(pick.choices.all(func(id): return not Combat.RELICS[id].rare), "the first Spoils is commons only")
+		check(pick.find_children("*", "Button", true, false).all(func(b): return b.text not in ["<", "Skip", "Take", "Break"]), "no free-pick buttons")
+		check(pick.buys.all(func(b): return b.disabled), "a Buy you can't afford is disabled")
+		check(pick.buys[0].text == "Buy  %d" % Combat.price(pick.choices[0]), "the Buy button shows the price")
+		game.combat.shards = 20
+		pick._refresh()
+		check(not pick.buys[0].disabled, "with the Shards it is enabled")
+		var first: String = pick.choices[0]
+		var second: String = pick.choices[1]
+		pick.buys[0].pressed.emit()
+		check(game.combat.relics.is_empty(), "Buy asks first")
+		_agree(game)
+		await process_frame  # the closed confirm leaves the tree
+		pick.buys[1].pressed.emit()
 		_agree(game)
 		await process_frame
-		check(game.combat.relics.size() == 1 and game.combat.relics[0].id == id, "Take puts the relic on the belt")
-		check(game.screen is MapScreen and game.layer == 1, "then the map's next column")
-	game.queue_free()
-	game = await _won_fight()
-	var shards: int = game.combat.shards
-	if game.screen is RelicPickScreen:
-		_button(game.screen, "Skip").pressed.emit()
-		_agree(game)
-		await process_frame
-	check(game.combat.shards == shards + RelicPickScreen.SKIP_SHARDS and game.combat.relics.is_empty(), "Skip pays %d Shards" % RelicPickScreen.SKIP_SHARDS)
-	check(game.screen is MapScreen and game.layer == 1, "and goes on to the map")
-	game.queue_free()
-	game = await _won_fight()
-	shards = game.combat.shards
-	if game.screen is RelicPickScreen:
-		var pick: RelicPickScreen = game.screen
-		var fill: Array = Combat.RELICS.keys().filter(func(r): return r not in pick.choices).slice(0, Combat.BELT_SIZE)
-		for r in fill:
+		check(game.combat.relics.map(func(r): return r.id) == [first, second] and game.combat.shards == 12, "two buys: both on the belt, 8 Shards paid")
+		check(game.screen == pick and pick.buys[0].disabled and pick.buys[1].disabled and not pick.buys[2].disabled, "still the shop; the bought cards are sold, the other still buyable")
+		check(pick.subtitle.text.contains("Shards 12"), "the Shards line refreshes")
+		var rest: Array = Combat.RELICS.keys().filter(func(r): return r not in pick.choices and r not in [first, second])
+		for r in rest.slice(0, 3):
 			game.combat.take_relic(r)
-		pick._show_belt()  # redraw the belt with the relics just added
-		check(pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<").size() == 4, "every belt relic but the first has a move-left button")
-		pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "<")[0].pressed.emit()
-		check(game.combat.relics[0].id == fill[1] and game.combat.relics[1].id == fill[0], "◀ moves a belt relic left")
-		var id: String = pick.choices[0]
-		_takes(pick)[0].pressed.emit()
-		check(_overlays(game, "ConfirmPanel").is_empty(), "on a full belt Take first asks which relic to break")
-		var breaks: Array = pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Break")
-		check(breaks.size() == Combat.BELT_SIZE, "a Break button under every belt relic")
+		pick._refresh()
+		check(game.combat.relics.size() == Combat.BELT_SIZE and pick.buys.all(func(b): return b.disabled), "a full belt disables every Buy")
 		var destroyed: String = game.combat.relics[0].id
-		if breaks.size() == Combat.BELT_SIZE:
-			breaks[0].pressed.emit()
-			_agree(game)
-			await process_frame
-		check(game.combat.relics[Combat.BELT_SIZE - 1].id == id and game.combat.relics.size() == Combat.BELT_SIZE, "the new relic goes on the end of the belt")
-		check(game.combat.shards == shards + Combat.sell_value(destroyed), "destroying pays %d Shards" % Combat.sell_value(destroyed))
-		check(game.screen is MapScreen, "then the map")
+		var shards: int = game.combat.shards
+		var destroys := pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Destroy")
+		check(destroys.size() == Combat.BELT_SIZE, "a Destroy button under every belt relic")
+		destroys[0].pressed.emit()
+		_agree(game)
+		await process_frame
+		check(game.combat.relics.size() == Combat.BELT_SIZE - 1 and game.combat.shards == shards + Combat.sell_value(destroyed), "Destroy pays %d Shards" % Combat.sell_value(destroyed))
+		check(not pick.buys[2].disabled and pick.subtitle.text.contains("Shards %d" % game.combat.shards), "the room makes the card buyable again, Shards refreshed")
+		shards = game.combat.shards
+		_button(pick, "Leave").pressed.emit()
+		check(game.screen == pick, "Leave asks first")
+		_agree(game)
+		await process_frame
+		check(game.screen is MapScreen and game.layer == 1 and game.combat.shards == shards, "Leave goes to the map's next column, nothing paid")
+		check(game.combat.shopped, "the first Spoils is marked as shopped")
+		game.combat.start_group(["skeleton"])
+		game._show_fight(game._on_fight_finished)
+		game.combat.enemies[0].hp = 1
+		await _fight_out(game, "skeleton at 1 HP")
+		check(game.screen is RelicPickScreen and game.screen.rarity == "any", "a later Spoils deals any rarity")
+	game.queue_free()
+	game = await _new_game()
+	game._on_warden_beaten()
+	check(game.screen is RelicPickScreen and game.screen.rarity == "rare", "the Warden's hoard is a rare shop")
+	if game.screen is RelicPickScreen:
+		_button(game.screen, "Leave").pressed.emit()
+		_agree(game)
+		await process_frame
+		check(game.screen is PerkPickScreen, "leaving the hoard goes to the perk pick")
 	game.queue_free()
 	game = await _new_game()
 	game.floor_id = "mine"
@@ -457,9 +472,9 @@ func _relic_picks() -> void:
 	game._show_fight(game._on_fight_finished)
 	game.combat.enemies[0].hp = 1
 	await _fight_out(game, "pit king at 1 HP")
-	check(game.screen is NoticeScreen and game.screen.title == "The Pit King falls.", "the Pit King gives no pick, only the run's end")
+	check(game.screen is NoticeScreen and game.screen.title == "The Pit King falls.", "the Pit King gives no shop, only the run's end")
 	await create_timer(0.3).timeout
-	check(errors.count == errors_before, "relic picks run with no errors (got %d)" % (errors.count - errors_before))
+	check(errors.count == errors_before, "the shop runs with no errors (got %d)" % (errors.count - errors_before))
 	game.queue_free()
 	await process_frame
 
@@ -577,11 +592,7 @@ func _won_fight() -> Node:
 	return game
 
 
-func _takes(pick: Node) -> Array:
-	return pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Take")
-
-
-## Once the Mine is unlocked the camp can start a run there, without a bonus perk.
+## Once the Mine is unlocked the camp can start a run there, without a bonus perk or a relic.
 func _mine_start() -> void:
 	var errors_before := errors.count
 	var game: Node = await _new_game()
@@ -596,13 +607,7 @@ func _mine_start() -> void:
 	var floors: Array = pick[0].find_children("*", "Button", true, false)
 	floors.filter(func(b): return b.text == "The Hollow Mine")[0].pressed.emit()
 	await process_frame
-	check(game.screen is RelicPickScreen and game.screen.rares and game.screen.title == "Into the Mine", "a Mine start opens with a rare pick")
-	if game.screen is RelicPickScreen:
-		var first: String = game.screen.choices[0]
-		_takes(game.screen)[0].pressed.emit()
-		_agree(game)
-		await process_frame
-		check(game.combat.relics[0].id == first, "the rare taken is on the belt")
+	check(game.combat.relics.is_empty(), "a Mine start gives no free relic")
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
 	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")
 	game.combat.start_group(["miner"])

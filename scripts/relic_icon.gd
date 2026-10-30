@@ -22,17 +22,22 @@ var _fire := 1.0  # 0..1 through a fire(), 1 at rest
 var _tween: Tween
 
 
-## Belt slot k's icon, not yet in a parent; its tooltip names the relic and its text, and a Mirror Shard what it copies.
-static func make(combat: Combat, k: int) -> RelicIcon:
+## Relic `id`'s icon off the belt (a shop card), not yet in a parent; its tooltip names the relic and its text.
+static func of(id: String) -> RelicIcon:
 	var icon := RelicIcon.new()
+	icon.relic = id
+	icon.tooltip_text = "%s\n%s" % [Combat.RELICS[id].name, Combat.RELICS[id].text]
+	icon._build()  # here, not in _ready, so value_label exists before the icon is in the tree
+	return icon
+
+
+## Belt slot k's icon, not yet in a parent; a Mirror Shard's tooltip also says what it copies.
+static func make(combat: Combat, k: int) -> RelicIcon:
+	var icon := of(combat.relics[k].id)
 	icon.k = k
-	icon.relic = combat.relics[k].id
-	var r: Dictionary = Combat.RELICS[icon.relic]
-	icon.tooltip_text = "%s\n%s" % [r.name, r.text]
 	if icon.relic == "mirror_shard":
 		var copy := combat.relic_id(k)
 		icon.tooltip_text += "\nCopying: " + (Combat.RELICS[copy].name if copy else "nothing")
-	icon._build()  # here, not in _ready, so value_label exists before the icon is in the tree
 	return icon
 
 

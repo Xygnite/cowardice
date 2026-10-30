@@ -139,10 +139,7 @@ func _start_run(first_floor := "chapel") -> void:
 	combat.skills = meta.skills.duplicate()
 	rooms_before = 0
 	seen_events.clear()
-	if first_floor == "mine":  # a Mine start opens with a rare pick
-		_show_relic_pick("Into the Mine", "rare", _enter_floor.bind("mine"))
-	else:
-		_enter_floor(first_floor)
+	_enter_floor(first_floor)  # a Mine start gets no free relic: buy at the shop after its first fight
 
 
 ## A fresh map of floor `id`, from its entrance. HP, Shards, dice, perks and seen events stay as they are; the murmurs start over.
@@ -265,7 +262,7 @@ func _on_fight_finished(won: bool) -> void:
 		_end_run(true)
 
 
-## The Mine opens for good; this run takes a rare relic, a bonus perk, a campfire, then the way down.
+## The Mine opens for good; this run gets a rare shop, a bonus perk, a campfire, then the way down.
 func _on_warden_beaten() -> void:
 	meta.mine_unlocked = true
 	meta.save()
@@ -282,7 +279,7 @@ func _show_perk_pick() -> void:
 	_show(s)
 
 
-## A pick of relics for the belt (of `rarity`, see RelicPickScreen.offer), then `then`; straight to `then` if there are none to offer.
+## The relic shop (of `rarity`, see RelicPickScreen.offer), then `then` once the player leaves; straight to `then` if there are none to offer.
 func _show_relic_pick(title: String, rarity: String, then: Callable) -> void:
 	var choices := RelicPickScreen.offer(combat.relics, rarity, combat.rng)
 	if choices.is_empty():
@@ -291,7 +288,7 @@ func _show_relic_pick(title: String, rarity: String, then: Callable) -> void:
 	var s := RelicPickScreen.new()
 	s.combat = combat
 	s.choices = choices
-	s.rares = rarity == "rare"
+	s.rarity = rarity
 	s.title = title
 	s.done.connect(then)
 	_show(s)
