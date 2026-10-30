@@ -433,6 +433,9 @@ func _relic_picks() -> void:
 		check(game.combat.shards == 3 and pick.rerolls == 1 and pick.reroll_button.text == "Reroll offer  3", "a reroll pays 2 and the next costs 3")
 		check(pick.choices.size() == 3 and pick.choices.all(func(id): return not Combat.RELICS[id].rare), "the first Spoils rerolls into commons")
 		check(pick.buys.size() == 3 and pick.buys.all(func(b): return b.is_inside_tree()), "the cards are rebuilt with their Buy buttons")
+		var icons: Array = pick.cards.find_children("*", "RelicIcon", true, false)
+		check(icons.size() == 3 and icons.all(func(i): return i.custom_minimum_size == Vector2(64, 64)), "the cards show the large art")
+		check(icons.all(func(i): return i.tooltip_text.begins_with(Combat.RELICS[i.relic].name)), "a large icon keeps its tooltip")
 		pick.reroll_button.pressed.emit()
 		check(game.combat.shards == 0, "the second costs 3")
 		check(pick.reroll_button.disabled and game.combat.shards >= 0, "can't afford the third; Shards never go below 0")
@@ -453,6 +456,8 @@ func _relic_picks() -> void:
 		check(pick.subtitle.text.contains("Shards 12"), "the Shards line refreshes")
 		await process_frame
 		_check_even_slots(pick, "two relics")
+		var belt_icons: Array = pick.belt_row.find_children("*", "RelicIcon", true, false)
+		check(belt_icons.size() == 2 and belt_icons.all(func(i): return i.custom_minimum_size == Vector2(32, 32)), "the shop's belt keeps the small icons")
 		pick.reroll_button.pressed.emit()
 		check(game.combat.relics.map(func(r): return r.id) == [first, second] and first not in pick.choices and second not in pick.choices,
 			"after a reroll the bought relics are still on the belt and not dealt again")
@@ -684,6 +689,7 @@ func _belt_row() -> void:
 	row.rebuild()
 	await process_frame
 	check(row.get_child_count() == Combat.BELT_SIZE and row.find_children("*", "RelicIcon", true, false).size() == 3, "the belt row has 5 slots, 3 with an icon")
+	check(row.find_children("*", "RelicIcon", true, false).all(func(i): return i.custom_minimum_size == Vector2(32, 32)), "the fight belt keeps the small icons")
 	check(row.icon(2).tooltip_text.contains("Copying: nothing"), "a Mirror Shard's icon tooltip still names what it copies")
 	var moves := [0]
 	row.moved.connect(func(): moves[0] += 1)

@@ -13,6 +13,7 @@ const DRAGGED_ALPHA := 0.3
 var k := 0
 var value_label: Label  # a growing relic's current worth, gold, hanging off the bottom-right corner
 var relic := ""
+var big := false  # the 64x64 still of a shop card, rather than the 32x32 animated strip
 var slide_x := 0.0  # how far the art has slid sideways, to open a gap in a drag-over
 var _slide_to := 0.0
 var _art: TextureRect  # what moves; the Control itself stays where its container put it
@@ -23,9 +24,11 @@ var _tween: Tween
 
 
 ## Relic `id`'s icon off the belt (a shop card), not yet in a parent; its tooltip names the relic and its text.
-static func of(id: String) -> RelicIcon:
+## `big` is the large still.
+static func of(id: String, big := false) -> RelicIcon:
 	var icon := RelicIcon.new()
 	icon.relic = id
+	icon.big = big
 	icon.tooltip_text = "%s\n%s" % [Combat.RELICS[id].name, Combat.RELICS[id].text]
 	icon._build()  # here, not in _ready, so value_label exists before the icon is in the tree
 	return icon
@@ -42,15 +45,18 @@ static func make(combat: Combat, k: int) -> RelicIcon:
 
 
 func _build() -> void:
-	var still: Texture2D = load(UI.ART % ("relic_" + relic))
+	var still: Texture2D = load(UI.ART % ("relic_" + relic + ("_big" if big else "")))
 	custom_minimum_size = still.get_size()
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_frame = AtlasTexture.new()
-	_frame.atlas = load(UI.ART % ("relic_%s_anim" % relic))
-	_frame.region = Rect2(Vector2.ZERO, still.get_size())
 	_art = TextureRect.new()
-	_art.texture = _frame
+	if big:
+		_art.texture = still
+	else:
+		_frame = AtlasTexture.new()
+		_frame.atlas = load(UI.ART % ("relic_%s_anim" % relic))
+		_frame.region = Rect2(Vector2.ZERO, still.get_size())
+		_art.texture = _frame
 	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_art.pivot_offset = still.get_size() / 2
 	add_child(_art)
@@ -68,7 +74,8 @@ func _build() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	slide_x = move_toward(slide_x, _slide_to, SLIDE_SPEED * delta)
-	_frame.region.position.x = (int(_time * FPS) % FRAMES) * _frame.region.size.x
+	if _frame:
+		_frame.region.position.x = (int(_time * FPS) % FRAMES) * _frame.region.size.x
 	var bob := roundf(sin(_time * 2.5 + k * 0.7) * BOB)
 	_art.position = Vector2(slide_x + sin(_fire * TAU * 3) * 3 * (1 - _fire), bob - sin(_fire * PI) * 8)
 	_art.rotation = sin(_fire * TAU * 3) * 0.12 * (1 - _fire)

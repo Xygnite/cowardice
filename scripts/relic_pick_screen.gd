@@ -83,7 +83,7 @@ func _deal_cards() -> void:
 		var col := UI.panel(cards)
 		col.custom_minimum_size = Vector2(260, 0)
 		var head := UI.row(col, 10)
-		head.add_child(RelicIcon.of(id))
+		head.add_child(RelicIcon.of(id, true))
 		UI.label(head, 22, r.name).size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		UI.label(col, 16, "Rare" if r.rare else "Common").add_theme_color_override("font_color", UI.GOLD if r.rare else UI.QUIET)
 		var text := UI.label(col, 16, r.text)
