@@ -680,6 +680,8 @@ func _hp_scaling() -> void:
 			if room.kind == "fight":
 				ok = ok and room.scale == (1.5 if col >= 5 and col <= 7 else 1.0)
 	check(ok, "only columns 5-7 fights are dealt a 1.5 scale")
+	check(Floor.world_factor(1) == 1.0 and Floor.world_factor(2) == 1.8 and Floor.world_factor(5) == 7.4, "world factors 1.0, 1.8 ... 7.4")
+	check(Floor.world_factor(6) == 7.4, "past world 5 the last factor holds")
 
 
 func _pit_king() -> void:

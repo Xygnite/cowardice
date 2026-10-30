@@ -377,15 +377,22 @@ func _two_floors() -> void:
 	check(game.screen is NoticeScreen and game.screen.title == "Campfire", "after the pick comes a campfire")
 	check(id in game.combat.perks, "the picked perk is active")
 	var heal: int = game.combat.campfire_heal_amount()
+	game._save_and_quit("mine")
+	game._continue_run()
+	check(game.world() == 2, "a continued run keeps its world")
 	game.screen.choices[0][1].call()  # Rest
 	_agree(game)
 	await process_frame
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.layer == 0, "then the Mine's map, from its entrance")
 	check(game.combat.player_hp == mini(game.combat.max_hp, hp + heal) and game.combat.shards == shards, "HP and Shards carry down")
 	check(game.combat.dungeon_turns == 0, "the Mine's murmurs start from their first line")
+	game._start_ambush()
+	check(game.combat.enemies.all(func(e): return e.max == ceili(e.type.hp * 1.8)), "a world-2 ambush takes the factor")
+	game.ambush = false
 	game.layer = game.map.size() - 1
-	game.combat.start_group(["pit_king"])
-	game._show_fight(game._on_fight_finished)
+	game._on_room_picked(0)
+	check(game.world() == 2, "the Mine after the Chapel is world 2")
+	check(game.combat.enemies[0].max == ceili(220 * 1.8), "the Pit King in world 2 has %d HP (got %d)" % [ceili(220 * 1.8), game.combat.enemies[0].max])
 	check(game.screen.backdrop == "mine", "Mine fights ask for the Mine backdrop")
 	check(game.screen.fight_label.text == "Boss" and game.screen.murmur_label.get_parsed_text() == "", "the Pit King's fight says Boss, no murmurs")
 	game.combat.enemies[0].hp = 1
@@ -721,6 +728,10 @@ func _mine_start() -> void:
 	check(game.combat.relics.is_empty(), "a Mine start gives no free relic")
 	check(game.screen is MapScreen and game.screen.title == "The Hollow Mine" and game.floor_id == "mine", "the camp starts a run in the Mine")
 	check(game.combat.bonus_perk == "" and game.rooms_before == 0, "a Mine start has no bonus perk")
+	check(game.world() == 1, "a Mine start is world 1")
+	game.layer = game.map.size() - 1
+	game._on_room_picked(0)
+	check(game.combat.enemies[0].max == 220, "a Mine-start Pit King keeps 220 HP")
 	game.combat.start_group(["miner"])
 	game._show_fight(game._on_fight_finished)
 	await process_frame

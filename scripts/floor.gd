@@ -18,6 +18,12 @@ const LANES := 5
 const EARLY_COLUMNS := 4  # columns 1-4 get early-HP fights, 5-7 late-HP
 const LATE_SCALE := 1.5  # late-column enemies get this much HP
 const MID := 2  # the entrance and boss lane
+const WORLD_FACTORS := [1.0, 1.8, 2.9, 4.6, 7.4]  # enemy HP by the world's place in the run
+
+
+## Enemy HP factor of the run's `world` (1-based); past the last listed world it stays at the last.
+static func world_factor(world: int) -> float:
+	return WORLD_FACTORS[clampi(world, 1, WORLD_FACTORS.size()) - 1]
 
 
 ## A fresh floor: entrance, eight columns of branching rooms (the last all campfires), then the boss.

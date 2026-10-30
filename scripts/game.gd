@@ -167,12 +167,17 @@ func _show_map() -> void:
 	_show(s)
 
 
+## The run's current world, 1-based: each floor cleared before this one counts a world.
+func world() -> int:
+	return 1 + rooms_before / Floor.COLUMNS
+
+
 func _on_room_picked(i: int) -> void:
 	path.append(i)
 	var room: Dictionary = map[layer][i]
 	match room.kind:
 		"fight":
-			combat.start_group(room.enemies, room.get("scale", 1.0))
+			combat.start_group(room.enemies, room.get("scale", 1.0) * Floor.world_factor(world()))
 			_show_fight(_on_fight_finished)
 		"unknown":
 			var id: String = Events.pick(seen_events)
@@ -322,7 +327,7 @@ func _on_event_finished(result: Dictionary) -> void:
 
 func _start_ambush() -> void:
 	ambush = true
-	combat.start_group(Floor.group(Floor.FLOORS[floor_id].hp[1], {}, Floor.FLOORS[floor_id].enemies))
+	combat.start_group(Floor.group(Floor.FLOORS[floor_id].hp[1], {}, Floor.FLOORS[floor_id].enemies), Floor.world_factor(world()))
 	_show_fight(_on_fight_finished)
 	screen._log("Something moves in the dark.")
 	screen._refresh()
