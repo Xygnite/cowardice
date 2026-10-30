@@ -7,10 +7,14 @@ const FPS := 6.0
 const FRAMES := 4
 const BOB := 1.5  # pixels up and down
 const FIRE_TIME := 0.25
+const SLIDE_SPEED := 300.0  # pixels per second
+const DRAGGED_ALPHA := 0.3
 
 var k := 0
 var value_label: Label  # a growing relic's current worth, gold, hanging off the bottom-right corner
 var relic := ""
+var slide_x := 0.0  # how far the art has slid sideways, to open a gap in a drag-over
+var _slide_to := 0.0
 var _art: TextureRect  # what moves; the Control itself stays where its container put it
 var _frame: AtlasTexture
 var _time := 0.0
@@ -58,9 +62,10 @@ func _build() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	slide_x = move_toward(slide_x, _slide_to, SLIDE_SPEED * delta)
 	_frame.region.position.x = (int(_time * FPS) % FRAMES) * _frame.region.size.x
 	var bob := roundf(sin(_time * 2.5 + k * 0.7) * BOB)
-	_art.position = Vector2(sin(_fire * TAU * 3) * 3 * (1 - _fire), bob - sin(_fire * PI) * 8)
+	_art.position = Vector2(slide_x + sin(_fire * TAU * 3) * 3 * (1 - _fire), bob - sin(_fire * PI) * 8)
 	_art.rotation = sin(_fire * TAU * 3) * 0.12 * (1 - _fire)
 
 
@@ -70,6 +75,17 @@ func fire() -> void:
 		_tween.kill()
 	_tween = create_tween()
 	_tween.tween_method(func(t: float) -> void: _fire = t, 0.0, 1.0, FIRE_TIME)
+
+
+## Slides the art to x (0 to come back), e.g. out of the way of a relic being dragged over.
+func slide(x: float) -> void:
+	_slide_to = x
+
+
+## Back to normal after a drag: in place and fully shown.
+func rest() -> void:
+	_slide_to = 0.0
+	modulate.a = 1.0
 
 
 ## The belt row this icon sits in, or null (a lone icon neither drags nor takes drops).
@@ -84,6 +100,7 @@ func _get_drag_data(_at: Vector2) -> Variant:
 	var row := _row()
 	if row == null or not row.can_drag.call():
 		return null
+	modulate.a = DRAGGED_ALPHA  # the relic lifts: this slot stays, dimmed, until the drag ends
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):  # a real drag; the tests call this with no mouse down
 		var lift := Control.new()  # the preview's origin is the cursor
 		var art := TextureRect.new()

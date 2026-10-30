@@ -53,8 +53,29 @@ func _slot_at(x: float) -> int:
 	return mini(k, combat.relics.size() - 1)
 
 
-func _can_drop_data(_at: Vector2, data: Variant) -> bool:
-	return data is Dictionary and data.has("belt_k") and can_drag.call()
+func _ready() -> void:
+	mouse_exited.connect(_slide_icons.bind(0, 0))  # the drag left: close the gap (the drag ending closes it too)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DRAG_END:
+		for k in combat.relics.size():
+			icon(k).rest()
+
+
+## Opens a gap at `to` for the relic coming from `from`: the icons between them slide one slot towards `from`.
+func _slide_icons(from: int, to: int) -> void:
+	var pitch: float = get_child(1).position.x - get_child(0).position.x
+	for k in combat.relics.size():
+		var inside := (k > from and k <= to) or (k < from and k >= to)
+		icon(k).slide(-signf(to - from) * pitch if inside else 0.0)
+
+
+func _can_drop_data(at: Vector2, data: Variant) -> bool:
+	if not (data is Dictionary and data.has("belt_k") and can_drag.call()):
+		return false
+	_slide_icons(data.belt_k, _slot_at(at.x))
+	return true
 
 
 func _drop_data(at: Vector2, data: Variant) -> void:

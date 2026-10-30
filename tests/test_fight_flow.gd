@@ -525,6 +525,18 @@ func _belt_row() -> void:
 	check(c.relics[2].id == "rosary" and moves[0] == 1, "dropping a relic where it already is changes nothing")
 	row._drop_data(Vector2(row.size.x - 1, 0), {"belt_k": 0})  # past the last relic: the last relic slot
 	check(c.relics[2].id == "whetstone" and moves[0] == 2, "dropping on an empty slot goes to the last relic slot")
+	await process_frame
+	var drag_from: Variant = row.icon(0)._get_drag_data(Vector2.ZERO)
+	check(row.icon(0).modulate.a < 1.0, "the dragged relic's slot is dimmed")
+	check(row._can_drop_data(Vector2(row.get_child(2).position.x + 1, 0), drag_from), "hovering slot 2 accepts the drop")
+	await create_timer(0.5).timeout
+	check(row.icon(1).slide_x < 0.0 and row.icon(2).slide_x < 0.0 and row.icon(0).slide_x == 0.0, "hovering slot 2 slides slots 1 and 2 aside to open a gap")
+	row._can_drop_data(Vector2(row.get_child(1).position.x + 1, 0), drag_from)
+	await create_timer(0.5).timeout
+	check(row.icon(1).slide_x < 0.0 and row.icon(2).slide_x == 0.0, "and hovering slot 1 only slides slot 1")
+	row.notification(Node.NOTIFICATION_DRAG_END)
+	await create_timer(0.5).timeout
+	check(range(3).all(func(k): return row.icon(k).slide_x == 0.0) and row.icon(0).modulate.a == 1.0, "the drag ending puts every icon back, undimmed")
 	row.can_drag = func() -> bool: return false
 	check(row.icon(0)._get_drag_data(Vector2.ZERO) == null and not row._can_drop_data(Vector2.ZERO, {"belt_k": 0}), "nothing drags while can_drag says no")
 	row.show_destroy = true
