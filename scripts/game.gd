@@ -283,7 +283,7 @@ func _show_perk_pick() -> void:
 
 ## A pick of relics for the belt (only rares if `rares`), then `then`; straight to `then` if there are none to offer.
 func _show_relic_pick(title: String, rares: bool, then: Callable) -> void:
-	var choices := RelicPickScreen.offer(combat.relics, rares, combat.rng)
+	var choices := RelicPickScreen.offer(combat.relics, "rare" if rares else "any", combat.rng)
 	if choices.is_empty():
 		then.call()
 		return

@@ -16,9 +16,9 @@ var breaking := ""  # the card being taken onto a full belt, waiting for which b
 var belt_row: HBoxContainer
 
 
-## Up to three different relics not on `belt`. A rare pick deals only rares; otherwise each card is rare
-## with RARE_CHANCE, from the other pool when one runs dry.
-static func offer(belt: Array, rares: bool, rng: RandomNumberGenerator) -> Array:
+## Up to three different relics not on `belt`. `rarity` "common" or "rare" deals only that pool; "any" makes each card
+## rare with RARE_CHANCE, from the other pool when one runs dry.
+static func offer(belt: Array, rarity: String, rng: RandomNumberGenerator) -> Array:
 	var owned: Array = belt.map(func(r): return r.id)
 	var pools := [[], []]  # commons, rares
 	for id: String in Combat.RELICS:
@@ -26,8 +26,8 @@ static func offer(belt: Array, rares: bool, rng: RandomNumberGenerator) -> Array
 			pools[int(Combat.RELICS[id].rare)].append(id)
 	var out := []
 	for i in 3:
-		var k := 1 if rares or rng.randf() < RARE_CHANCE else 0
-		if pools[k].is_empty() and not rares:
+		var k := 1 if rarity == "rare" or (rarity == "any" and rng.randf() < RARE_CHANCE) else 0
+		if pools[k].is_empty() and rarity == "any":
 			k = 1 - k
 		if pools[k].is_empty():
 			break
@@ -103,7 +103,7 @@ func _take(id: String) -> void:
 
 func _ask_break(k: int) -> void:
 	var old: String = Combat.RELICS[combat.relics[k].id].name
-	ConfirmPanel.ask(self, "Break %s?" % old, "Break %s for +%d Shards and take %s?" % [old, Combat.BREAK_SHARDS, Combat.RELICS[breaking].name], "Break it", _taken.bind(breaking, k))
+	ConfirmPanel.ask(self, "Break %s?" % old, "Break %s for +%d Shards and take %s?" % [old, Combat.sell_value(combat.relics[k].id), Combat.RELICS[breaking].name], "Break it", _taken.bind(breaking, k))
 
 
 func _move_left(k: int) -> void:
@@ -112,7 +112,9 @@ func _move_left(k: int) -> void:
 
 
 func _taken(id: String, replace: int) -> void:
-	combat.take_relic(id, replace)
+	if replace >= 0:
+		combat.destroy_relic(replace)
+	combat.take_relic(id)
 	done.emit()
 
 

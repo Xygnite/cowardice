@@ -42,7 +42,7 @@ const MARKS := {
 }
 const EMBER_HEAL := 2
 ## Relics: run-only, on a belt of BELT_SIZE slots, mostly raising the turn's Mult. Every hit is floori(base x Mult);
-## Mult builds left to right along the belt: each slot adds, then multiplies (mult()). Breaking one to make room pays BREAK_SHARDS.
+## Mult builds left to right along the belt: each slot adds, then multiplies (mult()). Relics cost Shards to buy; destroying one pays half its price back.
 const RELICS := {
 	"whetstone": {"name": "Whetstone", "text": "Attack dice showing 5 or 6 deal +3 each", "rare": false},
 	"twin_saints": {"name": "Twin Saints", "text": "Cleave or Sunder fires: +1 Mult", "rare": false},
@@ -62,7 +62,8 @@ const RELICS := {
 	"mirror_shard": {"name": "Mirror Shard", "text": "Copies the relic to its right", "rare": true},
 }
 const BELT_SIZE := 5
-const BREAK_SHARDS := 2
+const COMMON_PRICE := 4
+const RARE_PRICE := 8
 
 ## Enemy types. Optional keys:
 ## "turns": a tutorial enemy; the fight ends after that many turns and it can't die before.
@@ -144,6 +145,7 @@ var bonus_embers := 0  # extra embers an event promised for the end of the run
 var relics: Array = []  # the belt, left to right: {"id": RELICS key, "n": run counter, "f": this fight's counter}
 var best_hit := 0  # the biggest single Mult-applied hit this run
 var best_mult := 1.0  # the highest Mult a resolve dealt damage at this run
+var shopped := false  # the run's first Spoils has shown (it offers commons only)
 
 
 func _init(seed_value := -1) -> void:
@@ -159,7 +161,7 @@ const SAVED := ["max_hp", "player_hp", "shards", "kills", "perks", "bonus_perk",
 
 
 ## Fields added after run saves existed: an older save may lack them (they load as these defaults), but not hold the wrong type.
-const SAVED_LATER := {"relics": [], "best_hit": 0, "best_mult": 1.0}
+const SAVED_LATER := {"relics": [], "best_hit": 0, "best_mult": 1.0, "shopped": false}
 
 
 func to_dict() -> Dictionary:
@@ -185,6 +187,8 @@ static func valid_dict(d) -> bool:
 		return false
 	if d.has("relics") and not (d.relics is Array and d.relics.all(func(r): return r is Dictionary and r.get("id") is String and Combat.RELICS.has(r.id) and r.get("n") is float and r.get("f") is float)):
 		return false
+	if d.has("shopped") and not d.shopped is bool:
+		return false
 	return ["best_hit", "best_mult"].all(func(k): return not d.has(k) or typeof(d[k]) in [TYPE_INT, TYPE_FLOAT])
 
 
@@ -195,6 +199,7 @@ static func from_dict(d: Dictionary) -> Combat:
 	c.relics = d.get("relics", []).map(func(r): return {"id": r.id, "n": float(r.n), "f": float(r.f)})
 	c.best_hit = int(d.get("best_hit", 0))
 	c.best_mult = float(d.get("best_mult", 1.0))
+	c.shopped = bool(d.get("shopped", false))
 	for i in c.dice.size():
 		c.dice[i].merge(d.dice[i].duplicate(true), true)
 	return c
@@ -663,22 +668,40 @@ func relic_id(k: int) -> String:
 	return relics[k + 1].id
 
 
-## Puts relic `id` on the belt. Refuses one already on it, or a full belt unless `replace` names the slot to break
-## (only a full belt breaks one; otherwise it appends).
-func take_relic(id: String, replace := -1) -> bool:
-	if relics.any(func(r): return r.id == id):
+## What relic `id` costs in Shards at the shop.
+static func price(id: String) -> int:
+	return RARE_PRICE if RELICS[id].rare else COMMON_PRICE
+
+
+## What destroying relic `id` pays back.
+static func sell_value(id: String) -> int:
+	return price(id) / 2
+
+
+## Puts relic `id` on the end of the belt for free. Refuses one already on it, or a full belt.
+func take_relic(id: String) -> bool:
+	if relics.size() >= BELT_SIZE or relics.any(func(r): return r.id == id):
 		return false
-	var entry := {"id": id, "n": 0.0, "f": 0.0}
 	var before := _acting_ids()
-	if relics.size() < BELT_SIZE:
-		relics.append(entry)
-	elif replace >= 0 and replace < relics.size():
-		relics[replace] = entry
-		shards += BREAK_SHARDS
-	else:
-		return false
+	relics.append({"id": id, "n": 0.0, "f": 0.0})
 	_reset_changed_mirrors(before)
 	return true
+
+
+## Buys relic `id` onto the belt; refuses if it is owned, the belt is full, or the Shards fall short.
+func buy_relic(id: String) -> bool:
+	if shards < price(id) or not take_relic(id):
+		return false
+	shards -= price(id)
+	return true
+
+
+## Destroys belt slot k for Shards; the belt closes the gap.
+func destroy_relic(k: int) -> void:
+	var before := _acting_ids()
+	shards += sell_value(relics[k].id)
+	relics.remove_at(k)
+	_reset_changed_mirrors(before)
 
 
 func move_relic(from: int, to: int) -> void:

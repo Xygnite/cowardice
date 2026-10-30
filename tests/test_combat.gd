@@ -1035,6 +1035,7 @@ func _relic_save() -> void:
 	c.relics[3].n = 8.0
 	c.best_hit = 42
 	c.best_mult = 2.5
+	c.shopped = true
 	RunSave.write({"combat": c.to_dict()}, PATH)
 	var d := RunSave.read(PATH)
 	RunSave.erase(PATH)
@@ -1043,10 +1044,11 @@ func _relic_save() -> void:
 	check(back.relics.map(func(r): return r.id) == ["black_candle", "gravedigger", "mirror_shard", "miners_ledger"], "the belt keeps its order")
 	check(back.relics[1].n == 7.0 and typeof(back.relics[1].n) == TYPE_FLOAT and back.relics[3].n == 8.0, "relic counters come back as floats")
 	check(back.best_hit == 42 and typeof(back.best_hit) == TYPE_INT and is_equal_approx(back.best_mult, 2.5), "best hit and best Mult come back")
+	check(back.shopped, "the shopped flag comes back")
 	var old := c.to_dict()
-	for k in ["relics", "best_hit", "best_mult"]:
+	for k in ["relics", "best_hit", "best_mult", "shopped"]:
 		old.erase(k)
-	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).relics.is_empty(), "a save from before relics loads with an empty belt")
+	check(CombatScript.valid_dict(old) and CombatScript.from_dict(old).relics.is_empty() and not CombatScript.from_dict(old).shopped, "a save from before relics loads with an empty belt and not shopped")
 	var bad := c.to_dict()
 	bad.relics = "x"
 	check(not CombatScript.valid_dict(bad), "a belt of the wrong type is refused")
@@ -1079,10 +1081,9 @@ func _relic_save() -> void:
 	check(c.relics[0].n == 40.0, "a move that keeps the copied relic keeps the counter")
 	c.take_relic("whetstone")
 	c.take_relic("twin_saints")
-	c.take_relic("tithe_box")  # full belt now refuses; replace the copied relic
 	c.relics[0].n = 40.0
-	c.take_relic("rosary", 1)
-	check(c.relics[0].n == 0.0, "breaking the relic a Mirror copies resets the Mirror")
+	c.destroy_relic(1)  # the Ledger the Mirror copies
+	check(c.relics[0].n == 0.0, "destroying the relic a Mirror copies resets the Mirror")
 
 
 func _relic_belt() -> void:
@@ -1092,12 +1093,10 @@ func _relic_belt() -> void:
 	for id in ["whetstone", "twin_saints", "tithe_box", "ward_icon"]:
 		c.take_relic(id)
 	check(c.relics.size() == CombatScript.BELT_SIZE, "the belt holds five")
-	check(not c.take_relic("rosary"), "a full belt refuses a new relic without a slot to break")
-	var shards := c.shards
-	check(c.take_relic("rosary", 2) and c.relic_id(2) == "rosary" and c.shards == shards + CombatScript.BREAK_SHARDS,
-		"breaking slot 2 puts the Rosary there and pays 2 Shards")
-	check(c.relics.size() == CombatScript.BELT_SIZE, "breaking keeps the belt at five")
-	c.move_relic(2, 0)
+	check(not c.take_relic("rosary"), "a full belt refuses a new relic")
+	c.destroy_relic(2)
+	check(c.take_relic("rosary") and c.relic_id(4) == "rosary" and c.relics.size() == CombatScript.BELT_SIZE, "destroying one makes room at the end")
+	c.move_relic(4, 0)
 	check(c.relic_id(0) == "rosary" and c.relic_id(1) == "black_candle", "a relic can move along the belt")
 	for id in CombatScript.RELICS:
 		var r: Dictionary = CombatScript.RELICS[id]
@@ -1114,6 +1113,20 @@ func _relic_belt() -> void:
 	c.relics[0].f = 3.0
 	c.start_group(["rat"])
 	check(c.relics[0].f == 0.0, "a new fight zeroes each relic's fight counter")
+	c = fresh()
+	c.shards = 4
+	check(c.buy_relic("whetstone") and c.shards == 0, "a common costs exactly 4")
+	check(not c.buy_relic("twin_saints"), "no Shards, no buy")
+	c.shards = 7
+	check(not c.buy_relic("black_candle") and c.shards == 7, "a rare costs 8")
+	c.shards = 100
+	for id in ["twin_saints", "gravedigger", "tithe_box", "rosary"]:
+		c.buy_relic(id)
+	check(not c.buy_relic("spare_fuse") and c.shards == 100 - 4 * 3 - 8, "a full belt refuses a buy")
+	c.destroy_relic(4)  # Rosary, a rare
+	check(c.relics.size() == 4 and c.shards == 100 - 4 * 3 - 8 + 4, "destroying a rare pays 4")
+	c.destroy_relic(1)  # Twin Saints, a common
+	check(c.shards == 100 - 4 * 3 - 8 + 4 + 2 and c.relic_id(1) == "gravedigger", "a common pays 2, and the belt closes the gap")
 
 
 func _mult() -> void:
@@ -1318,8 +1331,8 @@ func _relic_effects() -> void:
 	c = fresh()
 	c.take_relic("whetstone")
 	c.shards = 0
-	check(c.take_relic("rosary", 0) and c.relics.size() == 2 and c.relic_id(0) == "whetstone" and c.shards == 0,
-		"a belt with room appends and breaks nothing")
+	check(c.take_relic("rosary") and c.relics.size() == 2 and c.relic_id(0) == "whetstone" and c.shards == 0,
+		"a belt with room appends and pays nothing")
 
 
 ## A pick offers up to three different relics, none on the belt; a rare pick only rares.
@@ -1328,7 +1341,7 @@ func _relic_offer() -> void:
 	rng.seed = 7
 	var rares: Array = Combat.RELICS.keys().filter(func(id): return Combat.RELICS[id].rare)
 	var belt: Array = rares.slice(0, 4).map(func(id): return {"id": id, "n": 0.0, "f": 0.0})
-	var got: Array = RelicPickScreen.offer(belt, true, rng)
+	var got: Array = RelicPickScreen.offer(belt, "rare", rng)
 	got.sort()
 	var want: Array = rares.slice(4)
 	want.sort()
@@ -1337,9 +1350,13 @@ func _relic_offer() -> void:
 	var ok := true
 	var saw_rare := false
 	for i in 200:
-		var o: Array = RelicPickScreen.offer(belt, false, rng)
+		var o: Array = RelicPickScreen.offer(belt, "any", rng)
 		ok = ok and o.size() == 3 and o.all(func(id): return id not in ["whetstone", "black_candle", "tithe_box", "mirror_shard", "ward_icon"])
 		ok = ok and o[0] != o[1] and o[1] != o[2] and o[0] != o[2]
 		saw_rare = saw_rare or o.any(func(id): return Combat.RELICS[id].rare)
 	check(ok, "200 picks each offer 3 different relics, none on the belt")
-	check(saw_rare, "a common pick sometimes offers a rare")
+	check(saw_rare, "an any pick sometimes offers a rare")
+	ok = true
+	for i in 200:
+		ok = ok and RelicPickScreen.offer([], "common", rng).all(func(id): return not Combat.RELICS[id].rare)
+	check(ok, "a common pick never offers a rare")
