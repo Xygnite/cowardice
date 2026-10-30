@@ -1217,8 +1217,13 @@ func _count_steps() -> void:
 	check(s[-1].slot == 2 and is_equal_approx(s[-1].mult, 1.5), "Twin Saints doesn't fire, Candle does")
 	check(c.preview_damage() == 9, "6 x 1.5 = 9")
 	c.enemies[0].intent = {"kind": "guard", "value": 20}
+	check(c.count_steps().is_empty(), "Guard above the dice and nothing else: no damage, no count")
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	place(c, 2, 3, CombatScript.Slot.SKILL)  # a Cleave pair still lands past the Guard
 	s = c.count_steps()
-	check(s.is_empty() or s.filter(func(x): return x.kind == "guard")[0].hit == 0, "Guard above the dice stops at 0")
+	var guard_steps := s.filter(func(x): return x.kind == "guard")
+	check(guard_steps.size() == 1 and guard_steps[0].hit == 0, "Guard above the dice stops at 0, not below")
+	_count_matches(c, "Guard above the dice, Cleave on top")
 	c = fresh()
 	check(c.count_steps().is_empty(), "no damage, no count")
 
