@@ -865,6 +865,14 @@ func _meta() -> void:
 func _relic_icons() -> void:
 	for id in Combat.RELICS:
 		check(ResourceLoader.exists("res://assets/ui/cut/relic_%s.png" % id), "relic %s has its icon" % id)
+		var anim_path := "res://assets/ui/cut/relic_%s_anim.png" % id
+		if not ResourceLoader.exists(anim_path):
+			check(false, "relic %s has its animation strip" % id)
+			continue
+		var still: Texture2D = load("res://assets/ui/cut/relic_%s.png" % id)
+		var strip: Texture2D = load(anim_path)
+		check(strip.get_width() == 4 * still.get_width() and strip.get_height() == still.get_height(),
+			"relic %s strip is 4 frames of the still's size, got %s" % [id, strip.get_size()])
 
 
 func _event_backdrops() -> void:
