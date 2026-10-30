@@ -32,6 +32,7 @@ const MARK_SFX := preload("res://assets/audio/confirm.wav")  # an Ember or Shard
 const COUNT_STEP := 0.3  # seconds the End turn count's first step shows
 const COUNT_SPEEDUP := 0.9  # each later step takes this share of the one before
 const COUNT_FASTEST := 0.12  # seconds, the shortest a step gets
+const COUNT_DIM := 0.4  # a relic with no part in the count shows this faint while it plays
 const BELT_FADE := 0.15  # seconds the belt takes to fade out under the timing bar, or back
 
 ## The tutorial, step by step, over its set dice (Combat.TUTORIAL_DICE). Each step spotlights one target
@@ -347,10 +348,14 @@ func _on_end_turn() -> void:
 			_roll_anim(range(combat.dice.size()).filter(func(i): return combat.dice[i].buried == 0), true)
 
 
-## Plays End turn's count, Combat.count_steps(), quicker step by step: an Attack die pops, a relic that adds fires,
-## a Guard's cut floats up as a minus, the summary ticking Hit and Mult with the damage still "?". Ends on the summary.
+## Plays End turn's count, Combat.count_steps(), quicker step by step: an Attack die pops, a relic that adds fires
+## and floats its part up, a Guard's cut floats up as a minus, the summary ticking Hit and Mult with the damage still
+## "?"; relics with no step stay dim throughout. Ends on the summary.
 func _play_count(steps: Array[Dictionary]) -> void:
 	counting = not steps.is_empty()
+	for k in combat.relics.size():
+		if counting and not steps.any(func(s): return s.slot == k):
+			belt.icon(k).modulate.a = COUNT_DIM
 	var wait := COUNT_STEP
 	for s in steps:
 		if not counting:
@@ -358,7 +363,10 @@ func _play_count(steps: Array[Dictionary]) -> void:
 		match s.kind:
 			"die":
 				tray.pop(s.die)
-			"relic_die", "flat", "mult":
+			"relic_die", "flat":
+				belt.icon(s.slot).fire()
+				_float(belt.icon(s.slot), "+%d" % s.amount, UI.GOLD)
+			"mult":
 				belt.icon(s.slot).fire()
 			"guard":
 				_float(summary_label, "%d" % s.amount, UI.DANGER)
@@ -369,6 +377,8 @@ func _play_count(steps: Array[Dictionary]) -> void:
 			left -= get_process_delta_time()
 		wait = maxf(wait * COUNT_SPEEDUP, COUNT_FASTEST)
 	counting = false
+	for k in combat.relics.size():
+		belt.icon(k).modulate.a = 1.0
 	_refresh()
 
 

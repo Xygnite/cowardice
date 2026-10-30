@@ -503,28 +503,34 @@ func _fight_belt() -> void:
 	await process_frame
 	game.queue_free()
 	game = await _new_game()
-	game.combat.take_relic("black_candle")
+	for r in ["black_candle", "twin_saints", "whetstone"]:  # with no skill or 5 in Attack, only the Candle has a step
+		game.combat.take_relic(r)
 	screen = await _belt_fight(game)
-	for i in 2:
-		screen.combat.dice[i].value = [4, 5][i]
+	for i in 3:
+		screen.combat.dice[i].value = 3
+		screen.combat.assign(i, Combat.Slot.ATTACK)
 	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}  # no enemy Guard to cut the hit
 	screen.combat.enemies[0].hp = 999  # lives through the turns below
 	belt = screen.belt
+	var dimmed := func() -> Array: return range(3).filter(func(k): return belt.icon(k).modulate.a < 1.0)
 	screen._refresh()
 	check("Hit 9 × Mult 1.5 = 13" in screen.summary_label.text, "Black Candle on Attack 9 reads Hit 9 × Mult 1.5 = 13: %s" % screen.summary_label.text)
 	var preview := screen.combat.preview_damage()
 	screen._on_end_turn()
 	check(screen.counting and not belt.can_drag.call(), "End turn starts the count, and the belt can't drag while busy")
+	check(dimmed.call() == [1, 2], "relics with no step in the count stay dim (dim: %s)" % [dimmed.call()])
 	var asked := false
 	while screen.counting:
 		asked = asked or screen.summary_label.text.ends_with("= ?")
 		await process_frame
 	check(asked, "the count shows Hit × Mult = ? before the damage")
+	check(dimmed.call().is_empty(), "the count's end undims them (dim: %s)" % [dimmed.call()])
 	check(999 - screen.combat.enemies[0].hp == preview, "the turn deals the %d the preview showed (dealt %d)" % [preview, 999 - screen.combat.enemies[0].hp])
 	check(screen.busy and not belt.can_drag.call(), "no dragging while the turn resolves")
 	while screen.busy:
 		await process_frame
-	for i in 2:
+	for i in 3:
+		screen.combat.dice[i].value = 3
 		screen.combat.assign(i, Combat.Slot.ATTACK)
 	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}
 	screen._refresh()
@@ -535,12 +541,26 @@ func _fight_belt() -> void:
 	var space := InputEventKey.new()
 	space.keycode = KEY_SPACE
 	space.pressed = true
-	check(screen.counting, "the count is under way")
+	check(screen.counting and dimmed.call() == [1, 2], "the count is under way, Twin Saints and Whetstone dim")
 	root.push_input(space)
 	check(root.is_input_handled(), "the skipping Space is consumed")
 	await process_frame
 	Engine.time_scale = SPEED
 	check(not screen.counting and screen.combat.rerolls == rerolls, "Space ends the count at once and rerolls nothing")
+	check(dimmed.call().is_empty(), "a skipped count undims them too (dim: %s)" % [dimmed.call()])
+	while screen.busy:
+		await process_frame
+	for i in 2:
+		screen.combat.dice[i].value = [5, 4][i]
+		screen.combat.assign(i, Combat.Slot.ATTACK)
+	screen.combat.enemies[0].intent = {"kind": "attack", "value": 2}
+	screen._refresh()
+	screen._on_end_turn()
+	var plus := false
+	while screen.counting:
+		plus = plus or screen.find_children("*", "Label", true, false).any(func(l): return l.text == "+3")
+		await process_frame
+	check(plus, "Whetstone's +3 floats up in the count")
 	while screen.busy:
 		await process_frame
 	screen.combat.assign(0, Combat.Slot.ATTACK)
