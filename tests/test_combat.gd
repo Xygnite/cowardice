@@ -875,6 +875,9 @@ func _relic_icons() -> void:
 		var strip: Texture2D = load(anim_path)
 		check(strip.get_width() == 4 * still.get_width() and strip.get_height() == still.get_height(),
 			"relic %s strip is 4 frames of the still's size, got %s" % [id, strip.get_size()])
+	for id in Combat.RELICS:
+		var big := "res://assets/ui/cut/relic_%s_big.png" % id
+		check(ResourceLoader.exists(big) and load(big).get_size() == Vector2(64, 64), "relic %s has its 64x64 large art" % id)
 
 
 func _event_backdrops() -> void:
