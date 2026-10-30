@@ -420,6 +420,18 @@ func _relic_picks() -> void:
 		check(pick.find_children("*", "Button", true, false).all(func(b): return b.text not in ["<", "Skip", "Take", "Break"]), "no free-pick buttons")
 		check(pick.buys.all(func(b): return b.disabled), "a Buy you can't afford is disabled")
 		check(pick.buys[0].text == "Buy  %d" % Combat.price(pick.choices[0]), "the Buy button shows the price")
+		game.combat.shards = 1
+		pick._refresh()
+		check(pick.reroll_button.text == "Reroll offer  2" and pick.reroll_button.disabled, "Reroll offer costs 2, disabled below that")
+		game.combat.shards = 5
+		pick._refresh()
+		pick.reroll_button.pressed.emit()
+		check(game.combat.shards == 3 and pick.rerolls == 1 and pick.reroll_button.text == "Reroll offer  3", "a reroll pays 2 and the next costs 3")
+		check(pick.choices.size() == 3 and pick.choices.all(func(id): return not Combat.RELICS[id].rare), "the first Spoils rerolls into commons")
+		check(pick.buys.size() == 3 and pick.buys.all(func(b): return b.is_inside_tree()), "the cards are rebuilt with their Buy buttons")
+		pick.reroll_button.pressed.emit()
+		check(game.combat.shards == 0, "the second costs 3")
+		check(pick.reroll_button.disabled and game.combat.shards >= 0, "can't afford the third; Shards never go below 0")
 		game.combat.shards = 20
 		pick._refresh()
 		check(not pick.buys[0].disabled, "with the Shards it is enabled")
@@ -435,6 +447,9 @@ func _relic_picks() -> void:
 		check(game.combat.relics.map(func(r): return r.id) == [first, second] and game.combat.shards == 12, "two buys: both on the belt, 8 Shards paid")
 		check(game.screen == pick and pick.buys[0].disabled and pick.buys[1].disabled and not pick.buys[2].disabled, "still the shop; the bought cards are sold, the other still buyable")
 		check(pick.subtitle.text.contains("Shards 12"), "the Shards line refreshes")
+		pick.reroll_button.pressed.emit()
+		check(game.combat.relics.map(func(r): return r.id) == [first, second] and first not in pick.choices and second not in pick.choices,
+			"after a reroll the bought relics are still on the belt and not dealt again")
 		var rest: Array = Combat.RELICS.keys().filter(func(r): return r not in pick.choices and r not in [first, second])
 		for r in rest.slice(0, 3):
 			game.combat.take_relic(r)
@@ -461,11 +476,22 @@ func _relic_picks() -> void:
 		game.combat.enemies[0].hp = 1
 		await _fight_out(game, "skeleton at 1 HP")
 		check(game.screen is RelicPickScreen and game.screen.rarity == "any", "a later Spoils deals any rarity")
+		check(game.screen.reroll_button.text == "Reroll offer  2", "a later shop's first reroll costs 2 again")
 	game.queue_free()
 	game = await _new_game()
 	game._on_warden_beaten()
 	check(game.screen is RelicPickScreen and game.screen.rarity == "rare", "the Warden's hoard is a rare shop")
 	if game.screen is RelicPickScreen:
+		game.combat.shards = 20
+		game.screen._refresh()
+		game.screen.reroll_button.pressed.emit()
+		check(game.screen.choices.all(func(id): return Combat.RELICS[id].rare), "the hoard rerolls into rares")
+		for id: String in Combat.RELICS:
+			if Combat.RELICS[id].rare and game.combat.relics.all(func(r): return r.id != id):
+				game.combat.relics.append({"id": id, "n": 0.0, "f": 0.0})  # past BELT_SIZE on purpose
+		game.combat.shards = 20
+		game.screen._refresh()
+		check(game.screen.reroll_button.disabled, "no rare left to deal: Reroll is disabled")
 		_button(game.screen, "Leave").pressed.emit()
 		_agree(game)
 		await process_frame
