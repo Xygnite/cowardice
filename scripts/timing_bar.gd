@@ -1,7 +1,7 @@
 class_name TimingBar
 extends Control
 ## Enemy wind-up for the timed block and parry: the marker runs right, and impact lands at a random
-## point along the bar each attack, where the windows end. One SPACE press per attack; pressing early,
+## point along the bar each attack, where the windows end. One SPACE press or left click on the tray per attack; pressing early,
 ## late or not at all is a miss.
 
 signal finished(grade: int)
@@ -45,8 +45,15 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if running and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+## _input, not _unhandled_input: the dice tray under the bar would eat the click otherwise.
+## A click counts only on the tray (the bar's parent), so a stray click elsewhere isn't a miss.
+func _input(event: InputEvent) -> void:
+	if not running or not event.is_pressed() or event.is_echo():
+		return
+	var key: bool = event is InputEventKey and event.keycode == KEY_SPACE
+	var click: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
+		and get_parent_control().get_global_rect().has_point(event.position)
+	if key or click:
 		get_viewport().set_input_as_handled()
 		_finish(combat.grade_for(impact_ms - elapsed, enemy))
 

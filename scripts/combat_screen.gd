@@ -3,7 +3,7 @@ extends Control
 ## One fight on screen, built in code. The hero and enemies with a sprite are rigs from scenes/
 ## (made by tools/rig_sprites.gd); enemies without one are placeholder boxes.
 ## Rules are taught only in the tutorial fight; a floor's boss is hinted at only by murmurs in the fights before him.
-## Keys: R reroll, Enter end turn, Space block/parry during the enemy wind-up, Esc the fight menu. Click an enemy to target it,
+## Keys: R reroll, Enter end turn, Space or a left click on the tray block/parry during the enemy wind-up, Esc the fight menu. Click an enemy to target it,
 ## a die for its actions (lock, place).
 
 signal finished(won: bool)
@@ -49,7 +49,7 @@ const TUTORIAL := [
 		"menu": "The dummy swings for 4. Click the 4 and choose Guard: Guard soaks hits aimed at you."},
 	{"turn": 1, "at": "end", "until": "end", "title": "End the turn", "text": "Now end the turn and get ready to block."},
 	{"turn": 1, "at": "timing", "until": "timing", "title": "Block",
-		"text": "When the dummy swings, a marker runs along this bar. Press SPACE as it reaches the blue zone. The later you press, the better the block."},
+		"text": "When the dummy swings, a marker runs along this bar. Press SPACE or click the tray as it reaches the blue zone. The later you press, the better the block."},
 	{"turn": 2, "at": "die", "die": 0, "slot": Combat.Slot.SKILL, "until": "place", "title": "Skills",
 		"text": "Two dice match, so they glow gold: a skill is in reach. Right-click the first 6 to put it straight in Skill.",
 		"menu": "Two dice match, so they glow gold: a skill is in reach. Click the first 6 and choose Skill."},
@@ -68,7 +68,7 @@ const TUTORIAL := [
 		"menu": "A parry still needs a die in Guard, and a higher die gives you more time. Click the 6 and choose Guard."},
 	{"turn": 4, "at": "end", "until": "end", "title": "End the turn", "text": "End the turn and get ready to parry."},
 	{"turn": 4, "at": "timing", "until": "timing", "title": "Parry",
-		"text": "Press SPACE while the marker is inside the red zone. Hit it and the blow misses entirely."},
+		"text": "Press SPACE or click the tray while the marker is inside the red zone. Hit it and the blow misses entirely."},
 ]
 
 const MURMUR_COLOR := Color(0.62, 0.72, 0.9)  # cold, like the window light
