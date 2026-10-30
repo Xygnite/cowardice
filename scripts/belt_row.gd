@@ -32,6 +32,12 @@ func rebuild() -> void:
 			empty.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			empty.draw.connect(_draw_empty.bind(empty))
 			slot.add_child(empty)
+			if show_destroy:
+				# an unseen, dead Destroy button, so an empty slot is as wide as a filled one
+				var ghost := UI.button(slot, "Destroy", func() -> void: pass)
+				ghost.modulate.a = 0
+				ghost.disabled = true
+				ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 ## Belt slot k's icon.

@@ -53,7 +53,7 @@ func _ready() -> void:
 	reroll_button = UI.button(root, "", _reroll)
 	reroll_button.custom_minimum_size = Vector2(240, 44)
 	reroll_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	UI.label(root, 20, "Your belt").horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UI.heading(root, 32, "Your belt").horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	belt_row = BeltRow.new()
 	belt_row.add_theme_constant_override("separation", 12)
 	belt_row.alignment = BoxContainer.ALIGNMENT_CENTER

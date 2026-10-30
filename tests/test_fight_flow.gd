@@ -417,6 +417,10 @@ func _relic_picks() -> void:
 	check(pick != null and pick.title == "Spoils" and pick.choices.size() == 3, "a won fight opens the Spoils shop, three relics")
 	if pick:
 		check(pick.choices.all(func(id): return not Combat.RELICS[id].rare), "the first Spoils is commons only")
+		var heading: Array = pick.find_children("*", "Label", true, false).filter(func(l): return l.text == "Your belt")
+		check(heading.size() == 1 and heading[0].get_theme_font("font") == UI.HEADING_FONT and heading[0].get_theme_font_size("font_size") == 32, "Your belt is a 32 px heading")
+		await process_frame  # the slots lay out
+		_check_even_slots(pick, "empty belt")
 		check(pick.find_children("*", "Button", true, false).all(func(b): return b.text not in ["<", "Skip", "Take", "Break"]), "no free-pick buttons")
 		check(pick.buys.all(func(b): return b.disabled), "a Buy you can't afford is disabled")
 		check(pick.buys[0].text == "Buy  %d" % Combat.price(pick.choices[0]), "the Buy button shows the price")
@@ -447,6 +451,8 @@ func _relic_picks() -> void:
 		check(game.combat.relics.map(func(r): return r.id) == [first, second] and game.combat.shards == 12, "two buys: both on the belt, 8 Shards paid")
 		check(game.screen == pick and pick.buys[0].disabled and pick.buys[1].disabled and not pick.buys[2].disabled, "still the shop; the bought cards are sold, the other still buyable")
 		check(pick.subtitle.text.contains("Shards 12"), "the Shards line refreshes")
+		await process_frame
+		_check_even_slots(pick, "two relics")
 		pick.reroll_button.pressed.emit()
 		check(game.combat.relics.map(func(r): return r.id) == [first, second] and first not in pick.choices and second not in pick.choices,
 			"after a reroll the bought relics are still on the belt and not dealt again")
@@ -457,7 +463,7 @@ func _relic_picks() -> void:
 		check(game.combat.relics.size() == Combat.BELT_SIZE and pick.buys.all(func(b): return b.disabled), "a full belt disables every Buy")
 		var destroyed: String = game.combat.relics[0].id
 		var shards: int = game.combat.shards
-		var destroys := pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Destroy")
+		var destroys := pick.find_children("*", "Button", true, false).filter(func(b): return b.text == "Destroy" and not b.disabled)
 		check(destroys.size() == Combat.BELT_SIZE, "a Destroy button under every belt relic")
 		destroys[0].pressed.emit()
 		_agree(game)
@@ -660,6 +666,12 @@ func _fight_belt() -> void:
 	check(errors.count == errors_before, "fights with relics run with no errors (got %d)" % (errors.count - errors_before))
 
 
+## Every slot of the shop's belt is as wide as the others, so the gaps look even.
+func _check_even_slots(pick: RelicPickScreen, when: String) -> void:
+	var widths: Array = range(Combat.BELT_SIZE).map(func(k): return pick.belt_row.get_child(k).size.x)
+	check(widths.all(func(w): return is_equal_approx(w, widths[0])), "every belt slot is as wide as the others (%s): %s" % [when, widths])
+
+
 ## BeltRow: five slots, a drop reorders the belt, can_drag shuts dragging, Destroy buttons report their slot.
 func _belt_row() -> void:
 	var errors_before := errors.count
@@ -700,7 +712,7 @@ func _belt_row() -> void:
 	check(row.icon(0)._get_drag_data(Vector2.ZERO) == null and not row._can_drop_data(Vector2.ZERO, {"belt_k": 0}), "nothing drags while can_drag says no")
 	row.show_destroy = true
 	row.rebuild()
-	var buttons := row.find_children("*", "Button", true, false)
+	var buttons := row.find_children("*", "Button", true, false).filter(func(b): return not b.disabled)  # empty slots hold a disabled one
 	var hit := [-1]
 	row.destroy_pressed.connect(func(k: int): hit[0] = k)
 	check(buttons.size() == 3 and buttons.all(func(b): return b.text == "Destroy"), "show_destroy puts a Destroy button under each relic")
