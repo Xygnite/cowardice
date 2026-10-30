@@ -51,6 +51,7 @@ the player can say which three relics did it.
 
 - Mult is per turn. It starts at ×1, relics add to it (`+0.5 Mult`) or multiply it (`×1.5 Mult`). Adds are
   summed first, then multipliers apply, left to right on the belt, as in Balatro.
+  Superseded: Mult now folds left to right, each slot adding then multiplying. See [2026-10-30-spoils-shop-and-belt-design.md](2026-10-30-spoils-shop-and-belt-design.md).
 - Mult applies to everything the player deals: Attack to the target, every skill's damage (Cleave, Sunder,
   Flurry, Oath, Gambit), and relic damage. It applies after enemy Guard and Bone Wall are taken off, so Guard
   still matters. It never applies to healing, Guard or Shards.
@@ -109,6 +110,7 @@ Rares (boss picks):
 - **Fight screen:** the belt sits beside the dice tray with small relic icons. Hover shows the name and text.
   The damage preview gains a Mult line. A relic that fires this turn flashes as the hit lands, and a growing
   relic shows its current value on its icon.
+  Superseded: the belt now sits on the dice tray's top edge. See [2026-10-30-spoils-shop-and-belt-design.md](2026-10-30-spoils-shop-and-belt-design.md).
 - **Relic pick:** after a fight, a screen like the bonus-perk pick (three cards and a skip button).
 - **Run end:** belt, final Mult, biggest hit, then the Embers as now.
 
