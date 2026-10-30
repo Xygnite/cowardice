@@ -624,17 +624,86 @@ func hits_to(i: int) -> Array[int]:
 			damage = maxi(0, damage - e.intent.value)
 		damage += _sum(sharp)  # Sharp faces cut past Guard and Bone Wall
 		for k in relics.size():  # Ledger and Ward Icon land after Guard
-			match relic_id(k):
-				"miners_ledger":
-					damage += floori(relics[k].n / 4)
-				"ward_icon":
-					damage += int(relics[k].f)
+			damage += _flat_bonus(k)
 		hits.append(damage)
 	for id in fired():
 		var h := _skill_hit(id, i)
 		if h > 0:
 			hits.append(h)
 	return hits
+
+
+## What belt slot k adds to the Attack hit after Guard: Miner's Ledger or Ward Icon.
+func _flat_bonus(k: int) -> int:
+	match relic_id(k):
+		"miners_ledger":
+			return floori(relics[k].n / 4)
+		"ward_icon":
+			return int(relics[k].f)
+	return 0
+
+
+## The End turn count in order, for the screen to play back. Each step is {kind, die, slot, amount, hit, mult} with the
+## running Hit and Mult after it (unused die/slot are -1). Kinds: "die" (an Attack die's face), "relic_die" (Crown or
+## Whetstone on that die), "guard" (Bone Wall and enemy Guard: whatever takes the dice down to the real Attack hit),
+## "flat" (Ledger, Ward Icon), "skill" (one fired skill over every enemy), "mult" (a belt slot changing Mult). The last
+## step's hit is the sum of hits_to() over all enemies and its mult is mult(); no steps when nothing would be dealt.
+func count_steps() -> Array[Dictionary]:
+	var steps: Array[Dictionary] = []
+	var hit := 0
+	if alive(target) and not _values_in(Slot.ATTACK).is_empty():
+		var flats: Array[int] = []
+		for k in relics.size():
+			flats.append(_flat_bonus(k))
+		for i in dice.size():
+			if dice[i].slot != Slot.ATTACK:
+				continue
+			var v: int = dice[i].value
+			hit += v
+			steps.append(_step("die", i, -1, v, hit, 1.0))
+			for id in ["cursed_crown", "whetstone"]:  # Crown makes a curse a 6, then Whetstone reads the result
+				for k in relics.size():
+					if relic_id(k) != id:
+						continue
+					var gain := 0
+					if id == "cursed_crown" and v == CURSE:
+						gain = 6
+						v = 6
+					elif id == "whetstone" and v >= 5:
+						gain = 3
+					if gain > 0:
+						hit += gain
+						steps.append(_step("relic_die", i, k, gain, hit, 1.0))
+		var cut := hits_to(target)[0] - _sum(flats) - hit  # Bone Wall's die, Guard, and Sharp faces that skip them
+		if cut != 0:
+			hit += cut
+			steps.append(_step("guard", -1, -1, cut, hit, 1.0))
+		for k in relics.size():
+			if flats[k] != 0:
+				hit += flats[k]
+				steps.append(_step("flat", -1, k, flats[k], hit, 1.0))
+	for id in fired():
+		var amount := 0
+		for i in enemies.size():
+			amount += _skill_hit(id, i) if alive(i) else 0
+		if amount > 0:
+			hit += amount
+			steps.append(_step("skill", -1, -1, amount, hit, 1.0))
+	if hit == 0:
+		return []
+	var m := 1.0
+	for k in relics.size():
+		var add := _relic_add(k)
+		var times := _relic_times(relic_id(k))
+		if add != 0.0 or times != 1.0:
+			var before := m
+			m = (m + add) * times
+			steps.append(_step("mult", -1, k, m - before, hit, m))
+	return steps
+
+
+func _step(kind: String, die: int, slot: int, amount: float, hit: int, m: float) -> Dictionary:
+	return {"kind": kind, "die": die, "slot": slot, "amount": amount, "hit": hit, "mult": m}
 
 
 ## An Attack die's worth: Cursed Crown makes a curse a 6, then each Whetstone adds 3 to a 5 or more.

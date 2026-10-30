@@ -45,6 +45,7 @@ func _init() -> void:
 	_relic_save()
 	_mult()
 	_relic_effects()
+	_count_steps()
 	_relic_icons()
 	_relic_offer()
 	print("FAILED: %d" % failures if failures else "All combat checks passed.")
@@ -1191,6 +1192,53 @@ func _mult() -> void:
 	c.dice[0].faces[c.dice[0].side] = 8  # mark_of reads the rolled face
 	c.dice[0].marks[c.dice[0].side] = "ember"
 	check(is_equal_approx(c.mult(), 1.0 + 0.2 + 0.5 + 0.5), "a placed Ember face gives Rusted Censer +0.5")
+
+
+## The last step's Hit is what hits_to deals in all, and its Mult is mult().
+func _count_matches(c: CombatScript, what: String) -> void:
+	var s := c.count_steps()
+	var total := 0
+	for i in c.enemies.size():
+		total += c._sum(c.hits_to(i))
+	check(not s.is_empty() and s[-1].hit == total and is_equal_approx(s[-1].mult, c.mult()), "%s: count ends at the hits and Mult (got %s, want %d)" % [what, s.back() if not s.is_empty() else {}, total])
+
+
+func _count_steps() -> void:
+	var c := fresh()
+	c.enemies[0].intent = {"kind": "guard", "value": 4}
+	c.take_relic("whetstone")
+	c.take_relic("twin_saints")
+	c.take_relic("black_candle")
+	place(c, 0, 5, CombatScript.Slot.ATTACK)
+	place(c, 1, 2, CombatScript.Slot.ATTACK)
+	var s := c.count_steps()
+	check(s.map(func(x): return x.kind) == ["die", "relic_die", "die", "guard", "mult"], "dice, Whetstone on the 5, Guard, then Candle (got %s)" % [s.map(func(x): return x.kind)])
+	check(s[3].amount == -4 and s[3].hit == 6, "Guard 4 takes 10 down to 6")
+	check(s[-1].slot == 2 and is_equal_approx(s[-1].mult, 1.5), "Twin Saints doesn't fire, Candle does")
+	check(c.preview_damage() == 9, "6 x 1.5 = 9")
+	c.enemies[0].intent = {"kind": "guard", "value": 20}
+	s = c.count_steps()
+	check(s.is_empty() or s.filter(func(x): return x.kind == "guard")[0].hit == 0, "Guard above the dice stops at 0")
+	c = fresh()
+	check(c.count_steps().is_empty(), "no damage, no count")
+
+	c = _rats()
+	c.take_relic("twin_saints")
+	c.take_relic("black_candle")
+	place(c, 0, 4, CombatScript.Slot.ATTACK)
+	place(c, 1, 3, CombatScript.Slot.SKILL)
+	place(c, 2, 3, CombatScript.Slot.SKILL)
+	_count_matches(c, "Cleave over three rats")
+	check(c.count_steps().filter(func(x): return x.kind == "skill").size() == 1, "Cleave is one step for all three rats")
+
+	c = fresh(WARDEN)
+	c.take_relic("cursed_crown")
+	c.take_relic("miners_ledger")
+	c.relics[1].n = 8.0
+	place(c, 0, CombatScript.CURSE, CombatScript.Slot.ATTACK)
+	place(c, 1, 6, CombatScript.Slot.ATTACK)
+	place(c, 2, 2, CombatScript.Slot.ATTACK)
+	_count_matches(c, "Bone Wall takes the highest die, Ledger adds 2")
 
 
 ## A fight against three 150 HP rats, all dice unplaced, so many turns of hits leave them standing.
